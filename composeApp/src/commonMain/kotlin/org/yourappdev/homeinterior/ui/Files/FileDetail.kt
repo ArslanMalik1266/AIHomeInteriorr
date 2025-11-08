@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,13 +35,16 @@ import homeinterior.composeapp.generated.resources.save
 import homeinterior.composeapp.generated.resources.share
 import homeinterior.composeapp.generated.resources.sofa
 import homeinterior.composeapp.generated.resources.sofa_3
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
+import org.yourappdev.homeinterior.ui.UiUtils.CloseIconButton
 import org.yourappdev.homeinterior.ui.UiUtils.DeleteConfirmationDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateEditScreen(onClick: () -> Unit) {
+    val scope = rememberCoroutineScope()
     val backgroundColor = Color(0xFFFFFFFF)
     val darkText = Color(0xFF2C2C2C)
     val grayText = Color(0xFF9B9B9B)
@@ -148,7 +152,12 @@ fun CreateEditScreen(onClick: () -> Unit) {
                 containerColor = Color.Transparent,
                 dragHandle = null, modifier = Modifier.statusBarsPadding()
             ) {
-                DeleteConfirmationDialog()
+                DeleteConfirmationDialog(title = "Are you sure you want to delete files?") {
+                    scope.launch {
+                        bottomSheetState.hide()
+                        showDelete = false
+                    }
+                }
             }
         }
     }
@@ -172,21 +181,14 @@ fun TopBar(
             horizontalArrangement = Arrangement.Start,
             modifier = Modifier.weight(1f)
         ) {
-            Image(
-                painter = painterResource(Res.drawable.close),
-                contentDescription = "Close",
-                colorFilter = ColorFilter.tint(color = Color(0xFF726C6C)),
-                modifier = Modifier.clickable(enabled = true, onClick = {
-                    onClick()
-                })
-            )
-
-
-            Spacer(modifier = Modifier.width(16.dp))
+            CloseIconButton(iconSize = 20.dp) {
+                onClick()
+            }
+            Spacer(modifier = Modifier.width(8.dp))
 
             Text(
                 text = "Create",
-                fontSize = 22.sp,
+                fontSize = 20.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = darkText
             )

@@ -66,7 +66,6 @@ kotlin {
             implementation(libs.coil.compose)
             implementation(libs.coil.svg)
             implementation(compose.components.resources)
-            implementation(libs.compose.beforeafter)
             implementation(libs.compottie)
             implementation(libs.compottie.lite)
             implementation(libs.compottie.resources)

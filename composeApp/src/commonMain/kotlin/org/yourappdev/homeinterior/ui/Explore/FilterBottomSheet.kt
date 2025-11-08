@@ -11,6 +11,8 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.staggeredgrid.LazyHorizontalStaggeredGrid
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -39,9 +41,9 @@ import org.jetbrains.compose.resources.painterResource
 data class FilterState(
     var selectedRoomTypes: Set<String> = setOf("Bedroom"),
     var selectedStyles: Set<String> = setOf("Modern"),
-    var selectedColor: Int? = 3,
+    var selectedColors: Set<Int> = setOf(3),
     var selectedFormats: Set<String> = setOf("JPEG"),
-    var selectedPrice: String = "Free"
+    var selectedPrices: Set<String> = setOf("Free")
 )
 
 @Composable
@@ -152,8 +154,8 @@ fun FilterBottomSheetContent(
                 titleColor = mediumText
             ) {
                 ColorOptions(
-                    selectedColorIndex = filterState.selectedColor,
-                    onColorSelected = { filterState = filterState.copy(selectedColor = it) },
+                    selectedColorIndices = filterState.selectedColors,
+                    onColorSelected = { filterState = filterState.copy(selectedColors = it) },
                     primaryGreen = primaryGreen
                 )
             }
@@ -186,8 +188,8 @@ fun FilterBottomSheetContent(
                 titleColor = mediumText
             ) {
                 PriceOptions(
-                    selectedOption = filterState.selectedPrice,
-                    onOptionSelected = { filterState = filterState.copy(selectedPrice = it) },
+                    selectedOptions = filterState.selectedPrices,
+                    onOptionsSelected = { filterState = filterState.copy(selectedPrices = it) },
                     primaryGreen = primaryGreen,
                     borderGray = borderGray,
                     lightText = lightText
@@ -391,7 +393,12 @@ fun RoomTypeOptions(
                         val newSelection = when {
                             option == "All" -> {
                                 if (selectedOptions.contains("All")) {
-                                    emptySet()
+                                    val firstOptionAfterAll = allOptions.getOrNull(1)
+                                    if (firstOptionAfterAll != null) {
+                                        selectedOptions - "All" - firstOptionAfterAll
+                                    } else {
+                                        selectedOptions - "All"
+                                    }
                                 } else {
                                     allOptions.toSet()
                                 }
@@ -453,7 +460,12 @@ fun StyleOptions(
                         val newSelection = when {
                             option == "All" -> {
                                 if (selectedOptions.contains("All")) {
-                                    emptySet()
+                                    val firstOptionAfterAll = allOptions.getOrNull(1)
+                                    if (firstOptionAfterAll != null) {
+                                        selectedOptions - "All" - firstOptionAfterAll
+                                    } else {
+                                        selectedOptions - "All"
+                                    }
                                 } else {
                                     allOptions.toSet()
                                 }
@@ -485,8 +497,8 @@ fun StyleOptions(
 
 @Composable
 fun ColorOptions(
-    selectedColorIndex: Int?,
-    onColorSelected: (Int) -> Unit,
+    selectedColorIndices: Set<Int>,
+    onColorSelected: (Set<Int>) -> Unit,
     primaryGreen: Color
 ) {
     val colors = listOf(
@@ -497,35 +509,36 @@ fun ColorOptions(
         Color(0xFFD9D9D9), Color(0xFFD9D9D9), Color(0xFFD9D9D9), Color(0xFFD9D9D9)
     )
 
-    Column(
-        modifier = Modifier.fillMaxWidth().padding(start = 10.dp, end = 10.dp, bottom = 18.dp),
+    LazyHorizontalStaggeredGrid(
+        rows = StaggeredGridCells.Fixed(3),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(130.dp)  // Adjust height based on your needs
+            .padding(start = 10.dp, end = 10.dp, bottom = 18.dp),
+        horizontalItemSpacing = 11.dp,
         verticalArrangement = Arrangement.spacedBy(11.dp)
     ) {
-        colors.chunked(8).forEachIndexed { rowIndex, rowColors ->
-            Row(
+        items(colors.size) { index ->
+            val isSelected = selectedColorIndices.contains(index)
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(11.dp)
-            ) {
-                rowColors.forEachIndexed { colIndex, color ->
-                    val index = rowIndex * 8 + colIndex
-                    val isSelected = selectedColorIndex == index
-
-                    Box(
-                        modifier = Modifier
-                            .size(32.dp)
-                            .border(
-                                width = if (isSelected) 2.dp else 0.dp,
-                                color = if (isSelected) Color(0xFFCBE0A7) else Color.Transparent,
-                                shape = CircleShape
-                            )
-                            .background(color, CircleShape)
-                            .clip(CircleShape)
-                            .clickable { onColorSelected(index) }
+                    .size(32.dp)
+                    .border(
+                        width = if (isSelected) 2.dp else 0.dp,
+                        color = if (isSelected) Color(0xFFCBE0A7) else Color.Transparent,
+                        shape = CircleShape
                     )
-                }
-            }
+                    .background(colors[index], CircleShape)
+                    .clip(CircleShape)
+                    .clickable {
+                        val newSelection = if (isSelected) {
+                            selectedColorIndices - index
+                        } else {
+                            selectedColorIndices + index
+                        }
+                        onColorSelected(newSelection)
+                    }
+            )
         }
     }
 }
@@ -559,7 +572,12 @@ fun FormatOptions(
                         val newSelection = when {
                             option == "All" -> {
                                 if (selectedOptions.contains("All")) {
-                                    emptySet()
+                                    val firstOptionAfterAll = allOptions.getOrNull(1)
+                                    if (firstOptionAfterAll != null) {
+                                        selectedOptions - "All" - firstOptionAfterAll
+                                    } else {
+                                        selectedOptions - "All"
+                                    }
                                 } else {
                                     allOptions.toSet()
                                 }
@@ -591,8 +609,8 @@ fun FormatOptions(
 
 @Composable
 fun PriceOptions(
-    selectedOption: String,
-    onOptionSelected: (String) -> Unit,
+    selectedOptions: Set<String>,
+    onOptionsSelected: (Set<String>) -> Unit,
     primaryGreen: Color,
     borderGray: Color,
     lightText: Color
@@ -604,8 +622,15 @@ fun PriceOptions(
         Box(modifier = Modifier.weight(1f)) {
             RadioOption(
                 text = "Free",
-                selected = selectedOption == "Free",
-                onClick = { onOptionSelected("Free") },
+                selected = selectedOptions.contains("Free"),
+                onClick = {
+                    val newSelection = if (selectedOptions.contains("Free")) {
+                        selectedOptions - "Free"
+                    } else {
+                        selectedOptions + "Free"
+                    }
+                    onOptionsSelected(newSelection)
+                },
                 primaryGreen = primaryGreen,
                 borderGray = borderGray,
                 lightText = lightText
@@ -614,8 +639,15 @@ fun PriceOptions(
         Box(modifier = Modifier.weight(1f)) {
             RadioOption(
                 text = "Premium",
-                selected = selectedOption == "Premium",
-                onClick = { onOptionSelected("Premium") },
+                selected = selectedOptions.contains("Premium"),
+                onClick = {
+                    val newSelection = if (selectedOptions.contains("Premium")) {
+                        selectedOptions - "Premium"
+                    } else {
+                        selectedOptions + "Premium"
+                    }
+                    onOptionsSelected(newSelection)
+                },
                 primaryGreen = primaryGreen,
                 borderGray = borderGray,
                 lightText = lightText

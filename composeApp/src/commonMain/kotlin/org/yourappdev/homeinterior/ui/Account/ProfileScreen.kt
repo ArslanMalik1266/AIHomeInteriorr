@@ -7,9 +7,15 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -21,52 +27,90 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import homeinterior.composeapp.generated.resources.Res
 import homeinterior.composeapp.generated.resources.arrow_back_
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
+import org.yourappdev.homeinterior.ui.UiUtils.BackIconButton
+import org.yourappdev.homeinterior.ui.UiUtils.CloseIconButton
+import org.yourappdev.homeinterior.ui.UiUtils.CommonAppButton
+import org.yourappdev.homeinterior.ui.UiUtils.DeleteConfirmationDialog
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     onBackClick: () -> Unit = {}
 ) {
-    Column(
+    var showDelete by remember {
+        mutableStateOf(false)
+    }
+    val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scope = rememberCoroutineScope()
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
             .statusBarsPadding()
-            .verticalScroll(rememberScrollState())
     ) {
-        Row(
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 24.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
         ) {
-            Image(
-                painter = painterResource(Res.drawable.arrow_back_),
-                colorFilter = ColorFilter.tint(color = Color(0xFF808080)),
-                contentDescription = "Back",
+            Row(
                 modifier = Modifier
-                    .size(18.dp)
-                    .clickable { onBackClick() }
-            )
+                    .fillMaxWidth()
+                    .padding(start = 24.dp, end = 24.dp, top = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                BackIconButton(iconSize = 18.dp, tint = Color(0xFF808080)) {
+                    onBackClick()
+                }
+                Text(
+                    text = "Profile",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF2C2C2C)
+                )
+            }
 
-            Text(
-                text = "Profile",
-                fontSize = 22.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF2C2C2C)
-            )
+            Spacer(modifier = Modifier.height(20.dp))
+
+            ProfileHeader()
+
+            Spacer(modifier = Modifier.height(60.dp))
+
+            ProfileMenuItems()
+
+            Box(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 27.dp).clip(RoundedCornerShape(8.dp))
+                    .clickable {
+                        showDelete = true
+                    }) {
+                Text(
+                    text = "Delete Account",
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color(0xFFFB5C5C),
+                    modifier = Modifier.padding(vertical = 16.dp, horizontal = 10.dp)
+                )
+            }
+
         }
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        ProfileHeader()
-
-        Spacer(modifier = Modifier.height(60.dp))
-
-        ProfileMenuItems()
-
-        Spacer(modifier = Modifier.height(24.dp))
+        if (showDelete) {
+            ModalBottomSheet(
+                onDismissRequest = { showDelete = false },
+                sheetState = bottomSheetState,
+                containerColor = Color.Transparent,
+                dragHandle = null, modifier = Modifier.statusBarsPadding()
+            ) {
+                DeleteConfirmationDialog(title = "Are you sure you want to delete account?") {
+                    scope.launch {
+                        bottomSheetState.hide()
+                        showDelete = false
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -118,7 +162,7 @@ fun ProfileMenuItems() {
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 35.dp),
-        verticalArrangement = Arrangement.spacedBy(30.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         ProfileMenuItem(
             label = "Username",
@@ -139,15 +183,6 @@ fun ProfileMenuItems() {
             label = "Sign Out",
             value = null
         )
-
-        Column {
-            Text(
-                text = "Delete Account",
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color(0xFFFB5C5C)
-            )
-        }
     }
 }
 

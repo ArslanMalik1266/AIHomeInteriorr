@@ -6,6 +6,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -26,14 +28,20 @@ import homeinterior.composeapp.generated.resources.Res
 import homeinterior.composeapp.generated.resources.sofa
 import homeinterior.composeapp.generated.resources.sofa_2
 import homeinterior.composeapp.generated.resources.sofa_3
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FilesScreen(onImageClick: () -> Unit) {
-    var selectedTabIndex by remember { mutableStateOf(0) }
     val tabs = listOf("Recent", "Drafts")
-
+    val pagerState = rememberPagerState(pageCount = { tabs.size })
+    var selectedTabIndex = remember {
+        derivedStateOf {
+            pagerState.currentPage
+        }
+    }
+    val scope = rememberCoroutineScope()
     Scaffold(
         topBar = {
             Column(
@@ -46,7 +54,7 @@ fun FilesScreen(onImageClick: () -> Unit) {
 
                 Text(
                     text = "Files",
-                    fontSize = 22.sp,
+                    fontSize = 20.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = Color(0xFF2C2C2C)
                 )
@@ -54,13 +62,13 @@ fun FilesScreen(onImageClick: () -> Unit) {
                 Spacer(modifier = Modifier.height(24.dp))
 
                 TabRow(
-                    selectedTabIndex = selectedTabIndex,
+                    selectedTabIndex = selectedTabIndex.value,
                     containerColor = Color.White,
                     contentColor = Color(0xFF2C2C2C),
                     indicator = { tabPositions ->
                         Box(
                             modifier = Modifier
-                                .tabIndicatorOffset(tabPositions[selectedTabIndex])
+                                .tabIndicatorOffset(tabPositions[selectedTabIndex.value])
                                 .height(2.dp)
                                 .background(
                                     color = Color(0xFF99AD76),
@@ -77,14 +85,18 @@ fun FilesScreen(onImageClick: () -> Unit) {
                 ) {
                     tabs.forEachIndexed { index, title ->
                         Tab(
-                            selected = selectedTabIndex == index,
-                            onClick = { selectedTabIndex = index },
+                            selected = selectedTabIndex.value == index,
+                            onClick = {
+                                scope.launch {
+                                    pagerState.animateScrollToPage(index)
+                                }
+                            },
                             text = {
                                 Text(
                                     text = title,
                                     fontSize = 15.sp,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = if (selectedTabIndex == index) Color(0xFF2C2C2C) else Color(0xFF959595)
+                                    color = if (selectedTabIndex.value == index) Color(0xFF2C2C2C) else Color(0xFF959595)
                                 )
                             }
                         )
@@ -94,17 +106,16 @@ fun FilesScreen(onImageClick: () -> Unit) {
         },
         containerColor = Color.White
     ) { paddingValues ->
-        Box(
+        HorizontalPager(
+            state = pagerState,
+
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-        ) {
-            if (selectedTabIndex == 0) {
-                RecentContent()
-            } else {
-                DraftsContent() {
-                    onImageClick()
-                }
+        ) { page ->
+            when (page) {
+                0 -> RecentContent()
+                1 -> DraftsContent { onImageClick() }
             }
         }
     }

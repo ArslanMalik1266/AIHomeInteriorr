@@ -1,6 +1,8 @@
 package org.yourappdev.homeinterior.ui.Generate
 
 
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -9,6 +11,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -57,6 +61,13 @@ fun StyleSelectionScreen() {
         InteriorStyle("Urban Modern", Res.drawable.sofa_2, 10),
         InteriorStyle("Rustic Modern", Res.drawable.sofa_3, 11),
     )
+    val listState = rememberLazyGridState()
+    val isLastItemVisible by remember {
+        derivedStateOf {
+            val lastVisibleItem = listState.layoutInfo.visibleItemsInfo.lastOrNull()
+            lastVisibleItem?.index == interiorStyles.size - 1
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -73,23 +84,47 @@ fun StyleSelectionScreen() {
             Spacer(modifier = Modifier.height(16.dp))
 
             LazyVerticalGrid(
+                state = listState,
                 columns = GridCells.Fixed(2),
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
                     .padding(horizontal = 24.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
                 contentPadding = PaddingValues(bottom = 100.dp)
             ) {
                 items(interiorStyles) { style ->
                     StyleCard(
                         style = style,
                         isSelected = style.id == selectedStyleId,
-                        onClick = { selectedStyleId = style.id }
+                        onClick = { selectedStyleId = style.id },
                     )
                 }
             }
+        }
+        androidx.compose.animation.AnimatedVisibility(
+            visible = !isLastItemVisible,
+            enter = fadeIn(),
+            exit = fadeOut(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(300.dp)
+                .align(Alignment.BottomCenter)
+        ) {
+            Box(
+                modifier = Modifier
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color(0x00FFFFFF),
+                                Color(0xF5FFFFFF)
+                            ),
+                            startY = 0f,
+                            endY = 900f
+                        )
+                    )
+            )
         }
     }
 }
@@ -157,8 +192,7 @@ private fun StyleCard(
 ) {
     Box(
         modifier = Modifier
-            .width(188.dp)
-            .height(175.dp)
+            .aspectRatio(1f)
             .clip(RoundedCornerShape(11.dp))
             .border(
                 width = if (isSelected) 3.dp else 1.dp,

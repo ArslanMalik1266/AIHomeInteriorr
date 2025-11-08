@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 fun ProgressIndicator(
     currentStep: Int,
     totalSteps: Int,
+    selectedColor: Color = Color(0xFF81C784),
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -50,7 +51,7 @@ fun ProgressIndicator(
             // Animate color
             val color by animateColorAsState(
                 targetValue = if (isSelected)
-                    Color(0xFF81C784)
+                    selectedColor
                 else
                     Color(0xFF787878).copy(alpha = 0.48f),
                 animationSpec = tween(durationMillis = 300)

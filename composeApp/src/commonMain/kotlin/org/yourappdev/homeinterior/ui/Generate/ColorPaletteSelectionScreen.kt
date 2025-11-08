@@ -1,12 +1,15 @@
 package org.yourappdev.homeinterior.ui.Generate
 
 
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -34,7 +37,7 @@ data class ColorPalette(
 @Composable
 fun ColorPaletteSelectionScreen() {
     var selectedPaletteId by remember { mutableStateOf(0) }
-
+    val listState = rememberLazyListState()
     val colorPalettes = listOf(
         ColorPalette(
             colors = listOf(
@@ -117,6 +120,12 @@ fun ColorPaletteSelectionScreen() {
             id = 7
         )
     )
+    val isLastItemVisible by remember {
+        derivedStateOf {
+            val lastVisibleItem = listState.layoutInfo.visibleItemsInfo.lastOrNull()
+            lastVisibleItem?.index == colorPalettes.size - 1
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -127,7 +136,7 @@ fun ColorPaletteSelectionScreen() {
             modifier = Modifier.fillMaxSize()
         ) {
 
-            HeaderWithSearch("Color Pallet")
+            HeaderWithSearch("Color Pallete")
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -135,9 +144,10 @@ fun ColorPaletteSelectionScreen() {
                 modifier = Modifier.weight(1f)
             ) {
                 LazyColumn(
+                    state = listState,
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 0.dp),
-                    verticalArrangement = Arrangement.spacedBy(24.dp)
+                    contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 90.dp),
+                    verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
                     items(colorPalettes.size) { index ->
                         ColorPaletteRow(
@@ -147,33 +157,36 @@ fun ColorPaletteSelectionScreen() {
                         )
                     }
 
-                    item {
-                        Spacer(modifier = Modifier.height(200.dp))
-                    }
                 }
 
-                Box(
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = !isLastItemVisible,
+                    enter = fadeIn(),
+                    exit = fadeOut(),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(311.dp)
+                        .height(280.dp)
                         .align(Alignment.BottomCenter)
-                        .background(
-                            brush = Brush.verticalGradient(
-                                colors = listOf(
-                                    Color(0x00FFFFFF),
-                                    Color(0xF5FFFFFF)
-                                ),
-                                startY = 0f,
-                                endY = 900f
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                brush = Brush.verticalGradient(
+                                    colors = listOf(
+                                        Color(0x00FFFFFF),
+                                        Color(0xF5FFFFFF)
+                                    ),
+                                    startY = 0f,
+                                    endY = 900f
+                                )
                             )
-                        )
-                )
+                    )
+                }
             }
         }
 
     }
 }
-
 
 
 @Composable
@@ -185,7 +198,6 @@ private fun ColorPaletteRow(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(100.dp)
             .clip(RoundedCornerShape(9.dp))
             .background(Color.White)
             .border(
@@ -199,7 +211,7 @@ private fun ColorPaletteRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 38.dp),
+                .padding(horizontal = 38.dp, vertical = 15.dp),
             horizontalArrangement = Arrangement.spacedBy(22.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {

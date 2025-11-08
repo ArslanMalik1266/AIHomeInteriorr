@@ -18,6 +18,7 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -27,6 +28,8 @@ import homeinterior.composeapp.generated.resources.coin
 import homeinterior.composeapp.generated.resources.coins
 import homeinterior.composeapp.generated.resources.ic_coins
 import homeinterior.composeapp.generated.resources.ic_restore
+import homeinterior.composeapp.generated.resources.keyboard_arrow_down_24px
+import homeinterior.composeapp.generated.resources.keyboard_arrow_up_24px
 import homeinterior.composeapp.generated.resources.settingback
 import org.jetbrains.compose.resources.painterResource
 
@@ -47,11 +50,10 @@ fun AccountScreen(
                 .fillMaxWidth()
                 .padding(start = 24.dp, bottom = 16.dp, top = 10.dp, end = 20.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = "Account",
-                fontSize = 22.sp,
+                fontSize = 20.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = Color(0xFF2C2C2C)
             )
@@ -249,11 +251,20 @@ fun NotificationsToggle() {
             checked = isEnabled,
             onCheckedChange = { isEnabled = it },
             modifier = Modifier.scale(0.8f),
+            thumbContent = {
+                Box(
+                    modifier = Modifier
+                        .size(24.dp)
+                        .background(Color.White, CircleShape)
+                )
+            },
             colors = SwitchDefaults.colors(
                 checkedThumbColor = Color.White,
                 checkedTrackColor = Color(0xFFA3B18A),
                 uncheckedThumbColor = Color.White,
-                uncheckedTrackColor = Color(0xFFE0E0E0)
+                uncheckedTrackColor = Color(0xFFE0E0E0),
+                uncheckedBorderColor = Color.Transparent,
+                checkedBorderColor = Color.Transparent
             )
         )
     }
@@ -261,6 +272,15 @@ fun NotificationsToggle() {
 
 @Composable
 fun ModelsSection() {
+    var selectedModel by remember { mutableStateOf("DesignNet" to "Basic") }
+    var isExpanded by remember { mutableStateOf(false) }
+    val models = listOf(
+        "DesignNet" to "Basic",
+        "RoomGen" to "Advance",
+        "InteriorMind" to "Advance",
+        "DecoraAI" to "Advance",
+        "SpaceSense" to "Advance"
+    )
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -270,7 +290,8 @@ fun ModelsSection() {
             text = "Models",
             fontSize = 15.sp,
             fontWeight = FontWeight.Medium,
-            color = Color(0xFF4D4D4D)
+            color = Color(0xFF4D4D4D), lineHeight = 18.sp
+
         )
 
         Text(
@@ -278,42 +299,123 @@ fun ModelsSection() {
             fontSize = 12.sp,
             fontWeight = FontWeight.Normal,
             color = Color(0xFFB1B0B0),
-            letterSpacing = 0.sp
+            letterSpacing = 0.sp, lineHeight = 16.sp
+
         )
 
-        Spacer(modifier = Modifier.height(5.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(10.dp))
                 .border(1.dp, Color(0xFFEAEAEA), RoundedCornerShape(10.dp))
                 .background(Color.White)
-                .padding(horizontal = 16.dp, vertical = 10.dp)
         ) {
+            // Selected Model Row
             Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { isExpanded = !isExpanded }
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(
-                    text = "DesignNet",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF7A7A7A)
-                )
-
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(6.dp))
-                        .background(Color(0xFFE3FFD4))
-                        .padding(horizontal = 8.dp, vertical = 0.dp)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Text(
-                        text = "Basic",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Normal,
-                        color = Color(0xFF3C5809)
+                        text = selectedModel.first,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF7A7A7A)
                     )
+
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(
+                                Color(0xFFE3FFD4)
+                            )
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = selectedModel.second,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Normal,
+                            color = Color(0xFF3C5809),
+                            lineHeight = 16.sp
+                        )
+                    }
+                }
+
+                Image(
+                    painter = painterResource(
+                        if (isExpanded)
+                            Res.drawable.keyboard_arrow_up_24px
+                        else
+                            Res.drawable.keyboard_arrow_down_24px
+                    ),
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    colorFilter = ColorFilter.tint(Color(0xFF7A7A7A))
+                )
+            }
+
+            // Expanded Options
+            androidx.compose.animation.AnimatedVisibility(
+                visible = isExpanded,
+                enter = androidx.compose.animation.expandVertically() + androidx.compose.animation.fadeIn(),
+                exit = androidx.compose.animation.shrinkVertically() + androidx.compose.animation.fadeOut()
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp)
+                ) {
+                    HorizontalDivider(
+                        thickness = 1.dp,
+                        color = Color(0xFFEAEAEA)
+                    )
+
+                    models.forEach { model ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    selectedModel = model
+                                    isExpanded = false
+                                }
+                                .padding(horizontal = 16.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Text(
+                                text = model.first,
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFF7A7A7A)
+                            )
+
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(
+                                        Color(0xFFE3FFD4)
+                                    )
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = model.second,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Normal,
+                                    color = Color(0xFF3C5809),
+                                    lineHeight = 16.sp
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -341,10 +443,10 @@ fun AppInfoSection() {
                 .clip(RoundedCornerShape(10.dp))
                 .border(1.dp, Color(0xFFEAEAEA), RoundedCornerShape(10.dp))
                 .background(Color.White)
-                .padding(24.dp)
+                .padding(horizontal = 10.dp, vertical = 5.dp)
         ) {
             Column(
-                verticalArrangement = Arrangement.spacedBy(15.dp)
+
             ) {
                 AppInfoItem("Contact Support")
                 AppInfoItem("Help Centre")
@@ -360,18 +462,23 @@ fun AppInfoSection() {
 @Composable
 fun AppInfoItem(text: String, showDivider: Boolean = true) {
     Column {
-        Text(
-            text = text,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium,
-            color = Color(0xFF4D4D4D)
-        )
+        Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).clickable {
+
+        }) {
+            Text(
+                text = text,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color(0xFF4D4D4D),
+                modifier = Modifier.padding(vertical = 15.dp, horizontal = 10.dp)
+            )
+        }
 
         if (showDivider) {
-            Spacer(modifier = Modifier.height(12.dp))
             Divider(
                 color = Color(0xFFE4E4E4),
-                thickness = 0.5.dp
+                thickness = 0.5.dp,
+                modifier = Modifier.padding(horizontal = 8.dp)
             )
         }
     }

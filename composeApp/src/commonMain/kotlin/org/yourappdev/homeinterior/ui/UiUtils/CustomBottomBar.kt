@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
@@ -123,7 +124,7 @@ fun SlippyBottomBar(
     }
 
     val barPadding = remember {
-        PaddingValues(top = 6.4.dp, bottom = 0.dp)
+        PaddingValues(top = 12.dp, bottom = 6.dp)
     }
 
     val animateIconColor: @Composable (Int) -> State<Color> = { index ->
@@ -143,7 +144,10 @@ fun SlippyBottomBar(
 
     Row(
         modifier = modifier
-            .background(color = bar.barStyle?.backgroundColor ?: Color.White)
+            .background(
+                color = bar.barStyle?.backgroundColor ?: Color.White,
+                RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
+            )
             .fillMaxWidth()
             .height(intrinsicSize = IntrinsicSize.Max),
         horizontalArrangement = Arrangement.SpaceAround,
@@ -223,7 +227,6 @@ fun SlippyBottomBar(
                     )
 
                     Text(
-                        modifier = Modifier.padding(top = 4.dp),
                         text = page.name,
                         maxLines = 1,
                         textAlign = TextAlign.Center,

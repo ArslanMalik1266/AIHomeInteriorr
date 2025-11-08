@@ -1,7 +1,10 @@
 package org.yourappdev.homeinterior.ui.Explore
 
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -41,18 +44,27 @@ import homeinterior.composeapp.generated.resources.sofa
 import homeinterior.composeapp.generated.resources.sofa_2
 import homeinterior.composeapp.generated.resources.sofa_3
 import org.jetbrains.compose.resources.DrawableResource
+import org.yourappdev.homeinterior.ui.theme.buttonBack
 import org.yourappdev.homeinterior.ui.theme.chipColor
 import org.yourappdev.homeinterior.ui.theme.fieldBack
 import org.yourappdev.homeinterior.ui.theme.selectedNavItem
+
+data class ColorPaletteChip(
+    val name: String,
+    val colors: List<Color>
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExploreScreen(onFilterClick: () -> Unit) {
     var filterCount by remember { mutableStateOf(0) }
 
+
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
     )
+    var selectedRoomTypes by remember { mutableStateOf<Set<String>>(emptySet()) }
+    var selectedStyles by remember { mutableStateOf<Set<String>>(emptySet()) }
     val roomTypes = listOf("Bedroom", "Dining Room", "Bathroom", "Kitchen", "Lounge")
     val styles = listOf("Modern", "Minimal", "Classic", "Vintage", "Modern", "Lux")
     val colors = listOf(
@@ -85,20 +97,20 @@ fun ExploreScreen(onFilterClick: () -> Unit) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(start = 24.dp, top = 10.dp),
+                .padding(top = 10.dp),
             verticalArrangement = Arrangement.spacedBy(0.dp)
         ) {
             stickyHeader {
                 Column(modifier = Modifier.fillMaxWidth().background(Color.White)) {
                     Text(
                         text = "Explore",
-                        fontSize = 22.sp,
+                        fontSize = 20.sp,
                         fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.padding(bottom = 16.dp)
+                        modifier = Modifier.padding(start = 24.dp, bottom = 16.dp)
                     )
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        modifier = Modifier.padding(end = 24.dp, bottom = 4.dp)
+                        modifier = Modifier.padding(start = 24.dp, end = 24.dp, bottom = 4.dp)
                     ) {
                         BasicTextField(
                             value = text.value,
@@ -118,13 +130,7 @@ fun ExploreScreen(onFilterClick: () -> Unit) {
                             TextFieldDefaults.DecorationBox(
                                 value = text.value,
                                 innerTextField = innerTextField,
-                                placeholder = { Text("Search") },
-                                leadingIcon = {
-                                    Image(
-                                        painter = painterResource(Res.drawable.search),
-                                        contentDescription = null
-                                    )
-                                },
+                                placeholder = { Text("Search here...") },
                                 singleLine = true,
                                 enabled = true,
                                 interactionSource = remember { MutableInteractionSource() },
@@ -134,7 +140,7 @@ fun ExploreScreen(onFilterClick: () -> Unit) {
                                     unfocusedIndicatorColor = Color.Transparent,
                                     focusedIndicatorColor = Color.Transparent
                                 ),
-                                contentPadding = PaddingValues(horizontal = 0.dp, vertical = 0.dp),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
                                 visualTransformation = VisualTransformation.None
                             )
                         }
@@ -187,7 +193,7 @@ fun ExploreScreen(onFilterClick: () -> Unit) {
                     text = "Type of Room",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(bottom = 3.dp),
+                    modifier = Modifier.padding(start = 24.dp, bottom = 3.dp),
                     letterSpacing = 0.sp
                 )
             }
@@ -195,25 +201,29 @@ fun ExploreScreen(onFilterClick: () -> Unit) {
             item {
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(start = 22.dp, end = 10.dp),
                     modifier = Modifier.padding(bottom = 16.dp)
                 ) {
                     items(roomTypes) { room ->
                         FilterChip(
-                            selected = false,
-                            onClick = onFilterClick,
+                            selected = selectedRoomTypes.contains(room),
+                            onClick = {
+                                selectedRoomTypes = if (selectedRoomTypes.contains(room)) {
+                                    selectedRoomTypes - room
+                                } else {
+                                    selectedRoomTypes + room
+                                }
+                            },
                             label = { Text(room, fontSize = 15.sp, fontWeight = FontWeight.Medium) },
                             shape = RoundedCornerShape(50),
                             colors = FilterChipDefaults.filterChipColors(
                                 containerColor = chipColor,
-                                selectedContainerColor = selectedNavItem,
+                                selectedContainerColor = buttonBack,
                                 selectedLabelColor = Color.White,
                                 labelColor = Color.Black
                             ),
                             border = null
                         )
-                    }
-                    item {
-                        Spacer(modifier = Modifier.width(4.dp))
                     }
                 }
             }
@@ -227,7 +237,7 @@ fun ExploreScreen(onFilterClick: () -> Unit) {
                     text = "Style",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(bottom = 3.dp),
+                    modifier = Modifier.padding(start = 24.dp, bottom = 3.dp),
                     letterSpacing = 0.sp
                 )
             }
@@ -235,17 +245,24 @@ fun ExploreScreen(onFilterClick: () -> Unit) {
             item {
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(start = 22.dp, end = 10.dp),
                     modifier = Modifier.padding(bottom = 16.dp)
                 ) {
                     items(styles) { style ->
                         FilterChip(
-                            selected = false,
-                            onClick = onFilterClick,
+                            selected = selectedStyles.contains(style),
+                            onClick = {
+                                selectedStyles = if (selectedStyles.contains(style)) {
+                                    selectedStyles - style
+                                } else {
+                                    selectedStyles + style
+                                }
+                            },
                             label = { Text(style, fontSize = 15.sp, fontWeight = FontWeight.Medium) },
                             shape = RoundedCornerShape(50),
                             colors = FilterChipDefaults.filterChipColors(
                                 containerColor = chipColor,
-                                selectedContainerColor = selectedNavItem,
+                                selectedContainerColor = buttonBack,
                                 selectedLabelColor = Color.White,
                                 labelColor = Color.Black
                             ),
@@ -264,8 +281,12 @@ fun ExploreScreen(onFilterClick: () -> Unit) {
                     text = "Colour",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(bottom = 8.dp)
+                    modifier = Modifier.padding(start = 24.dp, bottom = 8.dp)
                 )
+            }
+
+            item {
+                ColorPaletteChipsRow()
             }
 
             item {
@@ -291,13 +312,13 @@ fun ExploreScreen(onFilterClick: () -> Unit) {
                         if (filters.selectedStyles.isNotEmpty() && !filters.selectedStyles.contains("All")) {
                             filterCount++
                         }
-                        if (filters.selectedColor != null) {
+                        if (filters.selectedColors.isNotEmpty() && !filters.selectedStyles.contains("All")) {
                             filterCount++
                         }
                         if (filters.selectedFormats.isNotEmpty() && !filters.selectedFormats.contains("All")) {
                             filterCount++
                         }
-                        if (filters.selectedPrice != "Free") {
+                        if (filters.selectedPrices.isNotEmpty()) {
                             filterCount++
                         }
 
@@ -319,6 +340,7 @@ fun StaggeredImageGallery(images: List<DrawableResource>, colors: List<Color>) {
         rows = StaggeredGridCells.Fixed(2),
         horizontalItemSpacing = 8.dp,
         verticalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = PaddingValues(start = 20.dp, end = 10.dp),
         modifier = Modifier.height(200.dp)
     ) {
         items(images) { imageRes ->
@@ -355,6 +377,127 @@ fun ImageCard(imageRes: DrawableResource, height: Dp, colors: List<Color>) {
 
 
 @Composable
+fun ColorPaletteChipsRow() {
+    var expandedChips by remember { mutableStateOf<Set<String>>(emptySet()) }
+
+    val palettes = listOf(
+        ColorPaletteChip(
+            "Golden Dawn",
+            listOf(
+                Color(0xFF8B6914),
+                Color(0xFFC4A747),
+                Color(0xFFD4B95A),
+                Color(0xFFE8D99F),
+                Color(0xFFF5EDD3)
+            )
+        ),
+        ColorPaletteChip(
+            "Forest Whisper",
+            listOf(
+                Color(0xFF2C5F2D),
+                Color(0xFF4A7C59),
+                Color(0xFF6B9B6E),
+                Color(0xFF97C4A0),
+                Color(0xFFBFDFC2)
+            )
+        ),
+        ColorPaletteChip(
+            "Silver Storm",
+            listOf(
+                Color(0xFF4A5568),
+                Color(0xFF718096),
+                Color(0xFF8B95A5),
+                Color(0xFFB4BECF),
+                Color(0xFFD1D9E6)
+            )
+        ),
+        ColorPaletteChip(
+            "Violet Dream",
+            listOf(
+                Color(0xFF6B46C1),
+                Color(0xFF9F7AEA),
+                Color(0xFFB794F6),
+                Color(0xFFD6BCFA),
+                Color(0xFFE9D8FD)
+            )
+        )
+    )
+
+    LazyRow(
+        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        contentPadding = PaddingValues(horizontal = 20.dp)
+    ) {
+        items(palettes) { palette ->
+            ColorPaletteChipItem(
+                palette = palette,
+                isExpanded = expandedChips.contains(palette.name),
+                onClick = {
+                    expandedChips = if (expandedChips.contains(palette.name)) {
+                        expandedChips - palette.name
+                    } else {
+                        expandedChips + palette.name
+                    }
+                }
+            )
+        }
+    }
+}
+
+@Composable
+fun ColorPaletteChipItem(
+    palette: ColorPaletteChip,
+    isExpanded: Boolean,
+    onClick: () -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .wrapContentWidth()
+            .height(40.dp),
+        shape = RoundedCornerShape(20.dp),
+        color = if (isExpanded) Color.White else chipColor,
+        border = BorderStroke(1.dp, if (!isExpanded) chipColor else Color(0xffA3B18A)),
+        onClick = onClick
+    ) {
+        Row(
+            modifier = Modifier
+                .wrapContentWidth()
+                .padding(horizontal = 12.dp, vertical = 2.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = palette.name,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color.Black,
+                maxLines = 1,
+            )
+
+
+            androidx.compose.animation.AnimatedVisibility(
+                visible = isExpanded,
+                enter = androidx.compose.animation.expandHorizontally() + androidx.compose.animation.fadeIn(),
+                exit = androidx.compose.animation.shrinkHorizontally() + androidx.compose.animation.fadeOut()
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy((-8).dp),
+                    modifier = Modifier.padding(start = 6.dp)
+                ) {
+                    palette.colors.forEach { color ->
+                        Box(
+                            modifier = Modifier
+                                .size(20.dp)
+                                .clip(CircleShape)
+                                .background(color)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 fun OverlappingColorRow(modifier: Modifier = Modifier, colors: List<Color>) {
     Box(
         modifier = modifier
@@ -379,6 +522,7 @@ fun OverlappingColorRow(modifier: Modifier = Modifier, colors: List<Color>) {
 fun SpecificGridRow(images: List<DrawableResource>) {
     LazyRow(
         modifier = Modifier.padding(bottom = 24.dp),
+        contentPadding = PaddingValues(start = 24.dp, end = 10.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         items(images.chunked(3)) { group ->

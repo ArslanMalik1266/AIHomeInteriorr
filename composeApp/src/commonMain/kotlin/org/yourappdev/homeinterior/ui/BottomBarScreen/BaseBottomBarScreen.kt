@@ -26,6 +26,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.innerShadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.shadow.Shadow
@@ -35,8 +36,10 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.NavDisplay
 import homeinterior.composeapp.generated.resources.Res
+import homeinterior.composeapp.generated.resources.add
 import homeinterior.composeapp.generated.resources.add_2_24px
 import homeinterior.composeapp.generated.resources.createiconfinal
+import homeinterior.composeapp.generated.resources.files
 import homeinterior.composeapp.generated.resources.iconfiles
 import homeinterior.composeapp.generated.resources.newexploreicon
 import homeinterior.composeapp.generated.resources.profileiconnew
@@ -109,7 +112,7 @@ fun BaseBottomBarScreen() {
                     ),
                     SlippyTab(
                         name = stringResource(Res.string.tabThreeFiles),
-                        icon = painterResource(Res.drawable.iconfiles),
+                        icon = painterResource(Res.drawable.files),
                         selectedIcon = painterResource(Res.drawable.selectedfile),
                         action = {
                             backStack.add(Routes.Files)
@@ -148,25 +151,31 @@ fun BaseBottomBarScreen() {
             if (shouldShowBottomBar) {
                 Box(
                     modifier = Modifier.offset(y = 50.dp).background(bottomBarBack, CircleShape).size(65.dp)
-
-
                 ) {
-
                     FloatingActionButton(
                         onClick = {
                             backStack.add(Routes.AddScreen)
                         },
-                        containerColor = Color(0xFF90EE90),
+                        containerColor = Color(0xFFD4F7BD),
                         elevation = FloatingActionButtonDefaults.elevation(
                             defaultElevation = 0.dp
-                        ), modifier = Modifier.size(60.dp).align(Alignment.Center)
-                            , shape = CircleShape
+                        ), modifier = Modifier.size(60.dp).align(Alignment.Center), shape = CircleShape
                     ) {
-                        Image(
-                            painterResource(Res.drawable.add_2_24px),
-                            contentDescription = "Add",
-                            colorFilter = ColorFilter.tint(color = Color.Black),
-                        )
+                        Box(
+                            modifier = Modifier.fillMaxSize().innerShadow(
+                                shape = CircleShape,
+                                shadow = Shadow(
+                                    radius = 7.dp,
+                                    color = Color.Black.copy(alpha = 0.2f),
+                                )
+                            ), contentAlignment = Alignment.Center
+                        ) {
+                            Image(
+                                painterResource(Res.drawable.add),
+                                contentDescription = "Add",
+                                colorFilter = ColorFilter.tint(color = Color.Black),
+                            )
+                        }
                     }
                 }
             }

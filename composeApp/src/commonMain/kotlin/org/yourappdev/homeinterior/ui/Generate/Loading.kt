@@ -42,69 +42,68 @@ fun LoadingScreen() {
         label = "rotation"
     )
 
-    Dialog(onDismissRequest = {
 
-    }) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize(),
-            contentAlignment = Alignment.Center
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White.copy(alpha = 0.8f)),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+            Box(
+                modifier = Modifier.size(226.dp),
+                contentAlignment = Alignment.Center
             ) {
-                Box(
-                    modifier = Modifier.size(226.dp),
-                    contentAlignment = Alignment.Center
+                Canvas(
+                    modifier = Modifier.size(174.dp)
                 ) {
-                    Canvas(
-                        modifier = Modifier.size(174.dp)
-                    ) {
-                        rotate(rotation) {
-                            val gradientColors = listOf(
-                                Color(0xFFF059EB),
-                                Color(0xFFFFCF30),
-                                Color(0xFFA9D35D)
-                            )
+                    rotate(rotation) {
+                        val gradientColors = listOf(
+                            Color(0xFFF059EB),
+                            Color(0xFFFFCF30),
+                            Color(0xFFA9D35D)
+                        )
 
-                            drawArc(
-                                brush = Brush.sweepGradient(
-                                    colors = gradientColors,
-                                    center = center
-                                ),
-                                startAngle = 0f,
-                                sweepAngle = 360f,
-                                useCenter = false,
-                                style = Stroke(width = 7.5f, cap = StrokeCap.Round)
-                            )
-                        }
-                    }
-
-                    Canvas(
-                        modifier = Modifier.size(120.dp)
-                    ) {
-                        drawCircle(
-                            color = Color.White,
-                            radius = size.minDimension / 2
+                        drawArc(
+                            brush = Brush.sweepGradient(
+                                colors = gradientColors,
+                                center = center
+                            ),
+                            startAngle = 0f,
+                            sweepAngle = 360f,
+                            useCenter = false,
+                            style = Stroke(width = 7.5f, cap = StrokeCap.Round)
                         )
                     }
-
-                    SparkleIcon()
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Canvas(
+                    modifier = Modifier.size(120.dp)
+                ) {
+                    drawCircle(
+                        color = Color.White,
+                        radius = size.minDimension / 2
+                    )
+                }
 
-                Text(
-                    text = "Processing your image...",
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF575958)
-                )
+                SparkleIcon()
             }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(
+                text = "Processing your image...",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF575958)
+            )
         }
     }
 }
+
 
 @Composable
 fun SparkleIcon() {

@@ -40,6 +40,7 @@ import homeinterior.composeapp.generated.resources.close
 import homeinterior.composeapp.generated.resources.subscardback
 import homeinterior.composeapp.generated.resources.subscriptionbackgroun
 import org.jetbrains.compose.resources.painterResource
+import org.yourappdev.homeinterior.ui.UiUtils.ProgressIndicator
 import kotlin.math.absoluteValue
 
 data class SubscriptionPlan(
@@ -228,44 +229,12 @@ fun SubscriptionScreen(onBackClick: () -> Unit) {
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                repeat(subscriptionPlans.size) { index ->
-                    val isSelected = pagerState.currentPage == index
-
-                    // Animate width
-                    val width by animateDpAsState(
-                        targetValue = if (isSelected) 33.dp else 9.dp,
-                        animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing)
-                    )
-
-                    // Animate height
-                    val height by animateDpAsState(
-                        targetValue = if (isSelected) 6.dp else 9.dp,
-                        animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing)
-                    )
-
-                    // Animate color
-                    val color by animateColorAsState(
-                        targetValue = if (isSelected)
-                            Color.White.copy(alpha = 0.66f)
-                        else
-                            Color(0xFF787878).copy(alpha = 0.48f),
-                        animationSpec = tween(durationMillis = 300)
-                    )
-
-                    Box(
-                        modifier = Modifier
-                            .padding(horizontal = 3.dp)
-                            .size(width = width, height = height)
-                            .clip(if (isSelected) RoundedCornerShape(3.dp) else CircleShape)
-                            .background(color)
-                    )
-                }
-            }
+            ProgressIndicator(
+                currentStep = pagerState.currentPage,
+                selectedColor = Color.White.copy(alpha = 0.66f),
+                totalSteps = subscriptionPlans.size,
+                modifier = Modifier.fillMaxWidth()
+            )
 
             Spacer(modifier = Modifier.height(40.dp))
 
@@ -350,7 +319,7 @@ fun SubscriptionCard(
                     fontSize = 22.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = Color(0xFF696969),
-                    modifier = Modifier.padding(start = 12.dp)
+                    modifier = Modifier.padding(start = 18.dp)
                 )
                 Box(
                     modifier = Modifier

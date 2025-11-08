@@ -37,7 +37,7 @@ import org.yourappdev.homeinterior.ui.theme.AppTypography
 @Preview
 fun App() {
 
-    val backStack = remember { mutableStateListOf<Any>(Routes.BaseAppScreen) }
+    val backStack = remember { mutableStateListOf<Any>(Routes.OnBoarding) }
     MaterialTheme(typography = AppTypography()) {
 
         NavDisplay(

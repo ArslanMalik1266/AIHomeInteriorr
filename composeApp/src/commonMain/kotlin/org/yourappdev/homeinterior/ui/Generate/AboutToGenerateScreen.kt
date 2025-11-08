@@ -35,9 +35,10 @@ import homeinterior.composeapp.generated.resources.premiumicon
 import homeinterior.composeapp.generated.resources.sofa
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.painterResource
+import org.yourappdev.homeinterior.ui.UiUtils.CloseIconButton
 
 @Composable
-fun AboutToGenerateScreen(onCloseClick: () -> Unit,onResult: () -> Unit) {
+fun AboutToGenerateScreen(onCloseClick: () -> Unit, onResult: () -> Unit) {
     val backgroundColor = Color(0xFFFFFFFF)
     val borderColor = Color(0xFFD7D6D6)
     val selectedBorderColor = Color(0xFFACBE8D)
@@ -57,16 +58,13 @@ fun AboutToGenerateScreen(onCloseClick: () -> Unit,onResult: () -> Unit) {
             .fillMaxSize()
             .background(backgroundColor)
     ) {
-        if (showLoader) {
-            LoadingScreen()
-        }
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .statusBarsPadding()
         ) {
             TopBar() {
-
+                onCloseClick()
             }
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -88,7 +86,7 @@ fun AboutToGenerateScreen(onCloseClick: () -> Unit,onResult: () -> Unit) {
                     .padding(horizontal = 24.dp)
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             SelectionCard(
                 label = "Style",
@@ -99,7 +97,7 @@ fun AboutToGenerateScreen(onCloseClick: () -> Unit,onResult: () -> Unit) {
                     .padding(horizontal = 24.dp)
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             ColorPaletteCard(
                 borderColor = borderColor,
@@ -121,6 +119,9 @@ fun AboutToGenerateScreen(onCloseClick: () -> Unit,onResult: () -> Unit) {
 
             Spacer(modifier = Modifier.height(24.dp))
         }
+        if (showLoader) {
+            LoadingScreen()
+        }
     }
 }
 
@@ -129,26 +130,19 @@ fun TopBar(onCloseClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 16.dp),
+            .padding(horizontal = 18.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Start
     ) {
-        Box(modifier = Modifier.clip(CircleShape).clickable {
+        CloseIconButton(tint = Color(0xFFB2B0B0)) {
             onCloseClick()
-        }, contentAlignment = Alignment.Center) {
-            Image(
-                painter = painterResource(Res.drawable.close),
-                contentDescription = "back",
-                modifier = Modifier.size(24.dp),
-                colorFilter = ColorFilter.tint(Color(0xFFB2B0B0))
-            )
         }
 
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier.width(8.dp))
 
         Text(
             text = "Create",
-            fontSize = 22.sp,
+            fontSize = 20.sp,
             fontWeight = FontWeight.SemiBold,
             color = Color(0xFF2C2C2C)
         )
@@ -193,7 +187,7 @@ private fun SelectionCard(
                 shape = RoundedCornerShape(9.dp)
             )
             .background(backgroundColor)
-            .padding(horizontal = 16.dp, vertical = 15.dp)
+            .padding(horizontal = 16.dp, vertical = 10.dp)
     ) {
         Column(
             modifier = Modifier.align(Alignment.CenterStart),
@@ -201,18 +195,17 @@ private fun SelectionCard(
         ) {
             Text(
                 text = value,
-                fontSize = 16.sp,
+                fontSize = 15.sp,
                 fontWeight = FontWeight.Medium,
-                color = mediumText
+                color = mediumText,
+                lineHeight = 20.sp
             )
-
-            Spacer(modifier = Modifier.height(2.dp))
-
             Text(
                 text = label,
-                fontSize = 14.sp,
+                fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = grayText
+                color = grayText,
+                lineHeight = 20.sp
             )
         }
 
@@ -251,7 +244,7 @@ private fun ColorPaletteCard(
                 shape = RoundedCornerShape(9.dp)
             )
             .background(backgroundColor)
-            .padding(horizontal = 16.dp, vertical = 15.dp)
+            .padding(horizontal = 16.dp, vertical = 10.dp)
     ) {
         Column(
             modifier = Modifier.align(Alignment.CenterStart),
@@ -285,7 +278,7 @@ private fun ColorPaletteCard(
 
             Text(
                 text = "Colour Pallete",
-                fontSize = 18.sp,
+                fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = lightGrayText
             )

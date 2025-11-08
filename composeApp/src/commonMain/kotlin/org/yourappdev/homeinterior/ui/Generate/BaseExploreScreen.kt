@@ -33,6 +33,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,6 +51,7 @@ import homeinterior.composeapp.generated.resources.sofa
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.yourappdev.homeinterior.ui.Files.ProBadge
+import org.yourappdev.homeinterior.ui.UiUtils.CommonAppButton
 
 @Composable
 fun BaseAddScreen(endToNext: () -> Unit, onCloseClick: () -> Unit = {}) {
@@ -58,47 +60,35 @@ fun BaseAddScreen(endToNext: () -> Unit, onCloseClick: () -> Unit = {}) {
     val currentPage = state.currentPage
     val targetPage = state.targetPage
     val pageOffset = state.currentPageOffsetFraction
+    val gradientColors = remember {
+        listOf(
+            Color(0xFFC5EBB2),
+            Color(0xFFDFF2C2),
+            Color(0xFFC1DFB5),
+            Color(0xFFD2F7BD)
+        )
+    }
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White).statusBarsPadding(),
         bottomBar = {
             Box(modifier = Modifier.fillMaxWidth().offset(y = (-30).dp), contentAlignment = Alignment.Center) {
-                Button(
-                    onClick = {
-                        scope.launch {
-                            if (currentPage < 3) {
-                                state.animateScrollToPage(page = state.currentPage + 1)
-                            } else {
-                                endToNext()
-                            }
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth(0.7f)
-                        .height(56.dp),
-                    shape = RoundedCornerShape(39.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFA3B18A),
-                        contentColor = Color(0xFFF8F8F8)
-                    ),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF96A47D))
+                CommonAppButton(
+                    title = "Next", modifier = Modifier
+                        .fillMaxWidth(0.6f)
                 ) {
-                    Text(
-                        text = "Next",
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    scope.launch {
+                        if (currentPage < 3) {
+                            state.animateScrollToPage(page = state.currentPage + 1)
+                        } else {
+                            endToNext()
+                        }
+                    }
                 }
             }
         }
     ) {
-        val gradientColors = listOf(
-            Color(0xFFC5EBB2),
-            Color(0xFFDFF2C2),
-            Color(0xFFC1DFB5),
-            Color(0xFFD2F7BD)
-        )
 
 
         Column(
@@ -124,7 +114,7 @@ fun BaseAddScreen(endToNext: () -> Unit, onCloseClick: () -> Unit = {}) {
             )
 
             Spacer(modifier = Modifier.height(20.dp))
-            HorizontalPager(state = state) { page ->
+            HorizontalPager(state = state, userScrollEnabled = false) { page ->
                 when (page) {
                     0 -> {
                         FirstPage()
@@ -160,7 +150,7 @@ private fun TopNavigationBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 25.dp, end = 25.dp, top = 15.dp),
+            .padding(start = 20.dp, end = 20.dp, top = 15.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {

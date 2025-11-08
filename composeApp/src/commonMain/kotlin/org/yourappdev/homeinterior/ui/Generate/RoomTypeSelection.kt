@@ -10,11 +10,13 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -39,6 +41,7 @@ import org.yourappdev.homeinterior.ui.theme.fieldBack
 
 @Composable
 fun RoomTypeSelection() {
+    val listState = rememberLazyListState()
     var selectedRoom by remember { mutableStateOf("Bedroom") }
     val roomTypes = listOf(
         "Bedroom",
@@ -69,6 +72,12 @@ fun RoomTypeSelection() {
         "Garage"
     )
 
+    val isLastItemVisible by remember {
+        derivedStateOf {
+            val lastVisibleItem = listState.layoutInfo.visibleItemsInfo.lastOrNull()
+            lastVisibleItem?.index == roomTypes.size - 1
+        }
+    }
     Column(
         modifier = Modifier
             .fillMaxSize().background(Color.White)
@@ -81,8 +90,9 @@ fun RoomTypeSelection() {
             modifier = Modifier.weight(1f)
         ) {
             LazyColumn(
+                state = listState,
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 130.dp)
+                contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 90.dp)
             ) {
                 items(roomTypes) { roomType ->
                     RoomTypeItem(
@@ -99,22 +109,30 @@ fun RoomTypeSelection() {
                     }
                 }
             }
-            Box(
+            androidx.compose.animation.AnimatedVisibility(
+                visible = !isLastItemVisible,
+                enter = fadeIn(),
+                exit = fadeOut(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(311.dp)
                     .align(Alignment.BottomCenter)
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                Color(0x00FFFFFF),
-                                Color(0xF5FFFFFF)
-                            ),
-                            startY = 0f,
-                            endY = 900f
+            ) {
+                Box(
+                    modifier = Modifier
+                        .background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(
+                                    Color(0x00FFFFFF),
+                                    Color(0xF5FFFFFF)
+                                ),
+                                startY = 0f,
+                                endY = 900f
+                            )
                         )
-                    )
-            )
+                )
+            }
+
         }
     }
 
@@ -173,19 +191,16 @@ fun HeaderWithSearch(title: String) {
                     ),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
+                        .border(
+                            width = 1.dp,
+                            color = Color(0xFFE3E3E3),
+                            shape = RoundedCornerShape(8.dp)
+                        ).clip(RoundedCornerShape(8.dp))
                 ) { innerTextField ->
                     TextFieldDefaults.DecorationBox(
                         value = searchText,
                         innerTextField = innerTextField,
-                        placeholder = { Text("Search") },
-                        leadingIcon = {
-                            Image(
-                                painter = painterResource(Res.drawable.search),
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp),
-                                colorFilter = ColorFilter.tint(color = Color(0xFFA0A0A0))
-                            )
-                        },
+                        placeholder = { Text("Search here...") },
                         trailingIcon = {
                             Image(
                                 painter = painterResource(Res.drawable.close),
@@ -206,7 +221,7 @@ fun HeaderWithSearch(title: String) {
                             unfocusedContainerColor = Color.Transparent,
                             focusedContainerColor = Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent,
-                            focusedIndicatorColor = Color.Transparent
+                            focusedIndicatorColor = Color.Transparent,
                         ),
                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
                         visualTransformation = VisualTransformation.None
@@ -249,7 +264,7 @@ private fun RoomTypeItem(
             Text(
                 text = roomName,
                 fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.Medium,
                 color = Color(0xFF414040)
             )
 
