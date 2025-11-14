@@ -239,7 +239,7 @@ private fun RecentFilesSection() {
         ) {
             Text(
                 text = "Recent Files",
-                fontSize = 18.sp,
+                fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = Color.Black,
                 modifier = Modifier.padding(start = 24.dp)

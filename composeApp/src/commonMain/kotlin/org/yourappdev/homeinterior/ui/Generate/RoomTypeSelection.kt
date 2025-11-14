@@ -157,7 +157,7 @@ fun HeaderWithSearch(title: String) {
         ) {
             Text(
                 text = title,
-                fontSize = 21.sp,
+                fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black,
                 modifier = Modifier.padding(end = 16.dp, top = 12.5.dp, bottom = 12.dp)
@@ -200,7 +200,7 @@ fun HeaderWithSearch(title: String) {
                     TextFieldDefaults.DecorationBox(
                         value = searchText,
                         innerTextField = innerTextField,
-                        placeholder = { Text("Search here...") },
+                        placeholder = { Text("Search here...", fontSize = 12.sp, color = Color.Gray) },
                         trailingIcon = {
                             Image(
                                 painter = painterResource(Res.drawable.close),

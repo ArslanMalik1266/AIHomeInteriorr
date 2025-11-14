@@ -53,7 +53,7 @@ fun ProgressIndicator(
                 targetValue = if (isSelected)
                     selectedColor
                 else
-                    Color(0xFF787878).copy(alpha = 0.48f),
+                    Color(0xFFEEEEEE),
                 animationSpec = tween(durationMillis = 300)
             )
 

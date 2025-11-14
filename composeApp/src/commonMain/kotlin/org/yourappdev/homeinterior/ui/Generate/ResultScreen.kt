@@ -104,10 +104,13 @@ private fun ImageCard(
     Image(
         painter = painterResource(imageResource),
         contentDescription = "Room design",
-        modifier = modifier
-            .fillMaxWidth()
-            .height(176.dp)
-            .clip(RoundedCornerShape(9.dp))
+        modifier = modifier.then(
+            if (isLarge) {
+                Modifier.fillMaxWidth().height(176.dp)
+            } else {
+                Modifier.aspectRatio(1f)
+            }
+        ).clip(RoundedCornerShape(9.dp))
             .border(
                 width = 1.dp,
                 color = if (isLarge) Color(0xFFCFCFCF) else Color(0xFFCFCFCF),

@@ -105,7 +105,7 @@ fun SubscriptionScreen(onBackClick: () -> Unit) {
             painter = painterResource(Res.drawable.subscriptionbackgroun),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.FillBounds
+            contentScale = ContentScale.Fit
         )
 
         Box(

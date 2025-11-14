@@ -156,7 +156,7 @@ fun BaseScreen(onEndReached: () -> Unit) {
                             color = Color(0xff979797),
                             modifier = Modifier.fillMaxWidth().padding(vertical = 11.dp),
                             textAlign = TextAlign.Center,
-                            fontSize = 15.sp, fontWeight = FontWeight.Bold
+                            fontSize = 15.sp, fontWeight = FontWeight.Medium
                         )
                     }
 
@@ -181,7 +181,7 @@ fun BaseScreen(onEndReached: () -> Unit) {
                         modifier = Modifier.weight(1f),
                         contentPadding = PaddingValues(vertical = 13.dp)
                     ) {
-                        Text(text = "Continue", fontSize = 15.sp, color = Color.White, fontWeight = FontWeight.Bold)
+                        Text(text = "Continue", fontSize = 15.sp, color = Color.White, fontWeight = FontWeight.Medium)
                     }
                 }
             }

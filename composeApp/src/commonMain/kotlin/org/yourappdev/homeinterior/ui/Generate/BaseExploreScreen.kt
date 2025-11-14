@@ -177,7 +177,7 @@ private fun TopNavigationBar(
         }
         Text(
             text = "Step ${currentPage + 1}/4",
-            fontSize = 17.sp,
+            fontSize = 14.sp,
             fontWeight = FontWeight.Medium,
             color = Color(0xFF9C9C9C),
             modifier = Modifier.padding(end = 40.dp)

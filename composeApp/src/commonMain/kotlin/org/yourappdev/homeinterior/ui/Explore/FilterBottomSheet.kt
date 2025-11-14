@@ -501,44 +501,89 @@ fun ColorOptions(
     onColorSelected: (Set<Int>) -> Unit,
     primaryGreen: Color
 ) {
-    val colors = listOf(
-        Color(0xFFD9D9D9), Color(0xFFD9D9D9), Color(0xFFD9D9D9), Color(0xFFD9D9D9),
-        Color(0xFFD9D9D9), Color(0xFFD9D9D9), Color(0xFFD9D9D9), Color(0xFFD9D9D9),
-        Color(0xFFD9D9D9), Color(0xFFD9D9D9), Color(0xFFD9D9D9), Color(0xFFD9D9D9),
-        Color(0xFFD9D9D9), Color(0xFFD9D9D9), Color(0xFFD9D9D9), Color(0xFFD9D9D9),
-        Color(0xFFD9D9D9), Color(0xFFD9D9D9), Color(0xFFD9D9D9), Color(0xFFD9D9D9)
+    val colorLists = listOf(
+        listOf("Neutral Tones", listOf(
+            Color(0xFFFFFFFF), Color(0xFFF5F5DC), Color(0xFFD3D3D3),
+            Color(0xFFC0C0C0), Color(0xFF808080)
+        )),
+        listOf("Earth Tones", listOf(
+            Color(0xFF8B4513), Color(0xFFA0522D), Color(0xFFCD853F),
+            Color(0xFFDEB887), Color(0xFFD2691E)
+        )),
+        listOf("Cool Blues", listOf(
+            Color(0xFF87CEEB), Color(0xFF4682B4), Color(0xFF1E90FF),
+            Color(0xFF4169E1), Color(0xFF000080)
+        )),
+        listOf("Warm Reds", listOf(
+            Color(0xFFFFB6C1), Color(0xFFFF69B4), Color(0xFFDC143C),
+            Color(0xFFB22222), Color(0xFF8B0000)
+        )),
+        listOf("Fresh Greens", listOf(
+            Color(0xFF90EE90), Color(0xFF32CD32), Color(0xFF228B22),
+            Color(0xFF006400), Color(0xFF556B2F)
+        ))
     )
 
-    LazyHorizontalStaggeredGrid(
-        rows = StaggeredGridCells.Fixed(3),
+    var flatColorIndex = 0
+
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .height(130.dp)  // Adjust height based on your needs
             .padding(start = 10.dp, end = 10.dp, bottom = 18.dp),
-        horizontalItemSpacing = 11.dp,
-        verticalArrangement = Arrangement.spacedBy(11.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(colors.size) { index ->
-            val isSelected = selectedColorIndices.contains(index)
-            Box(
+        colorLists.forEach { (title, colors) ->
+            val listStartIndex = flatColorIndex
+            val listIndices = (listStartIndex until listStartIndex + (colors as List<Color>).size).toSet()
+            val isListSelected = listIndices.all { selectedColorIndices.contains(it) }
+
+            Column(
                 modifier = Modifier
-                    .size(32.dp)
+                    .fillMaxWidth()
                     .border(
-                        width = if (isSelected) 2.dp else 0.dp,
-                        color = if (isSelected) Color(0xFFCBE0A7) else Color.Transparent,
-                        shape = CircleShape
+                        width = if (isListSelected) 2.dp else 1.dp,
+                        color = if (isListSelected) primaryGreen else Color(0xFFE5E5E5),
+                        shape = RoundedCornerShape(8.dp)
                     )
-                    .background(colors[index], CircleShape)
-                    .clip(CircleShape)
+                    .clip(RoundedCornerShape(8.dp))
                     .clickable {
-                        val newSelection = if (isSelected) {
-                            selectedColorIndices - index
+                        val newSelection = if (isListSelected) {
+                            selectedColorIndices - listIndices
                         } else {
-                            selectedColorIndices + index
+                            selectedColorIndices + listIndices
                         }
                         onColorSelected(newSelection)
                     }
-            )
+                    .padding(12.dp)
+            ) {
+                Text(
+                    text = title as String,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color(0xFF4D4D4D),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    colors.forEach { color ->
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .border(
+                                    width = 1.dp,
+                                    color = Color(0xFFD0D0D0),
+                                    shape = CircleShape
+                                )
+                                .padding(2.dp)
+                                .background(color, CircleShape)
+                        )
+                        flatColorIndex++
+                    }
+                }
+            }
         }
     }
 }
