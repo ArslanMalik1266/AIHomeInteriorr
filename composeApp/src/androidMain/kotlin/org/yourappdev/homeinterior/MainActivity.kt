@@ -8,7 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import org.yourappdev.homeinterior.data.local.getRoomDatabase
-import org.yourappdev.homeinterior.db.getDatabaseBuilder
 import org.yourappdev.homeinterior.ui.App
 
 class MainActivity : ComponentActivity() {

@@ -67,6 +67,10 @@ fun RegisterScreen(
                 CommonUiEvent.NavigateToSuccess -> {
                     onRegisterSuccess()
                 }
+
+                is CommonUiEvent.ShowSuccess -> {
+                    snackBarState.showSuccess(event.message)
+                }
             }
         }
     }
