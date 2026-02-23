@@ -1,4 +1,4 @@
-package org.yourappdev.homeinterior.ui.Authentication.Register
+package org.yourappdev.homeinterior.ui.authentication.register
 
 import org.yourappdev.homeinterior.data.remote.util.ResultState
 import org.yourappdev.homeinterior.domain.model.RegisterResponse

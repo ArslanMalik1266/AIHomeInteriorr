@@ -32,7 +32,9 @@ import homeinterior.composeapp.generated.resources.keyboard_arrow_down_24px
 import homeinterior.composeapp.generated.resources.keyboard_arrow_up_24px
 import homeinterior.composeapp.generated.resources.settingback
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.ui.tooling.preview.Preview
 
+@Preview
 @Composable
 fun AccountScreen(
     onSubscriptionClick: () -> Unit = {},

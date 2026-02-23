@@ -1,4 +1,4 @@
-package org.yourappdev.homeinterior.ui.Authentication.Register
+package org.yourappdev.homeinterior.ui.authentication.register
 
 sealed interface RegisterEvent {
     data class NameUpdate(val name: String) : RegisterEvent

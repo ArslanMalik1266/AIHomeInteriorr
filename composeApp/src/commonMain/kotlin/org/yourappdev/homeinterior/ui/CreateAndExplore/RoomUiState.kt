@@ -34,13 +34,13 @@ data class RoomUiState(
     val selectedImage: GalleryPhotoResult? = null,
     val currentPage: Int = 0,
     val pageCount: Int = 4,
-    val selectedRoomType: String? = null,
+    val selectedRoomType: String? = availableRoomTypes.firstOrNull(),
     val roomSearchQuery: String = "",
     val isRoomSearchExpanded: Boolean = false,
-    val selectedStyleId: Int? = null,
+    val selectedStyleId: Int? = availableStyles.firstOrNull()?.id,
     val styleSearchQuery: String = "",
     val isStyleSearchExpanded: Boolean = false,
-    val selectedPaletteId: Int? = null,
+    val selectedPaletteId: Int? = availableColors.firstOrNull()?.id,
     val isGenerating: Boolean = false
 )
 

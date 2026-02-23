@@ -8,27 +8,29 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import org.yourappdev.homeinterior.domain.repo.AuthRepository
 import org.yourappdev.homeinterior.domain.repo.UserRepository
+import org.yourappdev.homeinterior.utils.Constants
 import org.yourappdev.homeinterior.utils.Constants.LOGIN
 import org.yourappdev.homeinterior.utils.Constants.ONBOARDING
 
-class NavigationViewModel(val settings: Settings) : ViewModel() {
+class NavigationViewModel(private val settings: Settings) : ViewModel() {
 
     private val _state = MutableStateFlow(NavigationState())
     val state: StateFlow<NavigationState> = _state.asStateFlow()
 
     init {
-        checkOnBoardStatus()
+        checkStartDestination()
     }
 
-    private fun checkOnBoardStatus() {
-        val isLoggedIn = settings.getBoolean(LOGIN, defaultValue = false)
-        val isOnboardingDone = settings.getBoolean(ONBOARDING, defaultValue = false)
+    private fun checkStartDestination() {
+        val isOnboardingDone = settings.getBoolean(Constants.ONBOARDING, false)
+        val isLoggedIn = settings.getBoolean(Constants.LOGIN, false)
 
-        _state.value = when {
-            isLoggedIn && !isOnboardingDone -> _state.value.copy(startDestination = Routes.OnBoarding.toString())
-            isLoggedIn -> _state.value.copy(startDestination = Routes.BaseAppScreen.toString())
-            else -> _state.value.copy(startDestination = Routes.Welcome.toString())
+        val startDestination = when {
+            !isOnboardingDone -> Routes.OnBoarding.toString()
+            isLoggedIn -> Routes.BaseAppScreen.toString()
+            else -> Routes.Welcome.toString()
         }
-    }
 
+        _state.value = NavigationState(startDestination = startDestination)
+    }
 }

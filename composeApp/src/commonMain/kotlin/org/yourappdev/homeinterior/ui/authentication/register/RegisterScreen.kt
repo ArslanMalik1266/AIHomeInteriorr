@@ -1,4 +1,4 @@
-package org.yourappdev.homeinterior.ui.Authentication.ForgetPassword
+package org.yourappdev.homeinterior.ui.authentication.register
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -9,8 +9,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,45 +21,45 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import homeinterior.composeapp.generated.resources.Res
+import homeinterior.composeapp.generated.resources.emailicon
 import homeinterior.composeapp.generated.resources.hide_
 import homeinterior.composeapp.generated.resources.passicon
+import homeinterior.composeapp.generated.resources.person
 import homeinterior.composeapp.generated.resources.show_1_
 import kotlinx.coroutines.flow.SharedFlow
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.compose.viewmodel.koinViewModel
 import org.yourappdev.homeinterior.data.remote.util.ResultState
-import org.yourappdev.homeinterior.navigation.Routes
-import org.yourappdev.homeinterior.ui.Authentication.AuthViewModel
-import org.yourappdev.homeinterior.ui.Authentication.Register.RegisterEvent
-import org.yourappdev.homeinterior.ui.Authentication.Register.RegisterState
+import org.yourappdev.homeinterior.ui.authentication.AuthViewModel
 import org.yourappdev.homeinterior.ui.UiUtils.BackIconButton
+import org.yourappdev.homeinterior.ui.UiUtils.ClickableText
+import org.yourappdev.homeinterior.ui.UiUtils.CustomSnackbar
 import org.yourappdev.homeinterior.ui.UiUtils.ProgressLoading
 import org.yourappdev.homeinterior.ui.UiUtils.rememberCustomSnackbarState
 import org.yourappdev.homeinterior.ui.common.base.CommonUiEvent
 import org.yourappdev.homeinterior.ui.theme.buttonBack
 import org.yourappdev.homeinterior.ui.theme.smallText
 
+
 @Composable
-fun NewPassRoot(
-    authViewModel: AuthViewModel = koinViewModel(),
-    onBack: () -> Unit = {},
-    onSuccess: () -> Unit = {}
-) {
-    val state by authViewModel.state.collectAsState()
-    NewPasswordScreen(state, authViewModel.uiEvent, onBack, onSuccess, authViewModel::onRegisterFormEvent)
+fun RegisterRoot(onBackClick: () -> Unit, viewModel: AuthViewModel = koinViewModel(), onRegisterSuccess: () -> Unit) {
+    val state by viewModel.state.collectAsState()
+    RegisterScreen(onBackClick, state, viewModel.uiEvent, viewModel::onRegisterFormEvent, onRegisterSuccess)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
-fun NewPasswordScreen(
+fun RegisterScreen(
+    onBackClick: () -> Unit,
     state: RegisterState,
     uiEvent: SharedFlow<CommonUiEvent>,
-    onBack: () -> Unit,
-    onSuccess: () -> Unit,
-    onAuthEvent: (event: RegisterEvent) -> Unit
+    onRegisterEvent: (event: RegisterEvent) -> Unit,
+    onRegisterSuccess: () -> Unit
 ) {
-
     val snackBarState = rememberCustomSnackbarState()
+
     LaunchedEffect(Unit) {
         uiEvent.collect { event ->
             when (event) {
@@ -70,7 +68,7 @@ fun NewPasswordScreen(
                 }
 
                 CommonUiEvent.NavigateToSuccess -> {
-                    onSuccess()
+                    onRegisterSuccess()
                 }
 
                 is CommonUiEvent.ShowSuccess -> {
@@ -79,13 +77,14 @@ fun NewPasswordScreen(
             }
         }
     }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
             .statusBarsPadding()
     ) {
-        if (state.forgetPasswordResetResponse is ResultState.Loading) {
+        if (state.registerResponse is ResultState.Loading) {
             ProgressLoading()
         }
         Column(
@@ -94,40 +93,116 @@ fun NewPasswordScreen(
                 .padding(24.dp)
         ) {
             BackIconButton {
-                onBack()
+                onBackClick()
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "Forgot Password?",
+                text = "Register",
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
-                letterSpacing = (-0.8).sp,
-                color = buttonBack
+                color = Color(0xFF9CA986)
             )
 
             Text(
-                text = "Recover you password if you have forgot the password!",
+                text = "From imagination to inspiration—AI designs it for you.",
                 fontSize = 14.sp,
                 color = smallText,
-                lineHeight = 16.sp,
-                modifier = Modifier.padding(top = 8.dp)
+                modifier = Modifier.padding(top = 8.dp),
+                lineHeight = 16.sp
             )
 
             Spacer(modifier = Modifier.height(20.dp))
 
             // Email field
             Text(
-                text = "Enter New Password",
+                text = "Email",
                 fontSize = 14.sp,
                 color = smallText,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
             OutlinedTextField(
-                value = state.newPassword,
-                onValueChange = { onAuthEvent(RegisterEvent.NewPasswordUpdate(it)) },
+                value = state.email,
+                onValueChange = { onRegisterEvent(RegisterEvent.EmailUpdate(it)) },
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = {
+                    Text(
+                        "Ex. abc@example.com",
+                        color = Color(0xFFCCCCCC)
+                    )
+                },
+                leadingIcon = {
+                    Image(
+                        painter = painterResource(Res.drawable.emailicon),
+                        contentDescription = null,
+                        colorFilter = ColorFilter.tint(color = LocalContentColor.current)
+                    )
+                },
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    unfocusedBorderColor = Color(0xFFE0E0E0),
+                    focusedBorderColor = buttonBack,
+                    focusedLeadingIconColor = buttonBack,
+                    unfocusedLeadingIconColor = Color(0xffDBDBDB)
+                ),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                singleLine = true
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Name field
+            Text(
+                text = "Your Name",
+                fontSize = 14.sp,
+                color = smallText,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+
+            OutlinedTextField(
+                value = state.username,
+                onValueChange = { onRegisterEvent(RegisterEvent.NameUpdate(it)) },
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = {
+                    Text(
+                        "Ex. Soul Ramirez",
+                        color = Color(0xFFCCCCCC)
+                    )
+                },
+                leadingIcon = {
+                    Image(
+                        painter = painterResource(Res.drawable.person),
+                        contentDescription = null,
+                        colorFilter = ColorFilter.tint(color = LocalContentColor.current)
+                    )
+                },
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    unfocusedBorderColor = Color(0xFFE0E0E0),
+                    focusedBorderColor = buttonBack,
+                    focusedLeadingIconColor = buttonBack,
+                    unfocusedLeadingIconColor = Color(0xffDBDBDB)
+                ),
+                singleLine = true
+
+            )
+
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Password field
+            Text(
+                text = "Your Password",
+                fontSize = 14.sp,
+                color = smallText,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+
+            OutlinedTextField(
+                value = state.password,
+                onValueChange = { onRegisterEvent(RegisterEvent.PasswordUpdate(it)) },
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = {
                     Text(
@@ -144,7 +219,7 @@ fun NewPasswordScreen(
                 },
                 trailingIcon = {
                     Box(modifier = Modifier.size(30.dp).clip(CircleShape).clickable {
-                        onAuthEvent(RegisterEvent.TogglePassword(!state.showPassword))
+                        onRegisterEvent(RegisterEvent.TogglePassword(!state.showPassword))
                     }, contentAlignment = Alignment.Center) {
                         Image(
                             painter = painterResource(if (state.showPassword) Res.drawable.show_1_ else Res.drawable.hide_),
@@ -154,6 +229,7 @@ fun NewPasswordScreen(
                         )
                     }
                 },
+                singleLine = true,
                 visualTransformation = if (state.showPassword) VisualTransformation.None else PasswordVisualTransformation(),
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
@@ -163,14 +239,15 @@ fun NewPasswordScreen(
                     unfocusedLeadingIconColor = Color(0xffDBDBDB)
                 ),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                singleLine = true
             )
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Submit button
+            // Register button
             Button(
-                onClick = { onAuthEvent(RegisterEvent.ForgetPasswordReset) },
+                onClick = {
+                    onRegisterEvent(RegisterEvent.Register)
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -180,11 +257,33 @@ fun NewPasswordScreen(
                 )
             ) {
                 Text(
-                    text = "Submit",
+                    text = "Register",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium
                 )
             }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Login link
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Already have an account? ",
+                    fontSize = 14.sp,
+                    color = Color(0xFF666666)
+                )
+                ClickableText(title = "Login", textSize = 14.sp, fontWeight = FontWeight.Bold) {
+                    onBackClick()
+                }
+            }
         }
+        CustomSnackbar(
+            state = snackBarState,
+            duration = 3000L
+        )
     }
 }

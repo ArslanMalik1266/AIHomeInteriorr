@@ -1,4 +1,4 @@
-package org.yourappdev.homeinterior.ui.Authentication
+package org.yourappdev.homeinterior.ui.authentication
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -13,11 +13,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.launch
-import org.yourappdev.homeinterior.data.remote.util.ResultState
 import org.yourappdev.homeinterior.domain.model.RegisterRequest
 import org.yourappdev.homeinterior.domain.repo.AuthRepository
-import org.yourappdev.homeinterior.ui.Authentication.Register.RegisterEvent
-import org.yourappdev.homeinterior.ui.Authentication.Register.RegisterState
+import org.yourappdev.homeinterior.ui.authentication.register.RegisterEvent
+import org.yourappdev.homeinterior.ui.authentication.register.RegisterState
 import org.yourappdev.homeinterior.ui.common.base.CommonUiEvent
 import org.yourappdev.homeinterior.ui.common.base.CommonUiEvent.*
 import org.yourappdev.homeinterior.utils.Constants

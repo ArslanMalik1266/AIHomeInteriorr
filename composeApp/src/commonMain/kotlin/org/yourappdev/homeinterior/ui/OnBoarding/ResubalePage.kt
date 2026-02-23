@@ -28,6 +28,8 @@ import coil3.util.DebugLogger
 import homeinterior.composeapp.generated.resources.Res
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.ui.tooling.preview.Preview
+
 
 @Composable
 fun BoardingPage(image: DrawableResource) {

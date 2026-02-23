@@ -162,7 +162,7 @@ fun BaseBottomBarScreen() {
                 ) {
                     FloatingActionButton(
                         onClick = {
-                            navController.navigate(Routes.AddScreen)
+                            showGallery = true
                         },
                         containerColor = Color(0xFFD4F7BD),
                         elevation = FloatingActionButtonDefaults.elevation(
@@ -300,6 +300,7 @@ fun BaseBottomBarScreen() {
                 onPhotosSelected = { photos ->
                     roomViewModel.onRoomEvent(RoomEvent.SetImage(imageDetails = photos.first()))
                     showGallery = false
+                    navController.navigate(Routes.AddScreen)
                 },
                 onError = { showGallery = false },
                 onDismiss = { showGallery = false },

@@ -1,4 +1,4 @@
-package org.yourappdev.homeinterior.ui.Authentication.Login
+package org.yourappdev.homeinterior.ui.authentication.Login
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -29,12 +29,13 @@ import homeinterior.composeapp.generated.resources.passicon
 import homeinterior.composeapp.generated.resources.show_1_
 import kotlinx.coroutines.flow.SharedFlow
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.compose.viewmodel.koinViewModel
 import org.yourappdev.homeinterior.data.remote.util.ResultState
 import org.yourappdev.homeinterior.navigation.Routes
-import org.yourappdev.homeinterior.ui.Authentication.AuthViewModel
-import org.yourappdev.homeinterior.ui.Authentication.Register.RegisterEvent
-import org.yourappdev.homeinterior.ui.Authentication.Register.RegisterState
+import org.yourappdev.homeinterior.ui.authentication.AuthViewModel
+import org.yourappdev.homeinterior.ui.authentication.register.RegisterEvent
+import org.yourappdev.homeinterior.ui.authentication.register.RegisterState
 import org.yourappdev.homeinterior.ui.UiUtils.BackIconButton
 import org.yourappdev.homeinterior.ui.UiUtils.ButtonWithIcon
 import org.yourappdev.homeinterior.ui.UiUtils.ClickableText
@@ -45,6 +46,7 @@ import org.yourappdev.homeinterior.ui.common.base.CommonUiEvent
 import org.yourappdev.homeinterior.ui.theme.buttonBack
 import org.yourappdev.homeinterior.ui.theme.smallText
 
+@Preview(showBackground = true)
 @Composable
 fun LoginRoot(authViewModel: AuthViewModel = koinViewModel(), navController: NavHostController) {
     val state by authViewModel.state.collectAsState()
@@ -262,7 +264,7 @@ fun LoginScreen(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 20.dp, horizontal = 10.dp)
             )
 
-            ButtonWithIcon(image = Res.drawable.google, borderColor = buttonBack, title = "Continue with Google")
+            ButtonWithIcon(image = Res.drawable.google, borderColor = buttonBack, title = "Continue with Google", onClick = {})
 
             Spacer(modifier = Modifier.height(24.dp))
 

@@ -29,7 +29,7 @@ import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
-fun ButtonWithIcon(image: DrawableResource, title: String, borderColor: Color = Color(0xFFE0E0E0)) {
+fun ButtonWithIcon(image: DrawableResource, title: String, borderColor: Color = Color(0xFFE0E0E0),  onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -37,7 +37,7 @@ fun ButtonWithIcon(image: DrawableResource, title: String, borderColor: Color = 
             .clip(RoundedCornerShape(12.dp))
             .border(BorderStroke(1.5.dp, borderColor), RoundedCornerShape(12.dp))
             .height(56.dp).clickable {
-
+                onClick()
             },
         contentAlignment = Alignment.Center
     ) {

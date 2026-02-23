@@ -49,6 +49,9 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation(libs.androidx.core.splashscreen)
             implementation(libs.ktor.client.okhttp)
+            //room
+            implementation(libs.androidx.room.runtime)
+            implementation(libs.androidx.sqlite.bundled)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
@@ -65,7 +68,6 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(libs.kotlinx.datetime)
             implementation(libs.coil.compose)
-            implementation(libs.coil.network.okhttp)
             implementation(libs.coil.svg)
             implementation(compose.components.resources)
             implementation(libs.compottie)
@@ -85,9 +87,8 @@ kotlin {
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
             implementation(libs.koin.composeVM)
-            //room
-            implementation(libs.androidx.room.runtime)
-            implementation(libs.androidx.sqlite.bundled)
+
+
 
             implementation(libs.multiplatform.settings.no.arg)
             implementation(libs.multiplatform.settings)

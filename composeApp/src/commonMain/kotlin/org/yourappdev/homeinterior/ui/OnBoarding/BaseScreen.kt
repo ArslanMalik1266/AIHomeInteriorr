@@ -55,6 +55,7 @@ import org.yourappdev.homeinterior.domain.model.BoardingData
 import org.yourappdev.homeinterior.ui.UiUtils.ProgressIndicator
 import org.yourappdev.homeinterior.ui.UiUtils.TopUShape
 
+@Preview(showBackground = true)
 @Composable
 fun BaseScreen(onEndReached: () -> Unit) {
     val scope = rememberCoroutineScope()

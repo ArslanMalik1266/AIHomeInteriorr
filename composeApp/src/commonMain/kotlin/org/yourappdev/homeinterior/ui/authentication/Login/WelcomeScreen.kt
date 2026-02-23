@@ -1,4 +1,4 @@
-package org.yourappdev.homeinterior.ui.Authentication.Login
+package org.yourappdev.homeinterior.ui.authentication.Login
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -13,11 +13,14 @@ import androidx.compose.ui.unit.sp
 import homeinterior.composeapp.generated.resources.Res
 import homeinterior.composeapp.generated.resources.emailicon
 import homeinterior.composeapp.generated.resources.google
+import org.jetbrains.compose.ui.tooling.preview.Preview
+import org.yourappdev.homeinterior.navigation.Routes
 import org.yourappdev.homeinterior.ui.UiUtils.ButtonWithIcon
 import org.yourappdev.homeinterior.ui.UiUtils.ClickableText
 import org.yourappdev.homeinterior.ui.theme.buttonBack
 import org.yourappdev.homeinterior.ui.theme.smallText
 
+@Preview(showBackground = true)
 @Composable
 fun WelcomeScreen(
     onContinueWithGoogle: () -> Unit = {},
@@ -62,11 +65,18 @@ fun WelcomeScreen(
 
         Spacer(modifier = Modifier.height(28.dp))
 
-        ButtonWithIcon(image = Res.drawable.google, borderColor = buttonBack, title = "Continue with Google")
+        ButtonWithIcon(image = Res.drawable.google, borderColor = buttonBack, title = "Continue with Google",
+            onClick = fun() {
+
+            }
+        )
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        ButtonWithIcon(image = Res.drawable.emailicon, title = "Continue with Email")
+        ButtonWithIcon(image = Res.drawable.emailicon, title = "Continue with Email",     onClick = {
+            onLogin()
+        }
+        )
 
         Spacer(modifier = Modifier.height(24.dp))
 
