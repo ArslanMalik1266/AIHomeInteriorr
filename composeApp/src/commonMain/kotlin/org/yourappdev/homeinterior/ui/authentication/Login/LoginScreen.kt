@@ -43,8 +43,13 @@ import org.yourappdev.homeinterior.ui.UiUtils.CustomSnackbar
 import org.yourappdev.homeinterior.ui.UiUtils.ProgressLoading
 import org.yourappdev.homeinterior.ui.UiUtils.rememberCustomSnackbarState
 import org.yourappdev.homeinterior.ui.common.base.CommonUiEvent
+import org.yourappdev.homeinterior.ui.theme.app_color
 import org.yourappdev.homeinterior.ui.theme.buttonBack
+import org.yourappdev.homeinterior.ui.theme.green_border
+import org.yourappdev.homeinterior.ui.theme.green_btn
+import org.yourappdev.homeinterior.ui.theme.grey_border
 import org.yourappdev.homeinterior.ui.theme.smallText
+import org.yourappdev.homeinterior.ui.theme.white_color
 
 @Preview(showBackground = true)
 @Composable
@@ -84,7 +89,7 @@ fun LoginScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(white_color)
             .statusBarsPadding()
     ) {
         if (state.loginResponse is ResultState.Loading) {
@@ -93,7 +98,7 @@ fun LoginScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp)
+                .padding(28.dp)
         ) {
             BackIconButton {
                 navController.navigateUp()
@@ -105,15 +110,14 @@ fun LoginScreen(
                 text = "Login",
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
-                color = buttonBack
+                color = app_color
             )
+            Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = "Login now to track all your expenses and income at a place!",
                 fontSize = 14.sp,
                 color = smallText,
-                modifier = Modifier.padding(top = 8.dp),
-                lineHeight = 16.sp
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -123,8 +127,8 @@ fun LoginScreen(
                 text = "Email",
                 fontSize = 14.sp,
                 color = smallText,
-                modifier = Modifier.padding(bottom = 8.dp)
             )
+            Spacer(modifier = Modifier.height(8.dp))
 
             OutlinedTextField(
                 value = state.email,
@@ -133,7 +137,7 @@ fun LoginScreen(
                 placeholder = {
                     Text(
                         "Ex. abc@example.com",
-                        color = Color(0xFFCCCCCC)
+                        color = grey_border
                     )
                 },
                 leadingIcon = {
@@ -143,12 +147,12 @@ fun LoginScreen(
                         colorFilter = ColorFilter.tint(color = LocalContentColor.current)
                     )
                 },
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(16.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedBorderColor = Color(0xFFE0E0E0),
-                    focusedBorderColor = buttonBack,
-                    focusedLeadingIconColor = buttonBack,
-                    unfocusedLeadingIconColor = Color(0xffDBDBDB)
+                    unfocusedBorderColor = grey_border,
+                    focusedBorderColor = green_border,
+                    focusedLeadingIconColor = green_border,
+                    unfocusedLeadingIconColor = grey_border
                 ),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 singleLine = true
@@ -161,8 +165,8 @@ fun LoginScreen(
                 text = "Your Password",
                 fontSize = 14.sp,
                 color = smallText,
-                modifier = Modifier.padding(bottom = 8.dp)
             )
+            Spacer(modifier = Modifier.height(8.dp))
 
             OutlinedTextField(
                 value = state.password,
@@ -171,7 +175,7 @@ fun LoginScreen(
                 placeholder = {
                     Text(
                         "••••••••••",
-                        color = Color(0xFFCCCCCC)
+                        color = grey_border
                     )
                 },
                 leadingIcon = {
@@ -189,17 +193,17 @@ fun LoginScreen(
                             painter = painterResource(if (state.showPassword) Res.drawable.show_1_ else Res.drawable.hide_),
                             contentDescription = "Close",
                             colorFilter = ColorFilter.tint(color = buttonBack),
-                            modifier = Modifier.size(23.dp)
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                 },
                 visualTransformation = if (state.showPassword) VisualTransformation.None else PasswordVisualTransformation(),
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedBorderColor = Color(0xFFE0E0E0),
-                    focusedBorderColor = buttonBack,
-                    focusedLeadingIconColor = buttonBack,
-                    unfocusedLeadingIconColor = Color(0xffDBDBDB)
+                    unfocusedBorderColor = grey_border,
+                    focusedBorderColor = green_border,
+                    focusedLeadingIconColor = green_border,
+                    unfocusedLeadingIconColor = grey_border
                 ),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
             )
@@ -218,7 +222,7 @@ fun LoginScreen(
                         checked = state.rememberMe,
                         onCheckedChange = { },
                         colors = CheckboxDefaults.colors(
-                            checkedColor = Color(0xFF9CA986),
+                            checkedColor = green_border,
                             uncheckedColor = Color(0xFFCCCCCC)
                         )
                     )
@@ -226,8 +230,6 @@ fun LoginScreen(
                         text = "Remember me",
                         fontSize = 12.sp,
                         color = smallText,
-                        letterSpacing = (-0.12).sp,
-                        lineHeight = 1.sp,
                     )
                 }
 
@@ -246,15 +248,15 @@ fun LoginScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = buttonBack
+                    containerColor = green_btn
                 )
             ) {
                 Text(
                     text = "Login",
                     fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.SemiBold
                 )
             }
 
@@ -264,7 +266,7 @@ fun LoginScreen(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 20.dp, horizontal = 10.dp)
             )
 
-            ButtonWithIcon(image = Res.drawable.google, borderColor = buttonBack, title = "Continue with Google", onClick = {})
+            ButtonWithIcon(image = Res.drawable.google, borderColor = green_border, title = "Continue with Google", onClick = {})
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -283,7 +285,7 @@ fun LoginScreen(
                 ClickableText(
                     title = "Register",
                     textSize = 14.sp,
-                    color = buttonBack,
+                    color = green_border,
                     fontWeight = FontWeight.Bold
                 ) {
                     navController.navigate(Routes.Register)

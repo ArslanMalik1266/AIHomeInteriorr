@@ -27,15 +27,17 @@ import homeinterior.composeapp.generated.resources.Res
 import homeinterior.composeapp.generated.resources.emailicon
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
+import org.yourappdev.homeinterior.ui.theme.black_color
+import org.yourappdev.homeinterior.ui.theme.green_border
+import org.yourappdev.homeinterior.ui.theme.white_color
 
 @Composable
-fun ButtonWithIcon(image: DrawableResource, title: String, borderColor: Color = Color(0xFFE0E0E0),  onClick: () -> Unit) {
+fun ButtonWithIcon(image: DrawableResource, title: String, borderColor: Color = green_border, onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White, RoundedCornerShape(12.dp))
-            .clip(RoundedCornerShape(12.dp))
-            .border(BorderStroke(1.5.dp, borderColor), RoundedCornerShape(12.dp))
+            .background(color = white_color, RoundedCornerShape(16.dp))
+            .border(BorderStroke(1.dp, borderColor), RoundedCornerShape(12.dp))
             .height(56.dp).clickable {
                 onClick()
             },
@@ -56,7 +58,7 @@ fun ButtonWithIcon(image: DrawableResource, title: String, borderColor: Color = 
                 text = title,
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp,
-                color = Color(0xFF2D2D2D)
+                color = black_color
             )
         }
     }

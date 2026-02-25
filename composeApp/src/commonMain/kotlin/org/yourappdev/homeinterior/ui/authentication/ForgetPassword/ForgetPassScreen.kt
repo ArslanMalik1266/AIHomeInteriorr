@@ -27,8 +27,15 @@ import org.yourappdev.homeinterior.ui.UiUtils.BackIconButton
 import org.yourappdev.homeinterior.ui.UiUtils.ProgressLoading
 import org.yourappdev.homeinterior.ui.UiUtils.rememberCustomSnackbarState
 import org.yourappdev.homeinterior.ui.common.base.CommonUiEvent
+import org.yourappdev.homeinterior.ui.theme.app_color
+import org.yourappdev.homeinterior.ui.theme.black_color
 import org.yourappdev.homeinterior.ui.theme.buttonBack
+import org.yourappdev.homeinterior.ui.theme.green_border
+import org.yourappdev.homeinterior.ui.theme.green_btn
+import org.yourappdev.homeinterior.ui.theme.grey_border
+import org.yourappdev.homeinterior.ui.theme.grey_color
 import org.yourappdev.homeinterior.ui.theme.smallText
+import org.yourappdev.homeinterior.ui.theme.white_color
 
 @Composable
 fun ForgetEmailRoot(
@@ -71,7 +78,7 @@ fun ForgotPasswordScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(white_color)
             .statusBarsPadding()
     ) {
         if (state.forgetPasswordRequestResponse is ResultState.Loading) {
@@ -91,16 +98,14 @@ fun ForgotPasswordScreen(
                 text = "Forgot Password?",
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
-                letterSpacing = (-0.8).sp,
-                color = buttonBack
+                color = app_color
             )
 
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = "Recover you password if you have forgot the password!",
                 fontSize = 14.sp,
                 color = smallText,
-                lineHeight = 16.sp,
-                modifier = Modifier.padding(top = 8.dp)
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -109,9 +114,9 @@ fun ForgotPasswordScreen(
             Text(
                 text = "Email",
                 fontSize = 14.sp,
-                color = Color(0xFF666666),
-                modifier = Modifier.padding(bottom = 8.dp)
+                color = black_color,
             )
+            Spacer(modifier = Modifier.height(8.dp))
 
             OutlinedTextField(
                 value = state.email,
@@ -120,7 +125,8 @@ fun ForgotPasswordScreen(
                 placeholder = {
                     Text(
                         "Ex. abc@example.com",
-                        color = Color(0xFFCCCCCC)
+                        color = grey_border
+
                     )
                 },
                 leadingIcon = {
@@ -130,12 +136,12 @@ fun ForgotPasswordScreen(
                         colorFilter = ColorFilter.tint(color = LocalContentColor.current)
                     )
                 },
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(16.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedBorderColor = Color(0xFFE0E0E0),
-                    focusedBorderColor = buttonBack,
-                    focusedLeadingIconColor = buttonBack,
-                    unfocusedLeadingIconColor = Color(0xffDBDBDB)
+                    unfocusedBorderColor = grey_border,
+                    focusedBorderColor = green_border,
+                    focusedLeadingIconColor = green_border,
+                    unfocusedLeadingIconColor = grey_border
                 ),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 singleLine = true
@@ -151,15 +157,15 @@ fun ForgotPasswordScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = buttonBack
+                    containerColor = green_btn
                 )
             ) {
                 Text(
                     text = "Submit",
                     fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.SemiBold
                 )
             }
         }

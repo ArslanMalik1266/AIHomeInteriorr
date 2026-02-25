@@ -40,6 +40,7 @@ import homeinterior.composeapp.generated.resources.close
 import homeinterior.composeapp.generated.resources.subscardback
 import homeinterior.composeapp.generated.resources.subscriptionbackgroun
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.yourappdev.homeinterior.ui.UiUtils.ProgressIndicator
 import kotlin.math.absoluteValue
 
@@ -99,13 +100,13 @@ fun SubscriptionScreen(onBackClick: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black)
+            .background(Color.Transparent)
     ) {
         Image(
             painter = painterResource(Res.drawable.subscriptionbackgroun),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Fit
+            contentScale = ContentScale.FillBounds
         )
 
         Box(

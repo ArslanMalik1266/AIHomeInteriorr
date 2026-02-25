@@ -60,8 +60,7 @@ fun BaseBottomBarScreen() {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
-    val roomViewModel: RoomsViewModel =
-        koinViewModel()
+    val roomViewModel: RoomsViewModel = koinViewModel()
     var showGallery by remember { mutableStateOf(false) }
 
     val shouldShowBottomBar = currentDestination?.route?.let { route ->
@@ -262,6 +261,7 @@ fun BaseBottomBarScreen() {
 
             composable<Routes.AbtToGenerate> {
                 AboutToGenerateScreen(
+                    roomsViewModel = roomViewModel,
                     onCloseClick = {
                         navController.popBackStack()
                     },

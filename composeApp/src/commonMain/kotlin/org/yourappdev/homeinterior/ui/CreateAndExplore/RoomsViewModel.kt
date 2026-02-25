@@ -97,8 +97,11 @@ class RoomsViewModel(val roomsRepository: RoomsRepository) : ViewModel() {
             }
             // generate screen events from here
             is RoomEvent.SetImage -> {
-                _state.value = _state.value.copy(selectedImage = event.imageDetails)
-            }
+                _state.value = _state.value.copy(
+                    selectedImage = event.imageDetails.uri
+                )
+                println("DEBUG_VM: SelectedImage URI = ${event.imageDetails.uri}")
+                println("DEBUG_VM: Full GalleryPhotoResult = $event.imageDetails")            }
 
             is RoomEvent.OnPageChange -> {
                 _state.value = _state.value.copy(currentPage = event.page)
@@ -131,7 +134,10 @@ class RoomsViewModel(val roomsRepository: RoomsRepository) : ViewModel() {
             }
 
             is RoomEvent.OnStyleSelected -> {
-                _state.value = _state.value.copy(selectedStyleId = event.styleId)
+                val styleName = _state.value.availableStyles
+                    .firstOrNull { it.id == event.styleId }
+                    ?.name ?: "Unknown"
+                _state.value = _state.value.copy(selectedStyleName = styleName)
             }
 
             is RoomEvent.OnStyleSearchQueryChange -> {
@@ -251,6 +257,7 @@ class RoomsViewModel(val roomsRepository: RoomsRepository) : ViewModel() {
                             allRooms = finalList,
                             filteredRooms = finalList,
                         )
+
                         extractDynamicFilters(finalList)
                     } else {
                         _uiEvent.emit(ShowError("Something went wrong"))

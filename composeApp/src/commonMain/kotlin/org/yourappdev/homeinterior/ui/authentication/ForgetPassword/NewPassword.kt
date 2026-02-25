@@ -35,8 +35,13 @@ import org.yourappdev.homeinterior.ui.UiUtils.BackIconButton
 import org.yourappdev.homeinterior.ui.UiUtils.ProgressLoading
 import org.yourappdev.homeinterior.ui.UiUtils.rememberCustomSnackbarState
 import org.yourappdev.homeinterior.ui.common.base.CommonUiEvent
+import org.yourappdev.homeinterior.ui.theme.app_color
 import org.yourappdev.homeinterior.ui.theme.buttonBack
+import org.yourappdev.homeinterior.ui.theme.green_border
+import org.yourappdev.homeinterior.ui.theme.green_btn
+import org.yourappdev.homeinterior.ui.theme.grey_border
 import org.yourappdev.homeinterior.ui.theme.smallText
+import org.yourappdev.homeinterior.ui.theme.white_color
 
 @Composable
 fun NewPassRoot(
@@ -79,7 +84,7 @@ fun NewPasswordScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(white_color)
             .statusBarsPadding()
     ) {
         if (state.forgetPasswordResetResponse is ResultState.Loading) {
@@ -100,16 +105,14 @@ fun NewPasswordScreen(
                 text = "Forgot Password?",
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
-                letterSpacing = (-0.8).sp,
-                color = buttonBack
+                color = app_color
             )
+            Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = "Recover you password if you have forgot the password!",
                 fontSize = 14.sp,
                 color = smallText,
-                lineHeight = 16.sp,
-                modifier = Modifier.padding(top = 8.dp)
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -119,9 +122,9 @@ fun NewPasswordScreen(
                 text = "Enter New Password",
                 fontSize = 14.sp,
                 color = smallText,
-                modifier = Modifier.padding(bottom = 8.dp)
             )
 
+            Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
                 value = state.newPassword,
                 onValueChange = { onAuthEvent(RegisterEvent.NewPasswordUpdate(it)) },
@@ -129,7 +132,7 @@ fun NewPasswordScreen(
                 placeholder = {
                     Text(
                         "••••••••••",
-                        color = Color(0xFFCCCCCC)
+                        color = grey_border
                     )
                 },
                 leadingIcon = {
@@ -147,17 +150,17 @@ fun NewPasswordScreen(
                             painter = painterResource(if (state.showPassword) Res.drawable.show_1_ else Res.drawable.hide_),
                             contentDescription = "Close",
                             colorFilter = ColorFilter.tint(color = buttonBack),
-                            modifier = Modifier.size(23.dp)
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                 },
                 visualTransformation = if (state.showPassword) VisualTransformation.None else PasswordVisualTransformation(),
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedBorderColor = Color(0xFFE0E0E0),
-                    focusedBorderColor = buttonBack,
-                    focusedLeadingIconColor = buttonBack,
-                    unfocusedLeadingIconColor = Color(0xffDBDBDB)
+                    unfocusedBorderColor = grey_border,
+                    focusedBorderColor = green_border,
+                    focusedLeadingIconColor = green_border,
+                    unfocusedLeadingIconColor = grey_border
                 ),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 singleLine = true
@@ -171,15 +174,15 @@ fun NewPasswordScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = buttonBack
+                    containerColor = green_btn
                 )
             ) {
                 Text(
                     text = "Submit",
                     fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.SemiBold
                 )
             }
         }

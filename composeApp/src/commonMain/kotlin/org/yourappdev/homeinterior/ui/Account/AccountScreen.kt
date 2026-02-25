@@ -191,7 +191,7 @@ fun CreditCard(onSubscriptionClick: () -> Unit) {
 
                     Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(5.dp))
+                            .clip(RoundedCornerShape(6.dp))
                             .background(Color(0xFF71BA47))
                             .clickable(enabled = true, onClick = {
                                 onSubscriptionClick()
@@ -202,7 +202,7 @@ fun CreditCard(onSubscriptionClick: () -> Unit) {
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Medium,
                             color = Color.White,
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = 9.dp)
+                            modifier = Modifier.padding(horizontal = 8.dp)
                         )
                     }
                 }

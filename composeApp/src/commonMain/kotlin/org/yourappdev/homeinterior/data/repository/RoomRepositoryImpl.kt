@@ -13,6 +13,7 @@ import org.yourappdev.homeinterior.domain.repo.RoomsRepository
 class RoomRepositoryImpl(val roomService: RoomService) : RoomsRepository {
     override suspend fun getRoomsList(): Rooms {
         val response = roomService.getRooms().body<Rooms>()
+
         return response
     }
 }

@@ -17,7 +17,12 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.yourappdev.homeinterior.navigation.Routes
 import org.yourappdev.homeinterior.ui.UiUtils.ButtonWithIcon
 import org.yourappdev.homeinterior.ui.UiUtils.ClickableText
+import org.yourappdev.homeinterior.ui.theme.app_color
+import org.yourappdev.homeinterior.ui.theme.black_color
 import org.yourappdev.homeinterior.ui.theme.buttonBack
+import org.yourappdev.homeinterior.ui.theme.green_border
+import org.yourappdev.homeinterior.ui.theme.grey_border
+import org.yourappdev.homeinterior.ui.theme.grey_color
 import org.yourappdev.homeinterior.ui.theme.smallText
 
 @Preview(showBackground = true)
@@ -31,7 +36,7 @@ fun WelcomeScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
-            .padding(24.dp),
+            .padding(28.dp),
         horizontalAlignment = Alignment.Start, verticalArrangement = Arrangement.Center
     ) {
 
@@ -43,29 +48,30 @@ fun WelcomeScreen(
 
         Text(
             text = "Home Interior AI",
-            fontSize = 32.sp,
+            fontSize = 40.sp,
             fontWeight = FontWeight.Bold,
-            color = Color(0xFF9CA986)
+            modifier = Modifier.padding(top = 8.dp),
+            color = app_color
         )
 
         Text(
             text = "Interiors shaped by your imagination, perfected by AI.",
-            fontSize = 14.sp,
+            fontSize = 16.sp,
             color = smallText,
             modifier = Modifier.padding(top = 8.dp)
         )
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
         Text(
             text = "Let's Get Started...",
-            fontSize = 14.sp,
-            color = Color(0xFF666666)
+            fontSize = 16.sp,
+            color = smallText
         )
 
-        Spacer(modifier = Modifier.height(28.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
-        ButtonWithIcon(image = Res.drawable.google, borderColor = buttonBack, title = "Continue with Google",
+        ButtonWithIcon(image = Res.drawable.google, borderColor = green_border, title = "Continue with Google",
             onClick = fun() {
 
             }
@@ -73,7 +79,7 @@ fun WelcomeScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        ButtonWithIcon(image = Res.drawable.emailicon, title = "Continue with Email",     onClick = {
+        ButtonWithIcon(image = Res.drawable.emailicon, borderColor = grey_border, title = "Continue with Email",     onClick = {
             onLogin()
         }
         )
@@ -88,12 +94,12 @@ fun WelcomeScreen(
         ) {
             Text(
                 text = "Already have an account? ",
-                fontSize = 14.sp,
-                color = Color.Black,
+                fontSize = 16.sp,
+                color = black_color,
                 lineHeight = 1.sp,
                 fontWeight = FontWeight.Normal,
             )
-            ClickableText(title = "Login", textSize = 14.sp, fontWeight = FontWeight.Bold) {
+            ClickableText(title = "Login", textSize = 16.sp, fontWeight = FontWeight.Bold) {
                 onLogin()
             }
         }

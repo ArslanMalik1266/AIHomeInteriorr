@@ -111,7 +111,7 @@ fun BaseGenerateScreen(roomsViewModel: RoomsViewModel, endToNext: () -> Unit, on
             HorizontalPager(state = pagerState, userScrollEnabled = false) { page ->
                 when (page) {
                     0 -> {
-                        FirstPage(state.selectedImage?.uri)
+                        FirstPage(state.selectedImage)
                     }
 
                     1 -> {
@@ -135,7 +135,7 @@ fun BaseGenerateScreen(roomsViewModel: RoomsViewModel, endToNext: () -> Unit, on
                     2 -> {
                         StyleSelectionScreen(
                             styles = state.availableStyles,
-                            selectedStyleId = state.selectedStyleId,
+                            selectedStyleName = state.selectedStyleName,
                             searchQuery = state.styleSearchQuery,
                             isSearchExpanded = state.isStyleSearchExpanded,
                             onStyleSelected = { style ->

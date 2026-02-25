@@ -14,12 +14,13 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.yourappdev.homeinterior.ui.theme.buttonBack
+import org.yourappdev.homeinterior.ui.theme.green_border
 
 @Composable
 fun ClickableText(
     modifier: Modifier = Modifier,
-    textSize: TextUnit = 12.sp,
-    color: Color = buttonBack,
+    textSize: TextUnit = 14.sp,
+    color: Color = green_border,
     title: String,
     fontWeight: FontWeight = FontWeight.Medium,
     onClick: () -> Unit
@@ -35,7 +36,6 @@ fun ClickableText(
             color = color,
             fontSize = textSize,
             fontWeight = fontWeight,
-            letterSpacing = (-0.12).sp,
             modifier = Modifier.padding(horizontal = 5.dp)
         )
     }

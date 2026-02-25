@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -38,7 +39,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import co.touchlab.kermit.Logger
 import coil3.compose.AsyncImage
 import coil3.compose.LocalPlatformContext
 import coil3.request.ImageRequest
@@ -54,6 +54,9 @@ import org.koin.compose.viewmodel.koinViewModel
 import org.yourappdev.homeinterior.data.remote.BASE_URL
 import org.yourappdev.homeinterior.domain.model.RoomUi
 import org.yourappdev.homeinterior.ui.CreateAndExplore.RoomsViewModel
+import org.yourappdev.homeinterior.ui.theme.black_color
+import org.yourappdev.homeinterior.ui.theme.green_btn
+import org.yourappdev.homeinterior.ui.theme.white_color
 import org.yourappdev.homeinterior.utils.Constants
 
 
@@ -70,7 +73,7 @@ fun CreateScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(white_color)
             .padding(top = 10.dp),
         verticalArrangement = Arrangement.spacedBy(32.dp)
     ) {
@@ -123,11 +126,11 @@ private fun EmptyStateCard(onClick: () -> Unit) {
             onClick = {
                 onClick()
             },
-            color = Color(0xFFAAB892),
+            color = green_btn,
             shape = RoundedCornerShape(20),
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 15.dp)
+                .padding(bottom = 16.dp)
                 .height(28.dp),
         ) {
             Row(
@@ -139,17 +142,16 @@ private fun EmptyStateCard(onClick: () -> Unit) {
                 Image(
                     painter = painterResource(Res.drawable.add_2_24px),
                     contentDescription = "Add photo",
-                    colorFilter = ColorFilter.tint(color = Color.White),
-                    modifier = Modifier.size(13.dp)
+                    colorFilter = ColorFilter.tint(color = white_color),
+                    modifier = Modifier.size(12.dp)
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
                     text = "Add photo",
-                    color = Color.White,
+                    color = white_color,
                     fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
-                    lineHeight = 12.sp,
-                    letterSpacing = (-0.5).sp
+                    fontWeight = FontWeight.SemiBold,
+
                 )
             }
         }
@@ -158,12 +160,15 @@ private fun EmptyStateCard(onClick: () -> Unit) {
 
 @Composable
 private fun TrendingSection(rooms: List<RoomUi>, onRoomClick: (RoomUi) -> Unit) {
+    LaunchedEffect(rooms) {
+        println("Trending rooms size: ${rooms.size}")
+    }
     Column {
         Text(
             text = "Trending",
             fontSize = 18.sp,
             fontWeight = FontWeight.SemiBold,
-            color = Color.Black,
+            color = black_color,
             modifier = Modifier.padding(start = 24.dp)
         )
 
@@ -242,6 +247,9 @@ private fun RoomCategoryCard(
             .background(Color(0xFFE8E8E8))
             .clickable { onClick() }
     ) {
+        LaunchedEffect(room.imageUrl) {
+            println("Loading image: ${room.imageUrl}")
+        }
         AsyncImage(
             model = ImageRequest.Builder(LocalPlatformContext.current)
                 .data(room.imageUrl)

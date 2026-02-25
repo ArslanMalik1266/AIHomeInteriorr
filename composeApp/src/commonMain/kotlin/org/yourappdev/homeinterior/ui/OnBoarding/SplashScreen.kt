@@ -23,10 +23,12 @@ import org.yourappdev.homeinterior.navigation.NavigationViewModel
 @Composable
 fun SplashScreen(navigationViewModel: NavigationViewModel = koinViewModel(), navController: NavHostController) {
     val state by navigationViewModel.state.collectAsState()
-    LaunchedEffect(state) {
+    LaunchedEffect(state.startDestination) {
         if (state.startDestination.isNotBlank()) {
             delay(1000)
-            navController.navigate(state.startDestination)
+            navController.navigate(state.startDestination){
+                popUpTo(0) { inclusive = true }
+            }
         }
     }
     Box(

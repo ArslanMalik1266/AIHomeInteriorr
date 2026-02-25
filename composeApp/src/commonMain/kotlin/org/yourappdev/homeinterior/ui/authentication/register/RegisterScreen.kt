@@ -38,8 +38,14 @@ import org.yourappdev.homeinterior.ui.UiUtils.CustomSnackbar
 import org.yourappdev.homeinterior.ui.UiUtils.ProgressLoading
 import org.yourappdev.homeinterior.ui.UiUtils.rememberCustomSnackbarState
 import org.yourappdev.homeinterior.ui.common.base.CommonUiEvent
+import org.yourappdev.homeinterior.ui.theme.app_color
+import org.yourappdev.homeinterior.ui.theme.black_color
 import org.yourappdev.homeinterior.ui.theme.buttonBack
+import org.yourappdev.homeinterior.ui.theme.green_border
+import org.yourappdev.homeinterior.ui.theme.green_btn
+import org.yourappdev.homeinterior.ui.theme.grey_border
 import org.yourappdev.homeinterior.ui.theme.smallText
+import org.yourappdev.homeinterior.ui.theme.white_color
 
 
 @Composable
@@ -50,6 +56,7 @@ fun RegisterRoot(onBackClick: () -> Unit, viewModel: AuthViewModel = koinViewMod
 
 @OptIn(ExperimentalMaterial3Api::class)
 
+@Preview(showBackground = true)
 @Composable
 fun RegisterScreen(
     onBackClick: () -> Unit,
@@ -81,7 +88,7 @@ fun RegisterScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(white_color)
             .statusBarsPadding()
     ) {
         if (state.registerResponse is ResultState.Loading) {
@@ -90,7 +97,7 @@ fun RegisterScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp)
+                .padding(28.dp)
         ) {
             BackIconButton {
                 onBackClick()
@@ -102,15 +109,14 @@ fun RegisterScreen(
                 text = "Register",
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF9CA986)
+                color = app_color
             )
+            Spacer(modifier = Modifier.height(16.dp))
 
             Text(
                 text = "From imagination to inspiration—AI designs it for you.",
-                fontSize = 14.sp,
+                fontSize = 16.sp,
                 color = smallText,
-                modifier = Modifier.padding(top = 8.dp),
-                lineHeight = 16.sp
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -120,9 +126,9 @@ fun RegisterScreen(
                 text = "Email",
                 fontSize = 14.sp,
                 color = smallText,
-                modifier = Modifier.padding(bottom = 8.dp)
             )
 
+            Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
                 value = state.email,
                 onValueChange = { onRegisterEvent(RegisterEvent.EmailUpdate(it)) },
@@ -130,7 +136,7 @@ fun RegisterScreen(
                 placeholder = {
                     Text(
                         "Ex. abc@example.com",
-                        color = Color(0xFFCCCCCC)
+                        color = grey_border
                     )
                 },
                 leadingIcon = {
@@ -140,12 +146,12 @@ fun RegisterScreen(
                         colorFilter = ColorFilter.tint(color = LocalContentColor.current)
                     )
                 },
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(16.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedBorderColor = Color(0xFFE0E0E0),
-                    focusedBorderColor = buttonBack,
-                    focusedLeadingIconColor = buttonBack,
-                    unfocusedLeadingIconColor = Color(0xffDBDBDB)
+                    unfocusedBorderColor = grey_border,
+                    focusedBorderColor = green_border,
+                    focusedLeadingIconColor = green_border,
+                    unfocusedLeadingIconColor = grey_border
                 ),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 singleLine = true
@@ -158,8 +164,9 @@ fun RegisterScreen(
                 text = "Your Name",
                 fontSize = 14.sp,
                 color = smallText,
-                modifier = Modifier.padding(bottom = 8.dp)
             )
+            Spacer(modifier = Modifier.height(8.dp))
+
 
             OutlinedTextField(
                 value = state.username,
@@ -168,7 +175,7 @@ fun RegisterScreen(
                 placeholder = {
                     Text(
                         "Ex. Soul Ramirez",
-                        color = Color(0xFFCCCCCC)
+                        color = grey_border
                     )
                 },
                 leadingIcon = {
@@ -178,12 +185,12 @@ fun RegisterScreen(
                         colorFilter = ColorFilter.tint(color = LocalContentColor.current)
                     )
                 },
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(16.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedBorderColor = Color(0xFFE0E0E0),
-                    focusedBorderColor = buttonBack,
-                    focusedLeadingIconColor = buttonBack,
-                    unfocusedLeadingIconColor = Color(0xffDBDBDB)
+                    unfocusedBorderColor = grey_border,
+                    focusedBorderColor = green_border,
+                    focusedLeadingIconColor = green_border,
+                    unfocusedLeadingIconColor = grey_border
                 ),
                 singleLine = true
 
@@ -197,8 +204,8 @@ fun RegisterScreen(
                 text = "Your Password",
                 fontSize = 14.sp,
                 color = smallText,
-                modifier = Modifier.padding(bottom = 8.dp)
             )
+            Spacer(modifier = Modifier.height(20.dp))
 
             OutlinedTextField(
                 value = state.password,
@@ -207,7 +214,7 @@ fun RegisterScreen(
                 placeholder = {
                     Text(
                         "••••••••••",
-                        color = Color(0xFFCCCCCC)
+                        color = grey_border
                     )
                 },
                 leadingIcon = {
@@ -225,18 +232,18 @@ fun RegisterScreen(
                             painter = painterResource(if (state.showPassword) Res.drawable.show_1_ else Res.drawable.hide_),
                             contentDescription = "Close",
                             colorFilter = ColorFilter.tint(color = buttonBack),
-                            modifier = Modifier.size(23.dp)
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                 },
                 singleLine = true,
                 visualTransformation = if (state.showPassword) VisualTransformation.None else PasswordVisualTransformation(),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(16.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedBorderColor = Color(0xFFE0E0E0),
-                    focusedBorderColor = buttonBack,
-                    focusedLeadingIconColor = buttonBack,
-                    unfocusedLeadingIconColor = Color(0xffDBDBDB)
+                    unfocusedBorderColor = grey_border,
+                    focusedBorderColor = green_border,
+                    focusedLeadingIconColor = green_border,
+                    unfocusedLeadingIconColor = grey_border
                 ),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             )
@@ -251,15 +258,15 @@ fun RegisterScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = buttonBack
+                    containerColor = green_btn
                 )
             ) {
                 Text(
                     text = "Register",
                     fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.SemiBold
                 )
             }
 
@@ -274,7 +281,7 @@ fun RegisterScreen(
                 Text(
                     text = "Already have an account? ",
                     fontSize = 14.sp,
-                    color = Color(0xFF666666)
+                    color = black_color
                 )
                 ClickableText(title = "Login", textSize = 14.sp, fontWeight = FontWeight.Bold) {
                     onBackClick()
@@ -286,4 +293,5 @@ fun RegisterScreen(
             duration = 3000L
         )
     }
+
 }

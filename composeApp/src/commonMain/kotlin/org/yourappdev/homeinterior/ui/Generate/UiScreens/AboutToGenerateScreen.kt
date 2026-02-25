@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -25,19 +26,48 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
 import homeinterior.composeapp.generated.resources.Res
 import homeinterior.composeapp.generated.resources.edit_icon
 import homeinterior.composeapp.generated.resources.generate
 import homeinterior.composeapp.generated.resources.sofa
 import kotlinx.coroutines.delay
+import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
+import org.koin.compose.viewmodel.koinViewModel
+import org.yourappdev.homeinterior.domain.model.AboutToGenerateUiState
+import org.yourappdev.homeinterior.ui.CreateAndExplore.RoomsViewModel
 import org.yourappdev.homeinterior.ui.UiUtils.CloseIconButton
+import org.yourappdev.homeinterior.utils.Logger
+
+
 
 @Composable
-fun AboutToGenerateScreen(onCloseClick: () -> Unit, onResult: () -> Unit) {
+fun AboutToGenerateScreen(roomsViewModel: RoomsViewModel = koinViewModel(),
+                          onCloseClick: () -> Unit,
+                          onResult: () -> Unit ) {
+    val state by roomsViewModel.state.collectAsState()
+    LaunchedEffect(state.selectedImage) {
+        println("DEBUG_SCREEN: SelectedImage from ViewModel = ${state.selectedImage}")
+    }
+
+    val selectedType = state.selectedRoomType ?: ""
+    val selectedStyle = state.selectedStyleName ?: ""
+    val selectedImage =state.selectedImage
+
+    LaunchedEffect(state.selectedImage) {
+        println("DEBUGG = ${state.selectedImage}")
+    }
+
+
     val backgroundColor = Color(0xFFFFFFFF)
     val borderColor = Color(0xFFD7D6D6)
     val selectedBorderColor = Color(0xFFACBE8D)
+
+
+    LaunchedEffect(state) {
+        println("AboutToGenerateDebug: $state")
+    }
 
     var showLoader by remember {
         mutableStateOf(false)
@@ -68,25 +98,27 @@ fun AboutToGenerateScreen(onCloseClick: () -> Unit, onResult: () -> Unit) {
             ImagePreview(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
+                    .padding(horizontal = 24.dp),
+                imageUri = selectedImage
             )
 
             Spacer(modifier = Modifier.height(20.dp))
 
             SelectionCard(
                 label = "Type",
-                value = "Bedroom",
+                value = selectedType,
                 borderColor = selectedBorderColor,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp)
+
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             SelectionCard(
                 label = "Style",
-                value = "Contemporary",
+                value = selectedStyle.toString(),
                 borderColor = borderColor,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -146,19 +178,30 @@ fun TopBar(onCloseClick: () -> Unit) {
 }
 
 @Composable
-private fun ImagePreview(modifier: Modifier = Modifier) {
+private fun ImagePreview(
+    modifier: Modifier = Modifier,
+    imageUri: Any?
+) {
     Box(
         modifier = modifier
             .fillMaxHeight(0.45f)
             .clip(RoundedCornerShape(9.dp))
             .background(Color(0xFFF5F5F5))
     ) {
-        Image(
-            painter = painterResource(Res.drawable.sofa),
-            contentDescription = "Room Preview",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
-        )
+
+        if (imageUri != null) {
+            AsyncImage(
+                model = imageUri,
+                contentDescription = "Room Preview",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+        } else {
+            Text(
+                text = "No Image Selected",
+                modifier = Modifier.align(Alignment.Center)
+            )
+        }
     }
 }
 
@@ -167,7 +210,7 @@ private fun SelectionCard(
     label: String,
     value: String,
     borderColor: Color,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val backgroundColor = Color(0xFFFFFFFF).copy(alpha = 0.57f)
     val mediumText = Color(0xFF4D4D4D)
@@ -370,5 +413,8 @@ private fun GenerateButton(modifier: Modifier = Modifier, onGenerateClick: () ->
             }
         }
     }
+
+
 }
+
 

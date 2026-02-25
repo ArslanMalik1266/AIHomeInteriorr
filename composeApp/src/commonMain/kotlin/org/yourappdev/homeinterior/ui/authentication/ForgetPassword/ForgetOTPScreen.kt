@@ -29,7 +29,11 @@ import org.yourappdev.homeinterior.ui.UiUtils.CustomSnackbar
 import org.yourappdev.homeinterior.ui.UiUtils.ProgressLoading
 import org.yourappdev.homeinterior.ui.UiUtils.rememberCustomSnackbarState
 import org.yourappdev.homeinterior.ui.common.base.CommonUiEvent
+import org.yourappdev.homeinterior.ui.theme.app_color
 import org.yourappdev.homeinterior.ui.theme.buttonBack
+import org.yourappdev.homeinterior.ui.theme.green_border
+import org.yourappdev.homeinterior.ui.theme.green_btn
+import org.yourappdev.homeinterior.ui.theme.grey_border
 import org.yourappdev.homeinterior.ui.theme.smallText
 
 @Composable
@@ -91,15 +95,14 @@ fun ForgetOTPScreen(
                 text = "Forget Password",
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
-                color = buttonBack
+                color = app_color
             )
+            Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = "Recover you password if you have forgot the password!",
                 fontSize = 14.sp,
                 color = smallText,
-                modifier = Modifier.padding(top = 8.dp),
-                lineHeight = 16.sp
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -108,8 +111,8 @@ fun ForgetOTPScreen(
                 text = "Verification Code",
                 fontSize = 14.sp,
                 color = smallText,
-                modifier = Modifier.padding(bottom = 8.dp)
             )
+            Spacer(modifier = Modifier.height(8.dp))
 
             OutlinedTextField(
                 value = state.otp,
@@ -118,13 +121,13 @@ fun ForgetOTPScreen(
                 placeholder = {
                     Text(
                         "EX. 123456",
-                        color = Color(0xFFCCCCCC)
+                        color = grey_border
                     )
                 },
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(16.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedBorderColor = Color(0xFFE0E0E0),
-                    focusedBorderColor = buttonBack
+                    unfocusedBorderColor = grey_border,
+                    focusedBorderColor = green_border
                 ),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 singleLine = true
@@ -139,15 +142,15 @@ fun ForgetOTPScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = buttonBack
+                    containerColor = green_btn
                 )
             ) {
                 Text(
                     text = "Verify OTP",
                     fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.SemiBold
                 )
             }
             Spacer(modifier = Modifier.height(24.dp))
@@ -160,7 +163,6 @@ fun ForgetOTPScreen(
                     text = "Didn't get the code? ",
                     fontSize = 14.sp,
                     color = Color(0xFF666666),
-                    lineHeight = 1.sp
                 )
                 AnimatedContent(
                     targetState = state.canResend,

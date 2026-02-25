@@ -49,7 +49,7 @@ data class InteriorStyle(
 @Composable
 fun StyleSelectionScreen(
     styles: List<InteriorStyle>,
-    selectedStyleId: Int?,
+    selectedStyleName: String?,
     searchQuery: String,
     isSearchExpanded: Boolean,
     onStyleSelected: (Int) -> Unit,
@@ -105,7 +105,7 @@ fun StyleSelectionScreen(
                 items(filteredStyles) { style ->
                     StyleCard(
                         style = style,
-                        isSelected = style.id == selectedStyleId,
+                        isSelected = style.name == selectedStyleName,
                         onClick = { onStyleSelected(style.id) },
                     )
                 }

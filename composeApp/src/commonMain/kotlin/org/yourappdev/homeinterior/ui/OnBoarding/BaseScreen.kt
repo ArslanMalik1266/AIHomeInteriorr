@@ -30,6 +30,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Surface
@@ -54,6 +55,11 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.yourappdev.homeinterior.domain.model.BoardingData
 import org.yourappdev.homeinterior.ui.UiUtils.ProgressIndicator
 import org.yourappdev.homeinterior.ui.UiUtils.TopUShape
+import org.yourappdev.homeinterior.ui.theme.black_color
+import org.yourappdev.homeinterior.ui.theme.green_btn
+import org.yourappdev.homeinterior.ui.theme.grey_color
+import org.yourappdev.homeinterior.ui.theme.light_green
+import org.yourappdev.homeinterior.ui.theme.urbanistFontFamily
 
 @Preview(showBackground = true)
 @Composable
@@ -79,23 +85,20 @@ fun BaseScreen(onEndReached: () -> Unit) {
         )
     }
     val state = rememberPagerState(pageCount = { myList.size })
-    Box(Modifier.fillMaxSize().background(Color(0xFFEDF8E7)), contentAlignment = Alignment.Center) {
+    Box(
+        Modifier.fillMaxSize().background(color = light_green)
+    ) {
         HorizontalPager(
-            state = state
-        ) {
-            when (state.currentPage) {
-                0 -> {
-                    BoardingPage(myList[state.currentPage].imageUri)
-                }
+            state = state,
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.85f)
+                .align(Alignment.TopCenter)
+        ) { page ->
 
-                1 -> {
-                    BoardingPage(myList[state.currentPage].imageUri)
-                }
-
-                2 -> {
-                    BoardingPage(myList[state.currentPage].imageUri)
-                }
-            }
+            BoardingPage(
+                image = myList[page].imageUri,
+            )
         }
         Box(
             modifier = Modifier.fillMaxHeight(0.5f).align(Alignment.BottomCenter)
@@ -104,35 +107,44 @@ fun BaseScreen(onEndReached: () -> Unit) {
             contentAlignment = Alignment.TopCenter
         ) {
             Column(
-                modifier = Modifier.fillMaxSize().padding(start = 20.dp, end = 20.dp, top = 30.dp),
+                modifier = Modifier.fillMaxSize()
+                    .padding(start = 30.dp, end = 30.dp, top = 30.dp, bottom = 40.dp),
                 verticalArrangement = Arrangement.SpaceBetween,
             ) {
                 Spacer(modifier = Modifier.padding(vertical = 10.dp))
                 AnimatedContent(
                     targetState = state.currentPage,
                     transitionSpec = {
-                        fadeIn(animationSpec = tween(500, easing = FastOutSlowInEasing)).togetherWith(
+                        fadeIn(
+                            animationSpec = tween(
+                                500,
+                                easing = FastOutSlowInEasing
+                            )
+                        ).togetherWith(
                             fadeOut(animationSpec = tween(500, easing = FastOutSlowInEasing))
                         )
                     }
                 ) { page ->
-                    Column(verticalArrangement = Arrangement.spacedBy(13.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text(
                             text = myList[page].title,
-                            fontSize = 25.sp,
+                            fontSize = 24.sp,
                             fontWeight = FontWeight.Bold,
                             lineHeight = 25.sp,
+                            fontFamily = urbanistFontFamily(),
                             textAlign = TextAlign.Center,
+                            color = black_color,
                             modifier = Modifier.fillMaxWidth()
                         )
 
                         Text(
                             text = myList[page].subTitle,
-                            fontSize = 14.5.sp,
+                            fontSize = 14.sp,
                             textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth(),
-                            lineHeight = 21.sp,
-                            color = Color(0xff979797)
+                            fontFamily = urbanistFontFamily(),
+                            fontWeight = FontWeight.Normal,
+                            color = grey_color
                         )
                     }
                 }
@@ -143,21 +155,24 @@ fun BaseScreen(onEndReached: () -> Unit) {
                     modifier = Modifier.fillMaxWidth()
                 )
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 17.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Surface(
                         onClick = {
                             onEndReached()
-                        }, color = Color.Transparent, shape = RoundedCornerShape(24.dp),
-                        modifier = Modifier.weight(1f), border = BorderStroke(1.dp, color = Color(0xff979797))
+                        },
+                        color = Color.Transparent,
+                        shape = RoundedCornerShape(24.dp),
+                        modifier = Modifier.weight(1f),
+                        border = BorderStroke(1.dp, color = grey_color),
                     ) {
                         Text(
                             text = "Skip",
-                            color = Color(0xff979797),
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 11.dp),
+                            color = grey_color,
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
                             textAlign = TextAlign.Center,
-                            fontSize = 15.sp, fontWeight = FontWeight.Medium
+                            fontSize = 16.sp, fontWeight = FontWeight.SemiBold
                         )
                     }
 
@@ -177,12 +192,17 @@ fun BaseScreen(onEndReached: () -> Unit) {
                                 onEndReached()
                             }
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF81C784)),
+                        colors = ButtonDefaults.buttonColors(containerColor = green_btn),
                         shape = RoundedCornerShape(24.dp),
                         modifier = Modifier.weight(1f),
-                        contentPadding = PaddingValues(vertical = 13.dp)
+                        contentPadding = PaddingValues(vertical = 14.dp)
                     ) {
-                        Text(text = "Continue", fontSize = 15.sp, color = Color.White, fontWeight = FontWeight.Medium)
+                        Text(
+                            text = "Continue",
+                            fontSize = 16.sp,
+                            color = Color.White,
+                            fontWeight = FontWeight.SemiBold
+                        )
                     }
                 }
             }

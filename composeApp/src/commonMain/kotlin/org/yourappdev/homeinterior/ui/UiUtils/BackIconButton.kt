@@ -18,9 +18,10 @@ import homeinterior.composeapp.generated.resources.arrow_back_
 import homeinterior.composeapp.generated.resources.close
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
+import org.yourappdev.homeinterior.ui.theme.grey_color
 
 @Composable
-fun BackIconButton(image: DrawableResource = Res.drawable.arrow_back_, iconSize: Dp = 23.dp, tint: Color = Color(0xFF8C8989), onClick: () -> Unit) {
+fun BackIconButton(image: DrawableResource = Res.drawable.arrow_back_, iconSize: Dp = 24.dp, tint: Color = grey_color, onClick: () -> Unit) {
     Box(modifier = Modifier.size(30.dp).clip(CircleShape).clickable {
         onClick()
     }, contentAlignment = Alignment.Center) {

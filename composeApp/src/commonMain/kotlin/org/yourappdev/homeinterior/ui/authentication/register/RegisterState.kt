@@ -17,7 +17,7 @@ data class RegisterState(
     val fieldError: String? = null,
     val resendTimerSeconds: Int = 0,
     val canResend: Boolean = true,
-    val rememberMe: Boolean = true,
+    val rememberMe: Boolean = false,
     val forgetPasswordRequestResponse: ResultState<RegisterResponse> = ResultState.Stable,
     val forgetPasswordResendResponse: ResultState<RegisterResponse> = ResultState.Stable,
     val forgetPasswordVerifyResponse: ResultState<RegisterResponse> = ResultState.Stable,
