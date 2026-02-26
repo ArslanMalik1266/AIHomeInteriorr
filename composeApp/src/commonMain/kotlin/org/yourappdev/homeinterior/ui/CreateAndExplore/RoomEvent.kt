@@ -8,6 +8,7 @@ sealed class RoomEvent {
     data object OnApplyFilters : RoomEvent()
     object OnFilterClick : RoomEvent()
     object OnDismissFilterSheet : RoomEvent()
+    object OnResetLoading : RoomEvent()
     object OnClearFilters : RoomEvent()
     data class OnTempFilterChange(val filterState: FilterState) : RoomEvent()
     data class OnToggleFilterSection(val section: FilterSection) : RoomEvent()

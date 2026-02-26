@@ -26,7 +26,7 @@ class MainActivity : ComponentActivity() {
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
-        // Hide nav bar and status bar
+        // Hide nav bar
         val controller = WindowInsetsControllerCompat(window, window.decorView)
         controller.hide(android.view.WindowInsets.Type.navigationBars())
         controller.systemBarsBehavior =

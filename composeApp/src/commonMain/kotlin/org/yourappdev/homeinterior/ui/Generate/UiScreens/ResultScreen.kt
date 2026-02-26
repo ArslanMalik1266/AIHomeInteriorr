@@ -15,6 +15,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
 import homeinterior.composeapp.generated.resources.Res
 import homeinterior.composeapp.generated.resources.sofa
 import org.jetbrains.compose.resources.DrawableResource
@@ -23,6 +24,7 @@ import org.jetbrains.compose.resources.painterResource
 
 @Composable
 fun ResultScreen(
+    generatedImages: List<String>,
     onCloseClick: () -> Unit = {}
 ) {
     Box(
@@ -38,25 +40,15 @@ fun ResultScreen(
             TopBar {
                 onCloseClick()
             }
-            CreateContent()
+            CreateContent(imageList = generatedImages)
         }
     }
 }
 
 
 @Composable
-private fun CreateContent() {
-    val imageList = listOf(
-        Res.drawable.sofa,
-        Res.drawable.sofa,
-        Res.drawable.sofa,
-        Res.drawable.sofa,
-        Res.drawable.sofa,
-        Res.drawable.sofa,
-        Res.drawable.sofa,
-        Res.drawable.sofa,
-        Res.drawable.sofa,
-    )
+private fun CreateContent(imageList: List<String>) {
+
 
     LazyVerticalStaggeredGrid(
         columns = StaggeredGridCells.Fixed(2),
@@ -79,7 +71,7 @@ private fun CreateContent() {
             }
         ) { index, imageResource ->
             ImageCard(
-                imageResource = imageResource,
+                imageUrl = imageResource,
                 isLarge = (index + 1) % 3 == 0
             )
         }
@@ -88,23 +80,21 @@ private fun CreateContent() {
 
 @Composable
 private fun ImageCard(
-    imageResource: DrawableResource,
+    imageUrl: String,
     isLarge: Boolean,
     modifier: Modifier = Modifier
 ) {
-    Image(
-        painter = painterResource(imageResource),
+    AsyncImage(
+        model = imageUrl,
         contentDescription = "Room design",
         modifier = modifier.then(
-            if (isLarge) {
-                Modifier.fillMaxWidth().height(176.dp)
-            } else {
-                Modifier.aspectRatio(1f)
-            }
-        ).clip(RoundedCornerShape(9.dp))
+            if (isLarge) Modifier.fillMaxWidth().height(176.dp)
+            else Modifier.aspectRatio(1f)
+        )
+            .clip(RoundedCornerShape(9.dp))
             .border(
                 width = 1.dp,
-                color = if (isLarge) Color(0xFFCFCFCF) else Color(0xFFCFCFCF),
+                color = Color(0xFFCFCFCF),
                 shape = RoundedCornerShape(9.dp)
             ),
         contentScale = ContentScale.Crop

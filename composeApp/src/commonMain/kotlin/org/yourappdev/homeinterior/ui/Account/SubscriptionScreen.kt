@@ -101,6 +101,7 @@ fun SubscriptionScreen(onBackClick: () -> Unit) {
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Transparent)
+
     ) {
         Image(
             painter = painterResource(Res.drawable.subscriptionbackgroun),

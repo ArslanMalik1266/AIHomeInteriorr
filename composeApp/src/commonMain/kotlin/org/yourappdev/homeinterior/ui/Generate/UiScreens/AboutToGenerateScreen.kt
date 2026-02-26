@@ -1,21 +1,13 @@
 package org.yourappdev.homeinterior.ui.Generate.UiScreens
 
-
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,55 +22,47 @@ import coil3.compose.AsyncImage
 import homeinterior.composeapp.generated.resources.Res
 import homeinterior.composeapp.generated.resources.edit_icon
 import homeinterior.composeapp.generated.resources.generate
-import homeinterior.composeapp.generated.resources.sofa
-import kotlinx.coroutines.delay
-import org.jetbrains.compose.resources.DrawableResource
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
-import org.yourappdev.homeinterior.domain.model.AboutToGenerateUiState
+import org.yourappdev.homeinterior.ui.CreateAndExplore.RoomEvent
 import org.yourappdev.homeinterior.ui.CreateAndExplore.RoomsViewModel
 import org.yourappdev.homeinterior.ui.UiUtils.CloseIconButton
-import org.yourappdev.homeinterior.utils.Logger
-
-
 
 @Composable
-fun AboutToGenerateScreen(roomsViewModel: RoomsViewModel = koinViewModel(),
-                          onCloseClick: () -> Unit,
-                          onResult: () -> Unit ) {
+fun AboutToGenerateScreen(
+    roomsViewModel: RoomsViewModel = koinViewModel(),
+    onCloseClick: () -> Unit,
+    onResult: () -> Unit
+) {
     val state by roomsViewModel.state.collectAsState()
-    LaunchedEffect(state.selectedImage) {
-        println("DEBUG_SCREEN: SelectedImage from ViewModel = ${state.selectedImage}")
-    }
+    val coroutineScope = rememberCoroutineScope()
 
     val selectedType = state.selectedRoomType ?: ""
     val selectedStyle = state.selectedStyleName ?: ""
-    val selectedImage =state.selectedImage
-
-    LaunchedEffect(state.selectedImage) {
-        println("DEBUGG = ${state.selectedImage}")
-    }
-
+    val selectedImage = state.selectedImage
+    val selectedPalette = state.availableColors.firstOrNull { it.id == state.selectedPaletteId }
 
     val backgroundColor = Color(0xFFFFFFFF)
     val borderColor = Color(0xFFD7D6D6)
     val selectedBorderColor = Color(0xFFACBE8D)
 
-
-    LaunchedEffect(state) {
-        println("AboutToGenerateDebug: $state")
+    LaunchedEffect(Unit) {
+        roomsViewModel.onRoomEvent(RoomEvent.OnResetLoading)
     }
 
-    var showLoader by remember {
-        mutableStateOf(false)
+    // If images are generated, show ResultScreen
+    if (state.generatedImages.isNotEmpty()) {
+        ResultScreen(
+            generatedImages = state.generatedImages,
+            onCloseClick = {
+                roomsViewModel.onRoomEvent(RoomEvent.OnGenerationComplete)
+                onCloseClick()
+            }
+        )
+        return
     }
-    LaunchedEffect(showLoader) {
-        if (showLoader) {
-            delay(5000)
-            showLoader = false
-            onResult()
-        }
-    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -89,9 +73,7 @@ fun AboutToGenerateScreen(roomsViewModel: RoomsViewModel = koinViewModel(),
                 .fillMaxSize()
                 .statusBarsPadding()
         ) {
-            TopBar() {
-                onCloseClick()
-            }
+            TopBar(onCloseClick)
 
             Spacer(modifier = Modifier.height(10.dp))
 
@@ -111,14 +93,13 @@ fun AboutToGenerateScreen(roomsViewModel: RoomsViewModel = koinViewModel(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp)
-
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             SelectionCard(
                 label = "Style",
-                value = selectedStyle.toString(),
+                value = selectedStyle,
                 borderColor = borderColor,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -127,12 +108,15 @@ fun AboutToGenerateScreen(roomsViewModel: RoomsViewModel = koinViewModel(),
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            ColorPaletteCard(
-                borderColor = borderColor,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
-            )
+            selectedPalette?.let { palette ->
+                ColorPaletteCard(
+                    borderColor = Color(0xFFCBE0A7),
+                    paletteColors = palette.colors,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp)
+                )
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -142,12 +126,15 @@ fun AboutToGenerateScreen(roomsViewModel: RoomsViewModel = koinViewModel(),
                     .height(49.dp)
                     .align(Alignment.CenterHorizontally)
             ) {
-                showLoader = true
+                coroutineScope.launch {
+                    roomsViewModel.onRoomEvent(RoomEvent.OnGenerateClick)
+                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
         }
-        if (showLoader) {
+
+        if (state.isGenerating) {
             LoadingScreen()
         }
     }
@@ -178,17 +165,13 @@ fun TopBar(onCloseClick: () -> Unit) {
 }
 
 @Composable
-private fun ImagePreview(
-    modifier: Modifier = Modifier,
-    imageUri: Any?
-) {
+private fun ImagePreview(modifier: Modifier = Modifier, imageUri: Any?) {
     Box(
         modifier = modifier
             .fillMaxHeight(0.45f)
             .clip(RoundedCornerShape(9.dp))
             .background(Color(0xFFF5F5F5))
     ) {
-
         if (imageUri != null) {
             AsyncImage(
                 model = imageUri,
@@ -197,21 +180,13 @@ private fun ImagePreview(
                 contentScale = ContentScale.Crop
             )
         } else {
-            Text(
-                text = "No Image Selected",
-                modifier = Modifier.align(Alignment.Center)
-            )
+            Text(text = "No Image Selected", modifier = Modifier.align(Alignment.Center))
         }
     }
 }
 
 @Composable
-private fun SelectionCard(
-    label: String,
-    value: String,
-    borderColor: Color,
-    modifier: Modifier = Modifier,
-) {
+private fun SelectionCard(label: String, value: String, borderColor: Color, modifier: Modifier = Modifier) {
     val backgroundColor = Color(0xFFFFFFFF).copy(alpha = 0.57f)
     val mediumText = Color(0xFF4D4D4D)
     val grayText = Color(0xFF91918F)
@@ -220,11 +195,7 @@ private fun SelectionCard(
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(9.dp))
-            .border(
-                width = 1.dp,
-                color = borderColor,
-                shape = RoundedCornerShape(9.dp)
-            )
+            .border(width = 1.dp, color = borderColor, shape = RoundedCornerShape(9.dp))
             .background(backgroundColor)
             .padding(horizontal = 16.dp, vertical = 10.dp)
     ) {
@@ -232,20 +203,8 @@ private fun SelectionCard(
             modifier = Modifier.align(Alignment.CenterStart),
             verticalArrangement = Arrangement.Center
         ) {
-            Text(
-                text = value,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Medium,
-                color = mediumText,
-                lineHeight = 20.sp
-            )
-            Text(
-                text = label,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = grayText,
-                lineHeight = 20.sp
-            )
+            Text(text = value, fontSize = 15.sp, fontWeight = FontWeight.Medium, color = mediumText, lineHeight = 20.sp)
+            Text(text = label, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = grayText, lineHeight = 20.sp)
         }
 
         Icon(
@@ -260,76 +219,41 @@ private fun SelectionCard(
 }
 
 @Composable
-private fun ColorPaletteCard(
-    borderColor: Color,
-    modifier: Modifier = Modifier
-) {
+private fun ColorPaletteCard(borderColor: Color, paletteColors: List<Color>, modifier: Modifier = Modifier) {
     val backgroundColor = Color(0xFFFFFFFF).copy(alpha = 0.57f)
     val lightGrayText = Color(0xFF90918F)
     val editIconColor = Color(0xFFB3B5B1)
 
-    val paletteColors = listOf(
-        Color(0xFF485F4C),
-        Color(0xFFC69735),
-        Color(0xFFD3CCBB)
-    )
-
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(9.dp))
-            .border(
-                width = 1.dp,
-                color = borderColor,
-                shape = RoundedCornerShape(9.dp)
-            )
+            .border(width = 1.dp, color = borderColor, shape = RoundedCornerShape(9.dp))
             .background(backgroundColor)
             .padding(horizontal = 16.dp, vertical = 10.dp)
     ) {
-        Column(
-            modifier = Modifier.align(Alignment.CenterStart),
-            verticalArrangement = Arrangement.Center
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy((-9).dp),
-            ) {
+        Column(modifier = Modifier.align(Alignment.CenterStart), verticalArrangement = Arrangement.Center) {
+            Row(horizontalArrangement = Arrangement.spacedBy((-9).dp)) {
                 paletteColors.forEach { color ->
                     Box(
                         modifier = Modifier
                             .size(24.dp)
-                            .shadow(
-                                elevation = 5.dp,
-                                shape = CircleShape,
-                                ambientColor = Color.Black.copy(alpha = 0.2f),
-                                spotColor = Color.Black.copy(alpha = 0.2f)
-                            )
+                            .shadow(5.dp, CircleShape, ambientColor = Color.Black.copy(0.2f), spotColor = Color.Black.copy(0.2f))
                             .clip(CircleShape)
                             .background(color)
-                            .border(
-                                width = 0.2.dp,
-                                color = Color(0xFF898989),
-                                shape = CircleShape
-                            )
+                            .border(0.2.dp, Color(0xFF898989), CircleShape)
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(2.dp))
-
-            Text(
-                text = "Colour Pallete",
-                fontSize = 15.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = lightGrayText
-            )
+            Text(text = "Colour Pallete", fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = lightGrayText)
         }
 
         Icon(
             painter = painterResource(Res.drawable.edit_icon),
             contentDescription = "Edit",
             tint = editIconColor,
-            modifier = Modifier
-                .size(22.dp)
-                .align(Alignment.CenterEnd)
+            modifier = Modifier.size(22.dp).align(Alignment.CenterEnd)
         )
     }
 }
@@ -342,56 +266,26 @@ private fun GenerateButton(modifier: Modifier = Modifier, onGenerateClick: () ->
         1.0f to Color(0xFFCEFFB3).copy(alpha = 0.48f)
     )
 
-
-
     Button(
-        onClick = {
-            onGenerateClick()
-        },
+        onClick = onGenerateClick,
         modifier = modifier,
         shape = RoundedCornerShape(50),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = Color.Transparent
-        ),
+        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
         contentPadding = PaddingValues(0.dp),
-        border = BorderStroke(
-            width = 1.5.dp,
-            color = Color(0xFFD2FDB9)
-        )
+        border = BorderStroke(1.5.dp, Color(0xFFD2FDB9))
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    brush = buttonGradient,
-                    shape = RoundedCornerShape(50)
-                ),
+            modifier = Modifier.fillMaxSize().background(buttonGradient, RoundedCornerShape(50)),
             contentAlignment = Alignment.Center
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.padding(end = 16.dp)
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center, modifier = Modifier.padding(end = 16.dp)) {
                 Box(
-                    modifier = Modifier.padding(end = 9.dp)
+                    modifier = Modifier
+                        .padding(end = 9.dp)
                         .size(40.2.dp)
-                        .shadow(
-                            elevation = 4.dp,
-                            shape = CircleShape,
-                            ambientColor = Color.Black.copy(alpha = 0.07f),
-                            spotColor = Color.Black.copy(alpha = 0.07f)
-                        )
+                        .shadow(4.dp, CircleShape, ambientColor = Color.Black.copy(0.07f), spotColor = Color.Black.copy(0.07f))
                         .clip(CircleShape)
-                        .background(
-                            brush = Brush.linearGradient(
-                                colors = listOf(
-                                    Color(0xFFC5EBB2).copy(alpha = 0.69f),
-                                    Color(0xFFDFF2C2).copy(alpha = 0.69f),
-                                    Color(0xFFD2F7BD).copy(alpha = 0.69f)
-                                )
-                            )
-                        ),
+                        .background(Brush.linearGradient(listOf(Color(0xFFC5EBB2).copy(0.69f), Color(0xFFDFF2C2).copy(0.69f), Color(0xFFD2F7BD).copy(0.69f)))),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -404,17 +298,8 @@ private fun GenerateButton(modifier: Modifier = Modifier, onGenerateClick: () ->
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                Text(
-                    text = "Generate",
-                    fontSize = 19.67.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color.Black
-                )
+                Text(text = "Generate", fontSize = 19.67.sp, fontWeight = FontWeight.Medium, color = Color.Black)
             }
         }
     }
-
-
 }
-
-

@@ -283,7 +283,8 @@ fun BaseBottomBarScreen() {
                 ResultScreen(
                     onCloseClick = {
                         navController.popBackStack()
-                    }
+                    },
+                    generatedImages = roomViewModel.state.value.generatedImages
                 )
             }
 

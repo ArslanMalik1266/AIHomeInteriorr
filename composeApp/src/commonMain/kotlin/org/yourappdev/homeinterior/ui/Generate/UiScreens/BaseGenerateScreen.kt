@@ -154,8 +154,11 @@ fun BaseGenerateScreen(roomsViewModel: RoomsViewModel, endToNext: () -> Unit, on
                         ColorPaletteSelectionScreen(
                             palettes = state.availableColors,
                             selectedPaletteId = state.selectedPaletteId,
-                            onPaletteSelected = {
-                                roomsViewModel.onRoomEvent(RoomEvent.OnPaletteSelected(it))
+                            onPaletteSelected = { paletteId ->
+                                roomsViewModel.onRoomEvent(
+                                    RoomEvent.OnPaletteSelected(paletteId)
+                                )
+                                println("Selected Palette ID: $paletteId")
                             }
                         )
                     }

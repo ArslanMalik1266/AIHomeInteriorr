@@ -3,6 +3,7 @@ package org.yourappdev.homeinterior.ui.CreateAndExplore
 import androidx.compose.ui.graphics.Color
 import io.github.ismoy.imagepickerkmp.domain.models.GalleryPhotoResult
 import org.yourappdev.homeinterior.data.remote.util.ResultState
+import org.yourappdev.homeinterior.domain.model.GenerateRoomResponse
 import org.yourappdev.homeinterior.domain.model.Room
 import org.yourappdev.homeinterior.domain.model.RoomUi
 import org.yourappdev.homeinterior.domain.model.Rooms
@@ -17,6 +18,7 @@ data class RoomUiState(
     val searchQuery: String = "",
     val filterState: FilterState = FilterState(),
     val filterCount: Int = 0,
+    val errorMessage: String? = null,
     val tempFilterCount: Int = 0,
     val isLoading: Boolean = true,
     val showFilterSheet: Boolean = false,
@@ -41,7 +43,10 @@ data class RoomUiState(
     val styleSearchQuery: String = "",
     val isStyleSearchExpanded: Boolean = false,
     val selectedPaletteId: Int? = availableColors.firstOrNull()?.id,
-    val isGenerating: Boolean = false
+    val isGenerating: Boolean = false,
+    val generatedImages: List<String> = emptyList(),
+    val jobId: String? = null,
+    val generatedRoom: GenerateRoomResponse? = null,
 )
 
 data class FilterState(

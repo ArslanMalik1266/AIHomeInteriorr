@@ -1,9 +1,12 @@
 package org.yourappdev.homeinterior.ui.Account
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -69,6 +72,7 @@ fun AccountScreen(
                     .clickable { onProfileClick() },
                 contentAlignment = Alignment.Center
             ) {
+
                 Box(
                     modifier = Modifier
                         .size(20.dp)
@@ -235,10 +239,14 @@ fun CreditCard(onSubscriptionClick: () -> Unit) {
 fun NotificationsToggle() {
     var isEnabled by remember { mutableStateOf(true) }
 
+    // Colors derived from your XML/Image
+    val orange = Color(0xFFA3B18A) // The green from your pic (or use 0xFFFF9800 for orange)
+    val lightGrey = Color(0xFFE0E0E0)
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp),
+            .padding(horizontal = 20.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -249,29 +257,32 @@ fun NotificationsToggle() {
             color = Color(0xFF4D4D4D)
         )
 
-        Switch(
-            checked = isEnabled,
-            onCheckedChange = { isEnabled = it },
-            modifier = Modifier.scale(0.8f),
-            thumbContent = {
-                Box(
-                    modifier = Modifier
-                        .size(24.dp)
-                        .background(Color.White, CircleShape)
-                )
-            },
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = Color.White,
-                checkedTrackColor = Color(0xFFA3B18A),
-                uncheckedThumbColor = Color.White,
-                uncheckedTrackColor = Color(0xFFE0E0E0),
-                uncheckedBorderColor = Color.Transparent,
-                checkedBorderColor = Color.Transparent
+        // --- CUSTOM SWITCH START ---
+        val trackColor by animateColorAsState(if (isEnabled) orange else lightGrey)
+        val thumbOffset by animateDpAsState(if (isEnabled) 23.dp else 0.dp)
+
+        Box(
+            modifier = Modifier
+                .size(width = 45.dp, height = 23.dp)
+                .clip(RoundedCornerShape(22.5.dp))
+                .background(trackColor)
+                .clickable(
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() }
+                ) { isEnabled = !isEnabled },
+            contentAlignment = Alignment.CenterStart
+        ) {
+            Box(
+                modifier = Modifier
+                    .offset(x = thumbOffset)
+                    .size(23.dp)
+                    .background(Color.White, CircleShape)
+                    .border(4.dp, trackColor, CircleShape) // This creates the "inset" look from your XML
             )
-        )
+        }
+        // --- CUSTOM SWITCH END ---
     }
 }
-
 @Composable
 fun ModelsSection() {
     var selectedModel by remember { mutableStateOf("DesignNet" to "Basic") }

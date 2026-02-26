@@ -7,8 +7,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.yourappdev.homeinterior.data.mapper.toUi
+import org.yourappdev.homeinterior.domain.model.GenerateRoomRequest
 import org.yourappdev.homeinterior.domain.repo.RoomsRepository
 import org.yourappdev.homeinterior.ui.Generate.UiScreens.ColorPalette
 import org.yourappdev.homeinterior.ui.Generate.UiScreens.InteriorStyle
@@ -53,6 +55,10 @@ class RoomsViewModel(val roomsRepository: RoomsRepository) : ViewModel() {
                 )
             }
 
+            RoomEvent.OnResetLoading -> {
+                _state.update { it.copy(isLoading = false) }
+            }
+
             RoomEvent.OnDismissFilterSheet -> {
                 _state.value = _state.value.copy(
                     showFilterSheet = false,
@@ -61,7 +67,8 @@ class RoomsViewModel(val roomsRepository: RoomsRepository) : ViewModel() {
             }
 
             RoomEvent.OnClearFilters -> {
-                _state.value = _state.value.copy(tempFilterState = FilterState(), tempFilterCount = 0)
+                _state.value =
+                    _state.value.copy(tempFilterState = FilterState(), tempFilterCount = 0)
             }
 
             is RoomEvent.OnTempFilterChange -> {
@@ -101,7 +108,8 @@ class RoomsViewModel(val roomsRepository: RoomsRepository) : ViewModel() {
                     selectedImage = event.imageDetails.uri
                 )
                 println("DEBUG_VM: SelectedImage URI = ${event.imageDetails.uri}")
-                println("DEBUG_VM: Full GalleryPhotoResult = $event.imageDetails")            }
+                println("DEBUG_VM: Full GalleryPhotoResult = $event.imageDetails")
+            }
 
             is RoomEvent.OnPageChange -> {
                 _state.value = _state.value.copy(currentPage = event.page)
@@ -152,14 +160,58 @@ class RoomsViewModel(val roomsRepository: RoomsRepository) : ViewModel() {
                 _state.value = _state.value.copy(selectedPaletteId = event.paletteId)
             }
 
-            RoomEvent.OnGenerateClick -> {
-                _state.value = _state.value.copy(isGenerating = true)
+            is RoomEvent.OnGenerateClick -> {
+                // Show loading
+                _state.value = _state.value.copy(isGenerating = true, errorMessage = null)
+
+                println("DEBUG_VM: Generate clicked, isGenerating = true")
+                viewModelScope.launch {
+                    try {
+                        val prompt = buildPromptFromState(_state.value)
+                        println("DEBUG_VM: Prompt = $prompt")
+
+                        val request = GenerateRoomRequest(
+                            image = _state.value.selectedImage ?: "",
+                            prompt = prompt,
+                            strength = 0.7f // or any value you want to use
+                        )
+                        println("DEBUG_VM: Final Request = $request")
+
+
+                        val response = roomsRepository.generateRoom(request)
+
+                        println("DEBUG_VM: API response = $response")
+                        if (response.success) {
+                            _state.value = _state.value.copy(
+                                isGenerating = false,
+                                generatedRoom = response,
+                                generatedImages = response.static_urls, // <-- store image URLs for UI
+                                jobId = response.job_id,
+                                errorMessage = null
+                            )
+                            println("DEBUG_VM: Generated images = ${response.static_urls}")
+                        } else {
+                            _state.value = _state.value.copy(
+                                isGenerating = false,
+                                errorMessage = response.message
+                            )
+                            _uiEvent.emit(ShowError(response.message))
+                        }
+                    } catch (e: Exception) {
+                        _state.value = _state.value.copy(
+                            isGenerating = false,
+                            errorMessage = e.message ?: "Unknown error"
+                        )
+                        _uiEvent.emit(ShowError(e.message ?: "Unknown error"))
+                    }
+                }
             }
 
             RoomEvent.OnGenerationComplete -> {
                 _state.value = _state.value.copy(isGenerating = false)
             }
 
+            else -> {}
         }
     }
 
@@ -183,6 +235,7 @@ class RoomsViewModel(val roomsRepository: RoomsRepository) : ViewModel() {
             }
         }
 
+
         // Apply style filter
         if (state.filterState.selectedStyles.isNotEmpty() &&
             !state.filterState.selectedStyles.contains("All")
@@ -194,7 +247,32 @@ class RoomsViewModel(val roomsRepository: RoomsRepository) : ViewModel() {
             }
         }
 
+        if (state.filterState.selectedColors.isNotEmpty()) {
+            filtered = filtered.filter { room ->
+                // Check if any of the room's color palette IDs are selected
+                state.filterState.selectedColors.contains(room.id)
+            }
+        }
+
+//        if (state.filterState.selectedFormats.isNotEmpty() &&
+//            !state.filterState.selectedFormats.contains("All")
+//        ) {
+//            filtered = filtered.filter { room ->
+//                state.filterState.selectedFormats.contains(room.format)
+//            }
+//        }
+//        if (state.filterState.selectedPrices.isNotEmpty()) {
+//            filtered = filtered.filter { room ->
+//                when (room.price) {
+//                    0 -> state.filterState.selectedPrices.contains("Free")
+//                    else -> state.filterState.selectedPrices.contains("Premium")
+//                }
+//            }
+//        }
+
         _state.value = _state.value.copy(filteredRooms = filtered)
+
+
     }
 
     private fun calculateFilterCount(filterState: FilterState): Int {
@@ -220,7 +298,13 @@ class RoomsViewModel(val roomsRepository: RoomsRepository) : ViewModel() {
             .distinct()
 
         val styles = rooms
-            .map { data -> InteriorStyle(name = data.roomStyle, imageUrl = data.imageUrl, id = data.id) }
+            .map { data ->
+                InteriorStyle(
+                    name = data.roomStyle,
+                    imageUrl = data.imageUrl,
+                    id = data.id
+                )
+            }
             .distinct()
 
 
@@ -235,7 +319,9 @@ class RoomsViewModel(val roomsRepository: RoomsRepository) : ViewModel() {
             availableRoomTypes = roomTypes,
             availableStyles = styles,
             availableStylesString = stylesString,
-            availableColors = colorPalettes
+            availableColors = colorPalettes,
+            selectedPaletteId = _state.value.selectedPaletteId
+                ?: colorPalettes.firstOrNull()?.id
         )
     }
 
@@ -268,6 +354,21 @@ class RoomsViewModel(val roomsRepository: RoomsRepository) : ViewModel() {
                 }
             )
         }
+    }
+
+    private fun buildPromptFromState(state: RoomUiState): String {
+        val roomType = state.selectedRoomType?.ifBlank { "living room" }
+        val style = state.selectedStyleName?.ifBlank { "modern" }
+
+        val colors = state.availableColors
+            .firstOrNull { it.id == state.selectedPaletteId }
+            ?.colors
+            ?.joinToString(", ")
+            ?: "neutral tones"
+
+        return """
+        “Design a $roomType in a $style with the color palette $colors, specifying primary, secondary, and accent colors. Provide a detailed furniture layout, including essential pieces, spatial arrangement, and functional zones. Recommend materials, textures, and finishes for walls, flooring, furniture, and textiles to enhance the style. Suggest lighting solutions, including natural light utilization, fixture types, and placement for ambient, task, and accent lighting. Include complementary decorative elements such as artwork, plants, rugs, curtains, and accessories that reinforce the mood and atmosphere. Ensure the design is cohesive, functional, visually balanced, and creates the intended ambiance while reflecting the chosen style and palette.”
+    """.trimIndent()
     }
 
 
