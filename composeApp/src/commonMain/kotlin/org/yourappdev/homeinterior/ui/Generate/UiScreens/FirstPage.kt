@@ -23,7 +23,8 @@ import homeinterior.composeapp.generated.resources.sofa_2
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
-fun FirstPage(imageUri: String?) {
+fun FirstPage(imageBytes: ByteArray?,
+              imageUri: String? = null) {
     Box(
         modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp),
         contentAlignment = Alignment.TopCenter
@@ -35,12 +36,12 @@ fun FirstPage(imageUri: String?) {
         ) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalPlatformContext.current)
-                    .data(imageUri)
+                    .data(imageBytes ?: imageUri)
                     .crossfade(true)
                     .build(),
                 placeholder = painterResource(Res.drawable.roomplaceholder),
                 error = painterResource(Res.drawable.roomplaceholder),
-                contentDescription = imageUri.toString(),
+                contentDescription = "Selected Room Image",
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
             )

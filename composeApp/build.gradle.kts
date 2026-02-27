@@ -68,6 +68,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(libs.kotlinx.datetime)
             implementation(libs.coil.network.ktor)
+            implementation("com.squareup.okio:okio:3.6.0")
             implementation(libs.coil.compose)
             implementation(libs.coil.svg)
             implementation(compose.components.resources)

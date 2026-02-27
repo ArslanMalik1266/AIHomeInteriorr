@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,7 +32,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import homeinterior.composeapp.generated.resources.*
-import io.github.ismoy.imagepickerkmp.domain.models.GalleryPhotoResult
 import io.github.ismoy.imagepickerkmp.presentation.ui.components.GalleryPickerLauncher
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -46,6 +46,7 @@ import org.yourappdev.homeinterior.ui.CreateAndExplore.RoomEvent
 import org.yourappdev.homeinterior.ui.CreateAndExplore.RoomsViewModel
 import org.yourappdev.homeinterior.ui.Files.CreateEditScreen
 import org.yourappdev.homeinterior.ui.Files.FilesScreen
+import org.yourappdev.homeinterior.utils.uriToByteArray
 import org.yourappdev.homeinterior.ui.Generate.UiScreens.AboutToGenerateScreen
 import org.yourappdev.homeinterior.ui.Generate.UiScreens.BaseGenerateScreen
 import org.yourappdev.homeinterior.ui.Generate.UiScreens.ResultScreen
@@ -53,6 +54,7 @@ import org.yourappdev.homeinterior.ui.UiUtils.*
 import org.yourappdev.homeinterior.ui.theme.bottomBarBack
 import org.yourappdev.homeinterior.ui.theme.selectedNavItem
 import org.yourappdev.homeinterior.ui.theme.unselectedNavItem
+import org.yourappdev.homeinterior.utils.getPlatformContext
 
 @Composable
 fun BaseBottomBarScreen() {
@@ -62,6 +64,10 @@ fun BaseBottomBarScreen() {
     val currentDestination = navBackStackEntry?.destination
     val roomViewModel: RoomsViewModel = koinViewModel()
     var showGallery by remember { mutableStateOf(false) }
+
+    val scope = rememberCoroutineScope()
+
+    val platformContext = getPlatformContext()
 
     val shouldShowBottomBar = currentDestination?.route?.let { route ->
         route.contains("Create") ||
@@ -210,6 +216,15 @@ fun BaseBottomBarScreen() {
                     viewModel = roomViewModel,
                     onPremiumClick = {
                         navController.navigate(Routes.Subscription)
+                    },
+                    onAddPhotoClick = {
+                        showGallery = true
+                    },
+                    onRoomClick = {
+                        navController.navigate(Routes.AddScreen)
+                    },
+                    onShowResults = {
+                        navController.navigate(Routes.Result)
                     }
                 )
             }
@@ -282,7 +297,10 @@ fun BaseBottomBarScreen() {
             composable<Routes.Result> {
                 ResultScreen(
                     onCloseClick = {
-                        navController.popBackStack()
+                        navController.navigate(Routes.Create) {
+                            popUpTo(Routes.Create) { inclusive = true }
+                            }
+                        roomViewModel.onRoomEvent(RoomEvent.OnGenerationComplete)
                     },
                     generatedImages = roomViewModel.state.value.generatedImages
                 )
@@ -296,13 +314,22 @@ fun BaseBottomBarScreen() {
                 )
             }
         }
+
         if (showGallery) {
             GalleryPickerLauncher(
-                onPhotosSelected = { photos ->
-                    roomViewModel.onRoomEvent(RoomEvent.SetImage(imageDetails = photos.first()))
-                    showGallery = false
-                    navController.navigate(Routes.AddScreen)
-                },
+            onPhotosSelected = { photos ->
+                val photo = photos.first()
+
+                // Ab ye function crash nahi karega
+                val bytes = uriToByteArray(platformContext, photo.uri.toString())
+                val fileName = "room_upload.jpg"
+                roomViewModel.onRoomEvent(
+                    RoomEvent.SetImageBytes(bytes, fileName)
+                )
+
+                showGallery = false
+                navController.navigate(Routes.AddScreen)
+            },
                 onError = { showGallery = false },
                 onDismiss = { showGallery = false },
                 allowMultiple = false,

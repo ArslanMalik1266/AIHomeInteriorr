@@ -10,6 +10,17 @@ sealed class RoomEvent {
     object OnDismissFilterSheet : RoomEvent()
     object OnResetLoading : RoomEvent()
     object OnClearFilters : RoomEvent()
+
+    data class SetImageBytes(val bytes: ByteArray, val fileName: String) : RoomEvent()
+
+    data class ShowSelectedBundle(val bundle: List<String>) : RoomEvent()
+
+    data class OnGenerateClick(
+        val imageBytes: ByteArray,
+        val fileName: String
+    ) : RoomEvent()
+
+
     data class OnTempFilterChange(val filterState: FilterState) : RoomEvent()
     data class OnToggleFilterSection(val section: FilterSection) : RoomEvent()
 
@@ -25,6 +36,5 @@ sealed class RoomEvent {
     data class OnStyleSearchQueryChange(val query: String) : RoomEvent()
     data class OnStyleSearchExpandedChange(val isExpanded: Boolean) : RoomEvent()
     data class OnPaletteSelected(val paletteId: Int) : RoomEvent()
-    object OnGenerateClick : RoomEvent()
     object OnGenerationComplete : RoomEvent()
 }

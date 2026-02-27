@@ -111,7 +111,7 @@ fun BaseGenerateScreen(roomsViewModel: RoomsViewModel, endToNext: () -> Unit, on
             HorizontalPager(state = pagerState, userScrollEnabled = false) { page ->
                 when (page) {
                     0 -> {
-                        FirstPage(state.selectedImage)
+                        FirstPage(state.selectedImageBytes, state.selectedImage)
                     }
 
                     1 -> {

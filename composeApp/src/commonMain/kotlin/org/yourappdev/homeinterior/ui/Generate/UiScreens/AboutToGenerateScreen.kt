@@ -81,7 +81,7 @@ fun AboutToGenerateScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp),
-                imageUri = selectedImage
+                imageBytes = state.selectedImageBytes
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -127,7 +127,19 @@ fun AboutToGenerateScreen(
                     .align(Alignment.CenterHorizontally)
             ) {
                 coroutineScope.launch {
-                    roomsViewModel.onRoomEvent(RoomEvent.OnGenerateClick)
+                    val bytes = state.selectedImageBytes
+                    val fileName = state.selectedFileName ?: "room_image.jpg"
+
+                    if (bytes != null) {
+                        roomsViewModel.onRoomEvent(
+                            RoomEvent.OnGenerateClick(
+                                imageBytes = bytes,
+                                fileName = fileName
+                            )
+                        )
+                    } else {
+                        println("DEBUG: No image bytes found in state")
+                    }
                 }
             }
 
@@ -165,16 +177,16 @@ fun TopBar(onCloseClick: () -> Unit) {
 }
 
 @Composable
-private fun ImagePreview(modifier: Modifier = Modifier, imageUri: Any?) {
+private fun ImagePreview(modifier: Modifier = Modifier, imageBytes: ByteArray?) {
     Box(
         modifier = modifier
             .fillMaxHeight(0.45f)
             .clip(RoundedCornerShape(9.dp))
             .background(Color(0xFFF5F5F5))
     ) {
-        if (imageUri != null) {
+        if (imageBytes != null) {
             AsyncImage(
-                model = imageUri,
+                model = imageBytes,
                 contentDescription = "Room Preview",
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop

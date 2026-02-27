@@ -53,6 +53,7 @@ import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.yourappdev.homeinterior.data.remote.BASE_URL
 import org.yourappdev.homeinterior.domain.model.RoomUi
+import org.yourappdev.homeinterior.ui.CreateAndExplore.RoomEvent
 import org.yourappdev.homeinterior.ui.CreateAndExplore.RoomsViewModel
 import org.yourappdev.homeinterior.ui.theme.black_color
 import org.yourappdev.homeinterior.ui.theme.green_btn
@@ -65,7 +66,8 @@ fun CreateScreen(
     viewModel: RoomsViewModel = koinViewModel(),
     onPremiumClick: () -> Unit = {},
     onAddPhotoClick: () -> Unit = {},
-    onRoomClick: (RoomUi) -> Unit = {}
+    onRoomClick: (RoomUi) -> Unit = {},
+    onShowResults: () -> Unit
 ) {
     val state by viewModel.state.collectAsState()
     val scrollState = rememberScrollState()
@@ -86,7 +88,14 @@ fun CreateScreen(
                 rooms = state.trendingRooms,
                 onRoomClick = onRoomClick
             )
-            RecentFilesSection()
+            RecentFilesSection(
+                generatedBundles = state.recentGeneratedImages,
+                onBundleClick = { bundle ->
+                    viewModel.onRoomEvent(RoomEvent.ShowSelectedBundle(bundle))
+                    onShowResults() // Result screen par bhej dega
+                },
+                onSeeAllClick = { /* Agar history screen hai toh wahan bhejain */ }
+            )
         }
     }
 }
@@ -288,53 +297,88 @@ private fun RoomCategoryCard(
 }
 
 @Composable
-private fun RecentFilesSection() {
+private fun RecentFilesSection(
+    generatedBundles: List<List<String>>,
+    onBundleClick: (List<String>) -> Unit,
+    onSeeAllClick: () -> Unit
+) {
     Column(modifier = Modifier.padding(bottom = 30.dp)) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(end = 24.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = "Recent Files",
-                fontSize = 16.sp,
+                fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color.Black,
-                modifier = Modifier.padding(start = 24.dp)
+                color = black_color
             )
 
-            Text(
-                text = "See all",
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Light,
-                color = Color(0xFF8D8D8D)
-            )
+            if (generatedBundles.isNotEmpty()) {
+                Text(
+                    text = "See all",
+                    fontSize = 13.sp,
+                    color = Color.Gray,
+                    modifier = Modifier.clickable { onSeeAllClick() }
+                )
+            }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
-        RecentFilesRow()
+        RecentFilesRow(
+            generatedBundles = generatedBundles,
+            onBundleClick = onBundleClick
+        )
     }
 }
 
 @Composable
-private fun RecentFilesRow() {
-    val recentFiles = listOf(1, 2, 3, 4)
-
+private fun RecentFilesRow(
+    generatedBundles: List<List<String>>,
+    onBundleClick: (List<String>) -> Unit
+) {
     LazyRow(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        contentPadding = PaddingValues(start = 24.dp, end = 10.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = PaddingValues(horizontal = 24.dp),
     ) {
-        items(recentFiles) { index ->
-            Box(
-                modifier = Modifier
-                    .size(114.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color(0xFFE8E8E8))
-            )
-        }
-        item {
-            Spacer(modifier = Modifier.width(4.dp))
+        if (generatedBundles.isNotEmpty()) {
+            // Har list (bundle) ke liye 1 square box
+            items(generatedBundles.reversed()) { bundle -> // Reversed taake naya pehle aaye
+                Box(
+                    modifier = Modifier
+                        .size(114.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFFE8E8E8))
+                        .clickable { onBundleClick(bundle) }
+                ) {
+                    if (bundle.isNotEmpty()) {
+                        AsyncImage(
+                            model = bundle[0], // Bundle ki pehli image
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop,
+                            placeholder = painterResource(Res.drawable.roomplaceholder)
+                        )
+
+                        // Badge: images count dikhane ke liye
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .padding(6.dp)
+                                .background(Color.Black.copy(0.6f), RoundedCornerShape(4.dp))
+                                .padding(horizontal = 4.dp, vertical = 2.dp)
+                        ) {
+                            Text("${bundle.size} Pics", color = Color.White, fontSize = 9.sp)
+                        }
+                    }
+                }
+            }
+        } else {
+            items(3) {
+                Box(modifier = Modifier.size(114.dp).clip(RoundedCornerShape(12.dp)).background(Color(0xFFF5F5F5)))
+            }
         }
     }
 }

@@ -32,7 +32,7 @@ data class RoomUiState(
     val availableStyles: List<InteriorStyle> = emptyList(),
     val availableStylesString: List<String> = emptyList(),
     val availableColors: List<ColorPalette> = emptyList(),
-
+    val recentGeneratedImages: List<List<String>> = emptyList(),
     val selectedImage: String? = null,
     val currentPage: Int = 0,
     val pageCount: Int = 4,
@@ -47,6 +47,8 @@ data class RoomUiState(
     val generatedImages: List<String> = emptyList(),
     val jobId: String? = null,
     val generatedRoom: GenerateRoomResponse? = null,
+    val selectedImageBytes: ByteArray? = null,
+    val selectedFileName: String? = null,
 )
 
 data class FilterState(
