@@ -3,6 +3,7 @@ package org.yourappdev.homeinterior.ui.Generate.UiScreens
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
@@ -25,8 +26,10 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 fun ResultScreen(
     generatedImages: List<String>,
-    onCloseClick: () -> Unit = {}
+    onCloseClick: () -> Unit = {},
+    onImageClick: (String) -> Unit
 ) {
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -40,14 +43,16 @@ fun ResultScreen(
             TopBar {
                 onCloseClick()
             }
-            CreateContent(imageList = generatedImages)
+            CreateContent(imageList = generatedImages,
+                onImageClick = onImageClick)
         }
     }
 }
 
 
 @Composable
-private fun CreateContent(imageList: List<String>) {
+private fun CreateContent(imageList: List<String>,
+                          onImageClick: (String) -> Unit) {
 
 
     LazyVerticalStaggeredGrid(
@@ -72,7 +77,8 @@ private fun CreateContent(imageList: List<String>) {
         ) { index, imageResource ->
             ImageCard(
                 imageUrl = imageResource,
-                isLarge = (index + 1) % 3 == 0
+                isLarge = (index + 1) % 3 == 0,
+                modifier = Modifier.clickable { onImageClick(imageResource) }
             )
         }
     }

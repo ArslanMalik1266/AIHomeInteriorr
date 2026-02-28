@@ -26,6 +26,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
 import homeinterior.composeapp.generated.resources.Res
 import homeinterior.composeapp.generated.resources.close
 import homeinterior.composeapp.generated.resources.compare
@@ -43,7 +44,8 @@ import org.yourappdev.homeinterior.ui.UiUtils.DeleteConfirmationDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CreateEditScreen(onClick: () -> Unit) {
+fun CreateEditScreen(imageUrl: String,
+                     onClick: () -> Unit) {
     val scope = rememberCoroutineScope()
     val backgroundColor = Color(0xFFFFFFFF)
     val darkText = Color(0xFF2C2C2C)
@@ -83,6 +85,7 @@ fun CreateEditScreen(onClick: () -> Unit) {
             Spacer(modifier = Modifier.height(24.dp))
 
             ImageSection(
+                imageUrl = imageUrl,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp),
@@ -223,6 +226,7 @@ fun ProBadge(gradientColors: List<Color>) {
 
 @Composable
 fun ImageSection(
+    imageUrl: String,
     modifier: Modifier = Modifier,
     imageBorder: Color
 ) {
@@ -235,8 +239,8 @@ fun ImageSection(
             .border(1.dp, imageBorder, RoundedCornerShape(9.dp))
             .background(Color(0xFFF5F5F5))
     ) {
-        Image(
-            painter = painterResource(if (isPressed) Res.drawable.sofa else image),
+        AsyncImage(
+            model = if (isPressed) imageUrl else imageUrl, // Yahan aap secondary image logic laga sakte hain
             contentDescription = "Editing Image",
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()

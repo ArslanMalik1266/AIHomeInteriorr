@@ -53,7 +53,9 @@ sealed class Routes {
 
     @Serializable
     @SerialName("file-edit")
-    data object FileEdit : Routes()
+    data class FileEdit(
+        val imageUrl: String
+    ) : Routes()
 
     @Serializable
     @SerialName("generate")
@@ -86,4 +88,7 @@ sealed class Routes {
     @Serializable
     @SerialName("forgetNewPass")
     data object ForgetNewPass : Routes()
+
+    @Serializable
+    data class CreateEdit(val imageUrl: String) : Routes()
 }

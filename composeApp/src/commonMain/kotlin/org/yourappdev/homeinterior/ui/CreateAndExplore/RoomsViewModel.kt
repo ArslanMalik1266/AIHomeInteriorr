@@ -24,9 +24,76 @@ class RoomsViewModel(val roomsRepository: RoomsRepository) : ViewModel() {
 
     private val _uiEvent = MutableSharedFlow<CommonUiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
+    private val _selectedGeneratedImage = MutableStateFlow<String?>(null)
+    val selectedGeneratedImage: StateFlow<String?> = _selectedGeneratedImage.asStateFlow()
+    private val _draftImages = MutableStateFlow<List<RoomDraft>>(emptyList()) // Change to RoomDraft
+    val draftImages = _draftImages.asStateFlow()
+    private var currentDraftIndex: Int? = null
+
+    fun selectDraftImage(imageBytes: ByteArray, index: Int) {
+        currentDraftIndex = index // Index save kar liya
+        onRoomEvent(RoomEvent.SetImageBytes(imageBytes, "draft_image.jpg"))
+    }
+    fun saveOrUpdateDraft() {
+        val currentState = _state.value
+        val currentImage = currentState.selectedImageBytes ?: return
+
+        val newDraft = RoomDraft(
+            imageBytes = currentImage,
+            roomType = currentState.selectedRoomType,
+            styleName = currentState.selectedStyleName,
+            paletteId = currentState.selectedPaletteId,
+            currentPage = currentState.currentPage
+        )
+
+        _draftImages.update { currentList ->
+            val list = currentList.toMutableList()
+            val index = currentDraftIndex
+            if (index != null && index in list.indices) {
+                list[index] = newDraft
+            } else {
+                list.add(newDraft)
+            }
+            list
+        }
+        currentDraftIndex = null
+        resetGenerationState() // Draft save hone ke baad state clear karein
+    }
+
+    fun selectDraftImage(draft: RoomDraft, index: Int) {
+        currentDraftIndex = index
+        _state.update { it.copy(
+            selectedImageBytes = draft.imageBytes,
+            selectedRoomType = draft.roomType,
+            selectedStyleName = draft.styleName,
+            selectedPaletteId = draft.paletteId,
+            currentPage = draft.currentPage,
+            selectedImage = "draft_picked"
+        )}
+    }
+
+    fun onGeneratedImageClick(imageUrl: String) {
+        _selectedGeneratedImage.value = imageUrl
+    }
+    fun resetSelectedGeneratedImage() {
+        _selectedGeneratedImage.value = null
+    }
 
     init {
         getRooms()
+    }
+
+    fun resetGenerationState() {
+        _state.update { it.copy(
+            selectedRoomType = null,
+            selectedStyleName = null,
+            selectedPaletteId = null,
+            currentPage = 0, // <--- YE LINE ADD KAREIN
+            errorMessage = null,
+            isGenerating = false,
+            generatedImages = emptyList()
+        ) }
+        currentDraftIndex = null
     }
 
     fun onRoomEvent(event: RoomEvent) {
@@ -171,6 +238,10 @@ class RoomsViewModel(val roomsRepository: RoomsRepository) : ViewModel() {
                 viewModelScope.launch {
                     try {
                         val prompt = buildPromptFromState(_state.value)
+                        println("DEBUG_VM: OnGenerateClick triggered")
+                        println("DEBUG_VM: imageBytes size = ${event.imageBytes.size}")
+                        println("DEBUG_VM: fileName = ${event.fileName}")
+                        println("DEBUG_VM: prompt = $prompt")
                         val response = roomsRepository.generateRoom(
                             imageBytes = event.imageBytes,
                             fileName = event.fileName,
@@ -183,6 +254,9 @@ class RoomsViewModel(val roomsRepository: RoomsRepository) : ViewModel() {
                                 generatedImages = response.static_urls,
                                 recentGeneratedImages = _state.value.recentGeneratedImages.plus(element = response.static_urls),                                errorMessage = null
                             )}
+                            println("DEBUG_VM: Response success = ${response.success}")
+                            println("DEBUG_VM: Response message = ${response.message}")
+                            println("DEBUG_VM: Response static_urls = ${response.static_urls}")
                         } else {
                             _state.update { it.copy(isGenerating = false, errorMessage = response.message) }
                             println("DEBUG_API_FLOW: API Error Message: ${response.message}")
@@ -197,11 +271,12 @@ class RoomsViewModel(val roomsRepository: RoomsRepository) : ViewModel() {
                     selectedImageBytes = null,
                     selectedFileName = null,
                     selectedImage = null,
-                    generatedImages = emptyList(), // Isse ResultScreen band ho jayegi
+                    generatedImages = emptyList(),
                     isGenerating = false,
                     selectedRoomType = null,
                     selectedStyleName = null,
-                    selectedPaletteId = null
+                    selectedPaletteId = null,
+                    currentPage = 0 // <--- Reset to Step 1
                 )}
             }
             is RoomEvent.ShowSelectedBundle -> {

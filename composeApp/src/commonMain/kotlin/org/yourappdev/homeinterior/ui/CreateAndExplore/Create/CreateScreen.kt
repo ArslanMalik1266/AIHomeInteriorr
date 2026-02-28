@@ -67,7 +67,8 @@ fun CreateScreen(
     onPremiumClick: () -> Unit = {},
     onAddPhotoClick: () -> Unit = {},
     onRoomClick: (RoomUi) -> Unit = {},
-    onShowResults: () -> Unit
+    onShowResults: () -> Unit,
+    onSeeAllClick: () -> Unit
 ) {
     val state by viewModel.state.collectAsState()
     val scrollState = rememberScrollState()
@@ -80,9 +81,7 @@ fun CreateScreen(
         verticalArrangement = Arrangement.spacedBy(32.dp)
     ) {
         Header(onClick = onPremiumClick)
-        EmptyStateCard() {
-
-        }
+        EmptyStateCard({ onAddPhotoClick() })
         Column(modifier = Modifier.verticalScroll(scrollState), verticalArrangement = Arrangement.spacedBy(32.dp)) {
             TrendingSection(
                 rooms = state.trendingRooms,
@@ -94,7 +93,7 @@ fun CreateScreen(
                     viewModel.onRoomEvent(RoomEvent.ShowSelectedBundle(bundle))
                     onShowResults() // Result screen par bhej dega
                 },
-                onSeeAllClick = { /* Agar history screen hai toh wahan bhejain */ }
+                onSeeAllClick = onSeeAllClick
             )
         }
     }

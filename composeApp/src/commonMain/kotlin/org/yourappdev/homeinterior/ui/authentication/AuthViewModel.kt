@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.launch
 import org.yourappdev.homeinterior.domain.model.RegisterRequest
+import org.yourappdev.homeinterior.domain.model.User
 import org.yourappdev.homeinterior.domain.repo.AuthRepository
 import org.yourappdev.homeinterior.ui.authentication.register.RegisterEvent
 import org.yourappdev.homeinterior.ui.authentication.register.RegisterState
@@ -28,9 +29,16 @@ class AuthViewModel(val repository: AuthRepository, val settings: Settings) : Vi
     private val _state = MutableStateFlow(RegisterState())
     val state: StateFlow<RegisterState> = _state.asStateFlow()
 
+    private val _user = MutableStateFlow<User?>(null)
+    val user = _user.asStateFlow()
+
     private val _uiEvent = MutableSharedFlow<CommonUiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
     private var timerJob: Job? = null
+
+    init {
+    }
+
     fun onRegisterFormEvent(event: RegisterEvent) {
         when (event) {
             is RegisterEvent.EmailUpdate -> _state.value = _state.value.copy(email = event.email)

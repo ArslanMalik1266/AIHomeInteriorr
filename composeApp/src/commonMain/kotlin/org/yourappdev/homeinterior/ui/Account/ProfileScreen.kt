@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,14 +30,17 @@ import homeinterior.composeapp.generated.resources.Res
 import homeinterior.composeapp.generated.resources.arrow_back_
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
+import org.koin.compose.viewmodel.koinViewModel
 import org.yourappdev.homeinterior.ui.UiUtils.BackIconButton
 import org.yourappdev.homeinterior.ui.UiUtils.CloseIconButton
 import org.yourappdev.homeinterior.ui.UiUtils.CommonAppButton
 import org.yourappdev.homeinterior.ui.UiUtils.DeleteConfirmationDialog
+import org.yourappdev.homeinterior.ui.authentication.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
+    authViewModel: AuthViewModel = koinViewModel(),
     onBackClick: () -> Unit = {}
 ) {
     var showDelete by remember {
@@ -44,6 +48,9 @@ fun ProfileScreen(
     }
     val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
+
+    val user by authViewModel.user.collectAsState()
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -75,7 +82,9 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            ProfileHeader()
+            ProfileHeader(
+                name = user?.fullname ?: "Loading...",
+            )
 
             Spacer(modifier = Modifier.height(60.dp))
 
@@ -115,7 +124,7 @@ fun ProfileScreen(
 }
 
 @Composable
-fun ProfileHeader() {
+fun ProfileHeader(name: String) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally

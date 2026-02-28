@@ -2,6 +2,7 @@ package org.yourappdev.homeinterior.ui.CreateAndExplore
 
 import androidx.compose.ui.graphics.Color
 import io.github.ismoy.imagepickerkmp.domain.models.GalleryPhotoResult
+import kotlinx.serialization.Serializable
 import org.yourappdev.homeinterior.data.remote.util.ResultState
 import org.yourappdev.homeinterior.domain.model.GenerateRoomResponse
 import org.yourappdev.homeinterior.domain.model.Room
@@ -61,3 +62,18 @@ data class FilterState(
 enum class FilterSection {
     ROOM_TYPE, STYLE, COLOR, FORMAT, PRICE
 }
+
+data class RoomDraft(
+    val imageBytes: ByteArray,
+    val roomType: String? = null,
+    val styleName: String? = null,
+    val paletteId: Int? = null,
+    val currentPage: Int = 0
+)
+@Serializable
+data class User(
+    val id: Int,
+    val fullname: String,
+    val email: String,
+    val image: String? = null
+)

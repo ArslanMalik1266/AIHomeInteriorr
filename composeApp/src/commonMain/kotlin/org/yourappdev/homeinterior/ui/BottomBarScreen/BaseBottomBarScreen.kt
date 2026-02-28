@@ -14,6 +14,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,6 +32,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import homeinterior.composeapp.generated.resources.*
 import io.github.ismoy.imagepickerkmp.presentation.ui.components.GalleryPickerLauncher
 import org.jetbrains.compose.resources.painterResource
@@ -220,25 +222,42 @@ fun BaseBottomBarScreen() {
                     onAddPhotoClick = {
                         showGallery = true
                     },
-                    onRoomClick = {
-                        navController.navigate(Routes.AddScreen)
-                    },
+                    onRoomClick = { room ->
+                        navController.navigate(Routes.FileEdit(imageUrl = room.imageUrl))                    },
                     onShowResults = {
                         navController.navigate(Routes.Result)
+                    },
+                    onSeeAllClick = {
+                        navController.navigate(Routes.Files) {
+                            popUpTo(navController.graph.startDestinationId) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     }
+
                 )
             }
 
             composable<Routes.Explore> {
                 ExploreScreen(
-                    viewModel = roomViewModel
+                    viewModel = roomViewModel,
+                    onRoomClick = { room ->
+                        navController.navigate(Routes.FileEdit(imageUrl = room.imageUrl))
+                    }
                 )
             }
 
             composable<Routes.Files> {
                 FilesScreen(
+                    viewModel = roomViewModel,
+                    navController = navController,
                     onImageClick = {
                         navController.navigate(Routes.FileEdit)
+                    },
+                    onShowResults = {
+                        navController.navigate(Routes.Result)
                     }
                 )
             }
@@ -256,21 +275,25 @@ fun BaseBottomBarScreen() {
 
             composable<Routes.AddScreen> {
                 BaseGenerateScreen(
+
                     roomViewModel,
                     endToNext = {
                         navController.navigate(Routes.AbtToGenerate)
                     },
                     onCloseClick = {
+                        roomViewModel.saveOrUpdateDraft()
                         navController.popBackStack()
                     }
                 )
             }
 
-            composable<Routes.FileEdit> {
+            composable<Routes.FileEdit> { backStackEntry ->
+
+                val args = backStackEntry.toRoute<Routes.FileEdit>()
+
                 CreateEditScreen(
-                    onClick = {
-                        navController.popBackStack()
-                    }
+                    imageUrl = args.imageUrl,
+                    onClick = { navController.popBackStack() }
                 )
             }
 
@@ -281,7 +304,9 @@ fun BaseBottomBarScreen() {
                         navController.popBackStack()
                     },
                     onResult = {
-                        navController.navigate(Routes.Result)
+                        navController.navigate(Routes.Result){
+                            popUpTo(Routes.AbtToGenerate) { inclusive = true }
+                        }
                     }
                 )
             }
@@ -295,14 +320,30 @@ fun BaseBottomBarScreen() {
             }
 
             composable<Routes.Result> {
+                val state by roomViewModel.state.collectAsState()
+                val selectedImage by roomViewModel.selectedGeneratedImage.collectAsState()
+
+                // Navigate when an image is selected
+                selectedImage?.let {
+                    navController.navigate(Routes.FileEdit(imageUrl = it))
+                    roomViewModel.resetSelectedGeneratedImage() // reset for next click
+                }
                 ResultScreen(
                     onCloseClick = {
-                        navController.navigate(Routes.Create) {
-                            popUpTo(Routes.Create) { inclusive = true }
-                            }
+                        val previousRoute = navController.previousBackStackEntry?.destination?.route
                         roomViewModel.onRoomEvent(RoomEvent.OnGenerationComplete)
+                        if (previousRoute?.contains("Files") == true) {
+                            navController.popBackStack()
+                        } else {
+                            navController.navigate(Routes.Create) {
+                                popUpTo(Routes.Create) { inclusive = true }
+                            }
+                        }
                     },
-                    generatedImages = roomViewModel.state.value.generatedImages
+                    generatedImages = roomViewModel.state.value.generatedImages,
+                    onImageClick = { url ->
+                        roomViewModel.onGeneratedImageClick(url)
+                    }
                 )
             }
 
@@ -319,10 +360,9 @@ fun BaseBottomBarScreen() {
             GalleryPickerLauncher(
             onPhotosSelected = { photos ->
                 val photo = photos.first()
-
-                // Ab ye function crash nahi karega
                 val bytes = uriToByteArray(platformContext, photo.uri.toString())
                 val fileName = "room_upload.jpg"
+                roomViewModel.resetGenerationState()
                 roomViewModel.onRoomEvent(
                     RoomEvent.SetImageBytes(bytes, fileName)
                 )

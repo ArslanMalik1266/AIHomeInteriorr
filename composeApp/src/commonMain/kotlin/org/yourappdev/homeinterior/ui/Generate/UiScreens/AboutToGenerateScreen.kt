@@ -50,18 +50,27 @@ fun AboutToGenerateScreen(
     LaunchedEffect(Unit) {
         roomsViewModel.onRoomEvent(RoomEvent.OnResetLoading)
     }
-
-    // If images are generated, show ResultScreen
-    if (state.generatedImages.isNotEmpty()) {
-        ResultScreen(
-            generatedImages = state.generatedImages,
-            onCloseClick = {
-                roomsViewModel.onRoomEvent(RoomEvent.OnGenerationComplete)
-                onCloseClick()
-            }
-        )
-        return
+    LaunchedEffect(state.generatedImages) {
+        if (state.generatedImages.isNotEmpty()) {
+            onResult()
+        }
     }
+
+//    // If images are generated, show ResultScreen
+//    if (state.generatedImages.isNotEmpty()) {
+//        ResultScreen(
+//            generatedImages = state.generatedImages,
+//            onCloseClick = {
+//                roomsViewModel.onRoomEvent(RoomEvent.OnGenerationComplete)
+//                onCloseClick()
+//            },
+//            onImageClick = {
+//                roomsViewModel.onRoomEvent(RoomEvent.OnGenerationComplete)
+//                onResult()
+//            }
+//        )
+//        return
+//    }
 
     Box(
         modifier = Modifier

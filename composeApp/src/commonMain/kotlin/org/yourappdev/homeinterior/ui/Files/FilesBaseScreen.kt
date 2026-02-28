@@ -30,10 +30,21 @@ import homeinterior.composeapp.generated.resources.sofa_2
 import homeinterior.composeapp.generated.resources.sofa_3
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
+import org.koin.compose.viewmodel.koinViewModel
+import org.yourappdev.homeinterior.navigation.Routes
+import org.yourappdev.homeinterior.ui.CreateAndExplore.RoomEvent
+import org.yourappdev.homeinterior.ui.CreateAndExplore.RoomsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FilesScreen(onImageClick: () -> Unit) {
+fun FilesScreen(
+    viewModel: RoomsViewModel = koinViewModel(),
+    navController: androidx.navigation.NavController,
+    onImageClick: () -> Unit,
+    onShowResults: () -> Unit
+) {
+    val state by viewModel.state.collectAsState()
+
     val tabs = listOf("Recent", "Drafts")
     val pagerState = rememberPagerState(pageCount = { tabs.size })
     var selectedTabIndex = remember {
@@ -96,7 +107,9 @@ fun FilesScreen(onImageClick: () -> Unit) {
                                     text = title,
                                     fontSize = 15.sp,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = if (selectedTabIndex.value == index) Color(0xFF2C2C2C) else Color(0xFF959595)
+                                    color = if (selectedTabIndex.value == index) Color(0xFF2C2C2C) else Color(
+                                        0xFF959595
+                                    )
                                 )
                             }
                         )
@@ -114,8 +127,21 @@ fun FilesScreen(onImageClick: () -> Unit) {
                 .padding(paddingValues)
         ) { page ->
             when (page) {
-                0 -> RecentContent()
-                1 -> DraftsContent { onImageClick() }
+                0 -> RecentContent(
+                    generatedBundles = state.recentGeneratedImages,
+                    onBundleClick = { bundle ->
+                        viewModel.onRoomEvent(RoomEvent.ShowSelectedBundle(bundle))
+                        onShowResults()
+                    }
+                )
+
+                1 -> DraftsContent(
+                    viewModel = viewModel,
+                    onImageClick = { draft, index ->
+                        viewModel.selectDraftImage(draft, index)
+                        navController.navigate(Routes.AddScreen)
+                    }
+                )
             }
         }
     }
