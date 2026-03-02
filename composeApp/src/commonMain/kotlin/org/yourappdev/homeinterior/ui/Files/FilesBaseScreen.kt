@@ -60,8 +60,8 @@ fun FilesScreen(
                     .fillMaxWidth()
                     .background(Color.White)
                     .padding(start = 24.dp, end = 24.dp)
+                    .statusBarsPadding()
             ) {
-                Spacer(modifier = Modifier.height(10.dp))
 
                 Text(
                     text = "Files",

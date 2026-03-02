@@ -35,8 +35,8 @@ import org.jetbrains.compose.resources.painterResource
 
 @Composable
 fun RecentContent(
-    generatedBundles: List<List<String>>, // ViewModel se data pass karein
-    onBundleClick: (List<String>) -> Unit // Click handler
+    generatedBundles: List<List<String>>,
+    onBundleClick: (List<String>) -> Unit
 ) {
     if (generatedBundles.isEmpty()) {
         // Empty State
@@ -58,8 +58,8 @@ fun RecentContent(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.fillMaxSize()
         ) {
-            // Reversed taake latest image sabse pehle aaye
             items(generatedBundles.reversed()) { bundle ->
+                println("DEBUG: Bundle received = $bundle")
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -69,6 +69,7 @@ fun RecentContent(
                         .clickable { onBundleClick(bundle) }
                 ) {
                     if (bundle.isNotEmpty()) {
+                        println("DEBUG: Loading image = ${bundle[0]}")
                         AsyncImage(
                             model = bundle[0], // Bundle ki cover image
                             contentDescription = "Generated Interior",
@@ -78,7 +79,6 @@ fun RecentContent(
                             error = painterResource(Res.drawable.roomplaceholder)
                         )
 
-                        // Small Badge (Optional: Kitni photos hain andar)
                         Surface(
                             color = Color.Black.copy(alpha = 0.6f),
                             shape = RoundedCornerShape(4.dp),

@@ -37,7 +37,9 @@ class AuthViewModel(val repository: AuthRepository, val settings: Settings) : Vi
     private var timerJob: Job? = null
 
     init {
+        loadUserFromSettings()
     }
+
 
     fun onRegisterFormEvent(event: RegisterEvent) {
         when (event) {
@@ -152,6 +154,7 @@ class AuthViewModel(val repository: AuthRepository, val settings: Settings) : Vi
         }
     }
 
+
     private fun performForgetPasswordRequest() {
         viewModelScope.launch {
             executeApiCall(
@@ -238,8 +241,20 @@ class AuthViewModel(val repository: AuthRepository, val settings: Settings) : Vi
                 },
                 onSuccess = { response ->
                     if (response.success) {
+                        println("LOGIN RESPONSE USER: ${response.user}")
                         settings.putBoolean(LOGIN, true)
                         settings.putString(BT, response.token ?: "")
+                        response.user?.let { u ->
+                            settings.putString("user_name", u.fullname)
+                            settings.putString("user_email", u.email)
+                            _user.value = u // Ab ye UI ko update karega
+                        }
+                        settings.putBoolean(LOGIN, true)
+
+                        _user.value = response.user
+                        println("USER SET IN VIEWMODEL: ${_user.value}")
+
+
                         _uiEvent.emit(ShowSuccess("Login successful!"))
                         _uiEvent.emit(NavigateToSuccess)
                     } else {
@@ -372,4 +387,20 @@ class AuthViewModel(val repository: AuthRepository, val settings: Settings) : Vi
         timerJob?.cancel()
     }
 
+    private fun loadUserFromSettings() {
+        val name = settings.getString("user_name", "")
+        val email = settings.getString("user_email", "")
+
+        if (name.isNotEmpty() && email.isNotEmpty()) {
+            _user.value = User(id = 0, fullname = name, email = email, createdAt = "", updatedAt = "")
+            println("DEBUG_VM: User loaded from Settings: $name")
+        }
+    }
+    fun logout() {
+        settings.remove("user_name")
+        settings.remove("user_email")
+        settings.remove(Constants.LOGIN)
+        settings.remove(Constants.BT)
+        _user.value = null
+    }
 }

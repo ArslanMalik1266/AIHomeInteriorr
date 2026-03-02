@@ -31,6 +31,7 @@ import homeinterior.composeapp.generated.resources.coin
 import homeinterior.composeapp.generated.resources.coins
 import homeinterior.composeapp.generated.resources.ic_coins
 import homeinterior.composeapp.generated.resources.ic_restore
+import homeinterior.composeapp.generated.resources.icon_profile
 import homeinterior.composeapp.generated.resources.keyboard_arrow_down_24px
 import homeinterior.composeapp.generated.resources.keyboard_arrow_up_24px
 import homeinterior.composeapp.generated.resources.settingback
@@ -53,7 +54,7 @@ fun AccountScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 24.dp, bottom = 16.dp, top = 10.dp, end = 20.dp),
+                .padding(start = 24.dp, bottom = 16.dp, end = 20.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(
@@ -73,11 +74,11 @@ fun AccountScreen(
                 contentAlignment = Alignment.Center
             ) {
 
-                Box(
-                    modifier = Modifier
-                        .size(20.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFFA3B18A))
+                Image(
+                    painter = painterResource(Res.drawable.icon_profile),
+                    contentDescription = "Profile Picture",
+                    modifier = Modifier.fillMaxSize(0.5f),
+                    contentScale = ContentScale.Fit,
                 )
             }
         }

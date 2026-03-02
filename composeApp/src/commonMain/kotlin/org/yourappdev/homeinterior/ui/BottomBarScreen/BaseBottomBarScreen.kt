@@ -3,11 +3,13 @@ package org.yourappdev.homeinterior.ui.BottomBarScreen
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
@@ -53,6 +55,7 @@ import org.yourappdev.homeinterior.ui.Generate.UiScreens.AboutToGenerateScreen
 import org.yourappdev.homeinterior.ui.Generate.UiScreens.BaseGenerateScreen
 import org.yourappdev.homeinterior.ui.Generate.UiScreens.ResultScreen
 import org.yourappdev.homeinterior.ui.UiUtils.*
+import org.yourappdev.homeinterior.ui.authentication.AuthViewModel
 import org.yourappdev.homeinterior.ui.theme.bottomBarBack
 import org.yourappdev.homeinterior.ui.theme.selectedNavItem
 import org.yourappdev.homeinterior.ui.theme.unselectedNavItem
@@ -66,6 +69,7 @@ fun BaseBottomBarScreen() {
     val currentDestination = navBackStackEntry?.destination
     val roomViewModel: RoomsViewModel = koinViewModel()
     var showGallery by remember { mutableStateOf(false) }
+    var authViewModel: AuthViewModel = koinViewModel()
 
     val scope = rememberCoroutineScope()
 
@@ -210,7 +214,7 @@ fun BaseBottomBarScreen() {
             modifier = Modifier
                 .background(Color.White)
                 .padding(bottom = padding.calculateBottomPadding())
-                .statusBarsPadding()
+
         ) {
             // Bottom bar destinations
             composable<Routes.Create> {
@@ -349,7 +353,8 @@ fun BaseBottomBarScreen() {
 
             composable<Routes.Profile> {
                 ProfileScreen(
-                    onBackClick = {
+                    authViewModel = authViewModel,
+                            onBackClick = {
                         navController.popBackStack()
                     }
                 )

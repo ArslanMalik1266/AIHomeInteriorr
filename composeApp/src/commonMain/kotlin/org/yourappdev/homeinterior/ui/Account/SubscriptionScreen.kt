@@ -16,6 +16,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,6 +44,8 @@ import homeinterior.composeapp.generated.resources.subscriptionbackgroun
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.yourappdev.homeinterior.ui.UiUtils.ProgressIndicator
+import org.yourappdev.homeinterior.utils.SetStatusBarIcons
+import org.yourappdev.homeinterior.utils.toggleStatusBarIcons
 import kotlin.math.absoluteValue
 
 data class SubscriptionPlan(
@@ -54,6 +58,14 @@ data class SubscriptionPlan(
 
 @Composable
 fun SubscriptionScreen(onBackClick: () -> Unit) {
+    SetStatusBarIcons(isLight = true)
+
+    DisposableEffect(Unit) {
+        onDispose {
+            toggleStatusBarIcons(isLight = false)
+        }
+    }
+
 
     val subscriptionPlans = listOf(
         SubscriptionPlan(
@@ -62,7 +74,7 @@ fun SubscriptionScreen(onBackClick: () -> Unit) {
             credits = "500 credits",
             features = listOf(
                 "Full crack generation with advanced AI enhancement.",
-                "Professional modefor expert-level design precision.",
+                "Professional made for expert-level design precision.",
                 "Watermark remover- clean visuals with no marks.",
                 "Image upscaling enhanced clarity with AI precision"
             ),
@@ -145,13 +157,15 @@ fun SubscriptionScreen(onBackClick: () -> Unit) {
                 )
         )
 
-        Box(modifier = Modifier.align(Alignment.TopEnd).padding(end = 10.dp, top = 20.dp)) {
+        Box(modifier = Modifier.align(Alignment.TopEnd).padding(end = 10.dp).windowInsetsPadding(WindowInsets.statusBars)) {
             Box(
                 modifier = Modifier.size(30.dp)
+
                     .background(Color.White.copy(alpha = 0.3f), CircleShape).clip(CircleShape)
                     .clickable {
                         onBackClick()
                     }, contentAlignment = Alignment.Center
+
             ) {
                 Image(
                     painter = painterResource(Res.drawable.close),
@@ -166,7 +180,8 @@ fun SubscriptionScreen(onBackClick: () -> Unit) {
 
         Column(
             modifier = Modifier
-                .fillMaxSize(),
+                .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.statusBars),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -219,7 +234,8 @@ fun SubscriptionScreen(onBackClick: () -> Unit) {
                 SubscriptionCard(
                     plan = subscriptionPlans[page],
                     modifier = Modifier.fillMaxWidth().graphicsLayer {
-                        val pageOffset = (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction
+                        val pageOffset =
+                            (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction
 
                         // Scale effect
                         scaleX = lerp(0.85f, 1f, 1f - pageOffset.absoluteValue.coerceIn(0f, 1f))
@@ -313,7 +329,8 @@ fun SubscriptionCard(
             )
 
             Row(
-                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(

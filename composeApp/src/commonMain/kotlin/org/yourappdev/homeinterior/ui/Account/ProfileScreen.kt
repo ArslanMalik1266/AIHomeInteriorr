@@ -21,21 +21,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import homeinterior.composeapp.generated.resources.Res
-import homeinterior.composeapp.generated.resources.arrow_back_
+import homeinterior.composeapp.generated.resources.icon_profile
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.yourappdev.homeinterior.ui.UiUtils.BackIconButton
-import org.yourappdev.homeinterior.ui.UiUtils.CloseIconButton
-import org.yourappdev.homeinterior.ui.UiUtils.CommonAppButton
 import org.yourappdev.homeinterior.ui.UiUtils.DeleteConfirmationDialog
 import org.yourappdev.homeinterior.ui.authentication.AuthViewModel
+import org.yourappdev.homeinterior.ui.theme.white_color
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,6 +42,8 @@ fun ProfileScreen(
     authViewModel: AuthViewModel = koinViewModel(),
     onBackClick: () -> Unit = {}
 ) {
+
+
     var showDelete by remember {
         mutableStateOf(false)
     }
@@ -50,6 +51,8 @@ fun ProfileScreen(
     val scope = rememberCoroutineScope()
 
     val user by authViewModel.user.collectAsState()
+
+    println("DEBUG_UI: ProfileScreen user data = $user")
 
     Box(
         modifier = Modifier
@@ -65,7 +68,7 @@ fun ProfileScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 24.dp, end = 24.dp, top = 10.dp),
+                    .padding(start = 24.dp, end = 24.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
@@ -83,15 +86,20 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.height(20.dp))
 
             ProfileHeader(
-                name = user?.fullname ?: "Loading...",
+                name = user?.fullname ?: "",
+                email = user?.email ?: ""
             )
 
             Spacer(modifier = Modifier.height(60.dp))
 
-            ProfileMenuItems()
+            ProfileMenuItems(
+                username = user?.fullname ?: "",
+                email = user?.email ?: ""
+            )
 
             Box(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 27.dp).clip(RoundedCornerShape(8.dp))
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 27.dp)
+                    .clip(RoundedCornerShape(8.dp))
                     .clickable {
                         showDelete = true
                     }) {
@@ -124,7 +132,7 @@ fun ProfileScreen(
 }
 
 @Composable
-fun ProfileHeader(name: String) {
+fun ProfileHeader(name: String, email: String) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -134,21 +142,21 @@ fun ProfileHeader(name: String) {
                 .size(84.dp)
                 .clip(CircleShape)
                 .background(Color.White)
-                .border(1.3.dp, Color(0xFFF5F5F5), CircleShape),
+                .border(1.3.dp, color = white_color, CircleShape),
             contentAlignment = Alignment.Center
         ) {
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xFFA3B18A))
+            Image(
+                painter = painterResource(Res.drawable.icon_profile),
+                contentDescription = "Profile Picture",
+                modifier = Modifier,
+                contentScale = ContentScale.Crop,
             )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "Home Interior AI",
+            text = name,
             fontSize = 17.sp,
             fontWeight = FontWeight.SemiBold,
             color = Color(0xFF615E5E),
@@ -156,7 +164,7 @@ fun ProfileHeader(name: String) {
         )
 
         Text(
-            text = "@admin",
+            text = email,
             fontSize = 13.sp,
             fontWeight = FontWeight.Medium,
             color = Color(0xFF686666),
@@ -166,7 +174,10 @@ fun ProfileHeader(name: String) {
 }
 
 @Composable
-fun ProfileMenuItems() {
+fun ProfileMenuItems(
+    username: String,
+    email: String
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -175,12 +186,12 @@ fun ProfileMenuItems() {
     ) {
         ProfileMenuItem(
             label = "Username",
-            value = "Home Interior AI"
+            value = username
         )
 
         ProfileMenuItem(
             label = "Email",
-            value = "@admin"
+            value = email
         )
 
         ProfileMenuItem(

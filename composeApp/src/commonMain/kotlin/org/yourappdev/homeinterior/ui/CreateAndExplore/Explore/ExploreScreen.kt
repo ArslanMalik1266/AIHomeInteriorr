@@ -64,7 +64,7 @@ fun ExploreScreen(viewModel: RoomsViewModel = koinViewModel(), onRoomClick: (Roo
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Color.White)
-                    .padding(top = 10.dp)
+                    .statusBarsPadding()
             ) {
                 Text(
                     text = "Explore",

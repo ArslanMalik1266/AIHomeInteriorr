@@ -77,7 +77,7 @@ fun CreateScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(white_color)
-            .padding(top = 10.dp),
+            .windowInsetsPadding(WindowInsets.statusBars),
         verticalArrangement = Arrangement.spacedBy(32.dp)
     ) {
         Header(onClick = onPremiumClick)
