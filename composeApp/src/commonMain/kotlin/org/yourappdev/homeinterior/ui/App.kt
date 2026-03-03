@@ -12,18 +12,17 @@ import org.koin.dsl.KoinAppDeclaration
 import org.yourappdev.homeinterior.di.appModule
 import org.yourappdev.homeinterior.navigation.Routes
 import org.yourappdev.homeinterior.platformModule
-import org.yourappdev.homeinterior.ui.authentication.register.RegisterRoot
 import org.yourappdev.homeinterior.ui.authentication.AuthViewModel
 import org.yourappdev.homeinterior.ui.authentication.ForgetPassword.ForgetEmailRoot
 import org.yourappdev.homeinterior.ui.authentication.ForgetPassword.ForgetOTPRoot
 import org.yourappdev.homeinterior.ui.authentication.ForgetPassword.NewPassRoot
 import org.yourappdev.homeinterior.ui.authentication.Login.LoginRoot
-import org.yourappdev.homeinterior.ui.authentication.Verification.VerificationRoot
 import org.yourappdev.homeinterior.ui.authentication.Login.WelcomeScreen
 import org.yourappdev.homeinterior.ui.BottomBarScreen.BaseBottomBarScreen
 import org.yourappdev.homeinterior.ui.OnBoarding.BaseScreen
 import org.yourappdev.homeinterior.ui.OnBoarding.OnBoardingViewModel
 import org.yourappdev.homeinterior.ui.OnBoarding.SplashScreen
+import org.yourappdev.homeinterior.ui.authentication.Verification.VerificationRoot
 import org.yourappdev.homeinterior.ui.theme.AppTypography
 
 @Composable
@@ -88,24 +87,17 @@ fun App(koinAppDeclaration: KoinAppDeclaration? = null) {
                 }
 
                 composable<Routes.Verification> {
-                    val parent = remember(navController) {
-                        navController.previousBackStackEntry
-                    }
-                    parent?.let {
-                        val authViewModel: AuthViewModel = koinViewModel(viewModelStoreOwner = it)
-                        VerificationRoot(onBackClick = {
-                            navController.navigateUp()
-                        }, authViewModel) {
-                            navController.navigate(Routes.OnBoarding)
+                    VerificationRoot(
+                        onBackClick = { navController.popBackStack() },
+                        authViewModel = koinViewModel(),
+                        onSuccess = {
+                            // Yahan se BaseAppScreen par navigate hoga
+                            navController.navigate(Routes.BaseAppScreen) {
+                                popUpTo(0) { inclusive = true } // Pura auth flow clear kar dega
+                                launchSingleTop = true
+                            }
                         }
-                    }
-                }
-                composable<Routes.Register> {
-                    RegisterRoot(onBackClick = {
-                        navController.navigateUp()
-                    }, onRegisterSuccess = {
-                        navController.navigate(Routes.Verification)
-                    })
+                    )
                 }
                 composable<Routes.OnBoarding> {
                     val onBoardingViewModel: OnBoardingViewModel = koinViewModel()

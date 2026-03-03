@@ -7,10 +7,18 @@ import org.yourappdev.homeinterior.data.repository.AuthRepositoryImpl
 import org.yourappdev.homeinterior.data.repository.RoomRepositoryImpl
 import org.yourappdev.homeinterior.domain.repo.AuthRepository
 import org.yourappdev.homeinterior.domain.repo.RoomsRepository
+import org.yourappdev.homeinterior.utils.NetworkConfig
 
 val dataModule = module {
-    single { AuthService(get()) }
+    single { NetworkConfig.API_KEY }
+
+    single {
+        AuthService(
+            client = get(),
+            apiKey = get()
+        )
+    }
     single { RoomService(get()) }
-    single<AuthRepository> { AuthRepositoryImpl(get(),get()) }
+    single<AuthRepository> { AuthRepositoryImpl(get()) }
     single<RoomsRepository> { RoomRepositoryImpl(get()) }
 }

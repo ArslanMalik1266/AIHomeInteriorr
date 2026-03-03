@@ -6,11 +6,10 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class VerifyResponse(
-    val success: Boolean,
+    val status: String,
     val message: String,
-    val token: String? = null,
-    val user: User? = null,
-    val error: String? = null
+    val auth_provider: String,
+
 )
 
 @Serializable
@@ -27,3 +26,4 @@ data class User(
     @SerialName("updated_at")
     val updatedAt: String
 )
+

@@ -31,12 +31,23 @@ import org.yourappdev.homeinterior.ui.common.base.CommonUiEvent
 import org.yourappdev.homeinterior.ui.theme.buttonBack
 import org.yourappdev.homeinterior.ui.theme.smallText
 
-@Composable
-fun VerificationRoot(onBackClick: () -> Unit, authViewModel: AuthViewModel, onSuccess: () -> Unit) {
-    val state by authViewModel.state.collectAsState()
-    VerificationScreen(onBackClick,state, authViewModel.uiEvent, authViewModel::onRegisterFormEvent, onSuccess)
-}
 
+@Composable
+fun VerificationRoot(
+    onBackClick: () -> Unit,
+    authViewModel: AuthViewModel,
+    onSuccess: () -> Unit
+) {
+    val state by authViewModel.state.collectAsState()
+
+    VerificationScreen(
+        onBackClick = onBackClick,
+        state = state,
+        uiEvent = authViewModel.uiEvent,
+        event = authViewModel::onRegisterFormEvent,
+        onSuccess = onSuccess
+    )
+}
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VerificationScreen(
@@ -44,7 +55,7 @@ fun VerificationScreen(
     state: RegisterState,
     uiEvent: SharedFlow<CommonUiEvent>,
     event: (event: RegisterEvent) -> Unit,
-    onSuccess: () -> Unit,
+    onSuccess: () -> Unit, // Ye callback aapko BaseAppScreen par le jayega
 ) {
     val snackBarState = rememberCustomSnackbarState()
 
@@ -56,6 +67,7 @@ fun VerificationScreen(
                 }
 
                 CommonUiEvent.NavigateToSuccess -> {
+                    // Logic success hone par bhi navigation
                     onSuccess()
                 }
 
@@ -130,6 +142,7 @@ fun VerificationScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
+            // --- YAHAN CHANGE KIYA HAI ---
             Button(
                 onClick = {
                     event(RegisterEvent.Verify)
@@ -148,7 +161,9 @@ fun VerificationScreen(
                     fontWeight = FontWeight.Medium
                 )
             }
+
             Spacer(modifier = Modifier.height(24.dp))
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
@@ -190,5 +205,4 @@ fun VerificationScreen(
             duration = 3000L
         )
     }
-
 }
