@@ -247,7 +247,7 @@ class AuthViewModel(val repository: AuthRepository, val settings: Settings) : Vi
                         response.user?.let { u ->
                             settings.putString("user_name", u.fullname)
                             settings.putString("user_email", u.email)
-                            _user.value = u // Ab ye UI ko update karega
+                            _user.value = u
                         }
                         settings.putBoolean(LOGIN, true)
 
@@ -391,9 +391,13 @@ class AuthViewModel(val repository: AuthRepository, val settings: Settings) : Vi
         val name = settings.getString("user_name", "")
         val email = settings.getString("user_email", "")
 
+        println("DEBUG_VM: User loaded from Settings: $name")
+        println("DEBUG_VM: User loaded from Settings: $email")
         if (name.isNotEmpty() && email.isNotEmpty()) {
             _user.value = User(id = 0, fullname = name, email = email, createdAt = "", updatedAt = "")
             println("DEBUG_VM: User loaded from Settings: $name")
+        } else {
+            println("DEBUG_VM: User not loaded from Settings")
         }
     }
     fun logout() {

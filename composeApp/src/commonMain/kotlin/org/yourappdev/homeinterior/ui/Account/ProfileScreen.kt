@@ -47,6 +47,7 @@ fun ProfileScreen(
     var showDelete by remember {
         mutableStateOf(false)
     }
+    var showLogoutDialog by remember { mutableStateOf(false) }
     val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
 
@@ -54,6 +55,85 @@ fun ProfileScreen(
 
     println("DEBUG_UI: ProfileScreen user data = $user")
 
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false },
+            confirmButton = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(10.dp) // Buttons ke darmiyan gap
+                ) {
+                    // Sign Out Button (Red Background)
+                    Button(
+                        onClick = {
+                            showLogoutDialog = false
+                            authViewModel.logout()
+                            onBackClick()
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFFB5C5C) // Wahi Red color jo Delete Account ka hai
+                        ),
+                        shape = RoundedCornerShape(10.dp),
+                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
+                    ) {
+                        Text(
+                            "Sign Out",
+                            color = Color.White,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 16.sp
+                        )
+                    }
+
+                    // Cancel Button (Light Grey Background)
+                    Button(
+                        onClick = { showLogoutDialog = false },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFF5F5F5) // Soft grey background
+                        ),
+                        shape = RoundedCornerShape(10.dp),
+                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
+                    ) {
+                        Text(
+                            "Cancel",
+                            color = Color(0xFF808080),
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 15.sp
+                        )
+                    }
+                }
+            },
+            title = {
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    Text(
+                        text = "Sign Out",
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 20.sp,
+                        color = Color(0xFF2C2C2C)
+                    )
+                }
+            },
+            text = {
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    Text(
+                        text = "Are you sure you want to sign out from your account?",
+                        textAlign = TextAlign.Center,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color(0xFF615E5E)
+                    )
+                }
+            },
+            containerColor = Color.White,
+            shape = RoundedCornerShape(24.dp)
+        )
+    }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -94,7 +174,8 @@ fun ProfileScreen(
 
             ProfileMenuItems(
                 username = user?.fullname ?: "",
-                email = user?.email ?: ""
+                email = user?.email ?: "",
+                onLogoutClick = { showLogoutDialog = true }
             )
 
             Box(
@@ -176,7 +257,8 @@ fun ProfileHeader(name: String, email: String) {
 @Composable
 fun ProfileMenuItems(
     username: String,
-    email: String
+    email: String,
+    onLogoutClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -201,7 +283,9 @@ fun ProfileMenuItems(
 
         ProfileMenuItem(
             label = "Sign Out",
-            value = null
+            value = null,
+            isDestructive = true,
+            onClick = onLogoutClick
         )
     }
 }
@@ -209,9 +293,15 @@ fun ProfileMenuItems(
 @Composable
 fun ProfileMenuItem(
     label: String,
-    value: String?
+    value: String?,
+    isDestructive: Boolean = false, // Color change for Sign Out
+    onClick: () -> Unit = {}
 ) {
     Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = value == null) { onClick() }
+            .padding(top = 8.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Column {
