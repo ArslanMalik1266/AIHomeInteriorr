@@ -7,9 +7,12 @@ import io.ktor.client.request.get
 import io.ktor.http.*
 import org.yourappdev.homeinterior.domain.model.GenerateRoomResponse
 
-class RoomService(val client: HttpClient) {
+class RoomService(val client: HttpClient,
+                  private val baseUrl: String) {
 
-    suspend fun getRooms() = client.get("rooms/")
+    private fun fullUrl(path: String) = "$baseUrl/$path"
+
+    suspend fun getRooms() = client.get(fullUrl("rooms/"))
 
     // CommonMain-safe: send image bytes directly
     suspend fun generateRoom(

@@ -69,7 +69,7 @@ fun BaseBottomBarScreen() {
     val currentDestination = navBackStackEntry?.destination
     val roomViewModel: RoomsViewModel = koinViewModel()
     var showGallery by remember { mutableStateOf(false) }
-    var authViewModel: AuthViewModel = koinViewModel()
+    val authViewModel: AuthViewModel = koinViewModel()
 
     val scope = rememberCoroutineScope()
 
@@ -356,6 +356,11 @@ fun BaseBottomBarScreen() {
                     authViewModel = authViewModel,
                             onBackClick = {
                         navController.popBackStack()
+                    },
+                    onLogoutSuccess = {
+                        navController.navigate(Routes.Login) {
+                            popUpTo(0) { inclusive = true }
+                        }
                     }
                 )
             }

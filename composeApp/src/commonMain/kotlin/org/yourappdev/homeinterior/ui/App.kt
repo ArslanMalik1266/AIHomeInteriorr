@@ -91,7 +91,6 @@ fun App(koinAppDeclaration: KoinAppDeclaration? = null) {
                         onBackClick = { navController.popBackStack() },
                         authViewModel = koinViewModel(),
                         onSuccess = {
-                            // Yahan se BaseAppScreen par navigate hoga
                             navController.navigate(Routes.BaseAppScreen) {
                                 popUpTo(0) { inclusive = true } // Pura auth flow clear kar dega
                                 launchSingleTop = true

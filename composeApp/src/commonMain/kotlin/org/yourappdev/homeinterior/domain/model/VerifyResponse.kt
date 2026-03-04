@@ -7,8 +7,8 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class VerifyResponse(
     val status: String,
-    val message: String,
-    val auth_provider: String,
+    val message: String? = null,
+    val auth_provider: String? = null,
 
 )
 

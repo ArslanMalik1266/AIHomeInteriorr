@@ -8,7 +8,7 @@ import org.yourappdev.homeinterior.ui.CreateAndExplore.RoomsViewModel
 import org.yourappdev.homeinterior.ui.OnBoarding.OnBoardingViewModel
 
 val viewModelModule = module {
-    single { AuthViewModel(get(), get()) }
+    single { AuthViewModel(get(), get(), get(), get(), get(), get()) }
     viewModelOf(::NavigationViewModel)
     viewModelOf(::OnBoardingViewModel)
     viewModelOf(::RoomsViewModel)

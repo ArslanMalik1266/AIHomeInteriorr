@@ -17,7 +17,6 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import org.yourappdev.homeinterior.utils.Constants
 
-const val BASE_URL = "https://dashboard.urdufonts.com/api/"
 
 fun createHttpClientManual(
     settings: Settings
@@ -40,8 +39,6 @@ fun createHttpClientManual(
         }
 
         defaultRequest {
-            url(BASE_URL)
-
             val bt = settings.getString(Constants.BT, "")
 
             if (bt.isNotEmpty()) {

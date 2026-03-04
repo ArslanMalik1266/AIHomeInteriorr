@@ -55,7 +55,7 @@ fun VerificationScreen(
     state: RegisterState,
     uiEvent: SharedFlow<CommonUiEvent>,
     event: (event: RegisterEvent) -> Unit,
-    onSuccess: () -> Unit, // Ye callback aapko BaseAppScreen par le jayega
+    onSuccess: () -> Unit,
 ) {
     val snackBarState = rememberCustomSnackbarState()
 
@@ -67,7 +67,6 @@ fun VerificationScreen(
                 }
 
                 CommonUiEvent.NavigateToSuccess -> {
-                    // Logic success hone par bhi navigation
                     onSuccess()
                 }
 
@@ -99,14 +98,14 @@ fun VerificationScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "Register",
+                text = "Otp Verification",
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
                 color = buttonBack
             )
 
             Text(
-                text = "We have sent an email to your email account with a verification code!",
+                text = "We sent a 6-digit verification code to ${maskEmail(state.email)}",
                 fontSize = 14.sp,
                 color = smallText,
                 modifier = Modifier.padding(top = 8.dp),
@@ -205,4 +204,15 @@ fun VerificationScreen(
             duration = 3000L
         )
     }
+}
+fun maskEmail(email: String): String {
+    if (email.isBlank() || !email.contains('@')) return email
+    val atIndex = email.indexOf('@')
+    if (atIndex <= 3) return email
+
+    val visiblePart = email.substring(0, 3)
+    val maskedPart = "*".repeat(atIndex - 3)
+    val domain = email.substring(atIndex)
+
+    return visiblePart + maskedPart + domain
 }

@@ -1,5 +1,6 @@
 package org.yourappdev.homeinterior.di
 
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import org.yourappdev.homeinterior.data.remote.service.AuthService
 import org.yourappdev.homeinterior.data.remote.service.RoomService
@@ -15,10 +16,16 @@ val dataModule = module {
     single {
         AuthService(
             client = get(),
+            baseUrl ="https://dashboard.urdufonts.com/api",
             apiKey = get()
         )
     }
-    single { RoomService(get()) }
+    single {
+        RoomService(
+            client = get(),
+            baseUrl = "https://interior.shabbirhussain.com/api/"
+        )
+    }
     single<AuthRepository> { AuthRepositoryImpl(get()) }
     single<RoomsRepository> { RoomRepositoryImpl(get()) }
 }

@@ -47,11 +47,9 @@ import homeinterior.composeapp.generated.resources.Res
 import homeinterior.composeapp.generated.resources.add_2_24px
 import homeinterior.composeapp.generated.resources.createpageimage
 import homeinterior.composeapp.generated.resources.premiumicon
-import homeinterior.composeapp.generated.resources.room_placeholder
 import homeinterior.composeapp.generated.resources.roomplaceholder
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
-import org.yourappdev.homeinterior.data.remote.BASE_URL
 import org.yourappdev.homeinterior.domain.model.RoomUi
 import org.yourappdev.homeinterior.ui.CreateAndExplore.RoomEvent
 import org.yourappdev.homeinterior.ui.CreateAndExplore.RoomsViewModel

@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,13 +35,15 @@ import org.koin.compose.viewmodel.koinViewModel
 import org.yourappdev.homeinterior.ui.UiUtils.BackIconButton
 import org.yourappdev.homeinterior.ui.UiUtils.DeleteConfirmationDialog
 import org.yourappdev.homeinterior.ui.authentication.AuthViewModel
+import org.yourappdev.homeinterior.ui.common.base.CommonUiEvent
 import org.yourappdev.homeinterior.ui.theme.white_color
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     authViewModel: AuthViewModel = koinViewModel(),
-    onBackClick: () -> Unit = {}
+    onBackClick: () -> Unit = {},
+    onLogoutSuccess: () -> Unit = {}
 ) {
 
 
@@ -51,6 +54,23 @@ fun ProfileScreen(
     val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
 
+    LaunchedEffect(Unit) {
+        authViewModel.uiEvent.collect { event ->
+            when (event) {
+                is CommonUiEvent.NavigateToSuccess -> {
+                    // Jab logout success ho jaye to ye lambda call karein
+                    onLogoutSuccess()
+                }
+                is CommonUiEvent.ShowError -> {
+                    // Error message dikhane ke liye
+                    println("DEBUG_UI: Logout Error = ${event.message}")
+                }
+                is CommonUiEvent.ShowSuccess -> {
+                    println("DEBUG_UI: Success = ${event.message}")
+                }
+            }
+        }
+    }
     val user by authViewModel.user.collectAsState()
 
     println("DEBUG_UI: ProfileScreen user data = $user")
@@ -67,9 +87,9 @@ fun ProfileScreen(
                     // Sign Out Button (Red Background)
                     Button(
                         onClick = {
-                            showLogoutDialog = false
+                            println("DEBUG_UI: Button clicked - Step 1") // Pehle ye check karein                            showLogoutDialog = false
                             authViewModel.logout()
-                            onBackClick()
+                            println("DEBUG_UI: Button clicked - Step 2")
                         },
                         modifier = Modifier
                             .fillMaxWidth()
