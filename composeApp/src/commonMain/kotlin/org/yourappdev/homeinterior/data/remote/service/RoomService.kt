@@ -5,6 +5,7 @@ import io.ktor.client.call.body
 import io.ktor.client.request.forms.*
 import io.ktor.client.request.get
 import io.ktor.http.*
+import org.yourappdev.homeinterior.domain.model.CreditResponse
 import org.yourappdev.homeinterior.domain.model.GenerateRoomResponse
 
 class RoomService(val client: HttpClient,
@@ -30,6 +31,16 @@ class RoomService(val client: HttpClient,
                     append(HttpHeaders.ContentType, "image/jpeg")
                     append(HttpHeaders.ContentDisposition, "filename=\"room_image.jpg\"")
                 })
+            }
+        ).body()
+    }
+
+    suspend fun addCredits(email: String, amount: Int): CreditResponse {
+        return client.submitForm(
+            url = fullUrl("credits/add"),
+            formParameters = parameters {
+                append("user_email", email)
+                append("amount", amount.toString())
             }
         ).body()
     }

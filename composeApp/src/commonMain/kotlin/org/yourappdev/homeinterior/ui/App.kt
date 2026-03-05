@@ -106,7 +106,7 @@ fun App(koinAppDeclaration: KoinAppDeclaration? = null) {
                     }
                 }
                 composable<Routes.BaseAppScreen> {
-                    BaseBottomBarScreen()
+                    BaseBottomBarScreen(rootNavController = navController)
                 }
             }
         }

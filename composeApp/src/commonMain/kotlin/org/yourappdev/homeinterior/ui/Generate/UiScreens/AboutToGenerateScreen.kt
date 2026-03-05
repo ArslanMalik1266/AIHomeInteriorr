@@ -3,6 +3,7 @@ package org.yourappdev.homeinterior.ui.Generate.UiScreens
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -28,15 +29,20 @@ import org.koin.compose.viewmodel.koinViewModel
 import org.yourappdev.homeinterior.ui.CreateAndExplore.RoomEvent
 import org.yourappdev.homeinterior.ui.CreateAndExplore.RoomsViewModel
 import org.yourappdev.homeinterior.ui.UiUtils.CloseIconButton
+import org.yourappdev.homeinterior.ui.authentication.AuthViewModel
 
 @Composable
 fun AboutToGenerateScreen(
     roomsViewModel: RoomsViewModel = koinViewModel(),
+    authViewModel: AuthViewModel = koinViewModel(),
     onCloseClick: () -> Unit,
-    onResult: () -> Unit
+    onResult: () -> Unit,
+    onSubscriptionClick: () -> Unit
 ) {
     val state by roomsViewModel.state.collectAsState()
+    val authState by authViewModel.state.collectAsState()
     val coroutineScope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     val selectedType = state.selectedRoomType ?: ""
     val selectedStyle = state.selectedStyleName ?: ""
@@ -130,34 +136,106 @@ fun AboutToGenerateScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             GenerateButton(
-                modifier = Modifier
-                    .width(170.dp)
-                    .height(49.dp)
-                    .align(Alignment.CenterHorizontally)
+                modifier = Modifier.width(170.dp).height(49.dp).align(Alignment.CenterHorizontally)
             ) {
-                coroutineScope.launch {
-                    val bytes = state.selectedImageBytes
-                    val fileName = state.selectedFileName ?: "room_image.jpg"
+                if (authState.totalCredits > 0) {
+                    coroutineScope.launch {
+                        val bytes = state.selectedImageBytes
+                        val fileName = state.selectedFileName ?: "room_image.jpg"
 
-                    if (bytes != null) {
-                        roomsViewModel.onRoomEvent(
-                            RoomEvent.OnGenerateClick(
-                                imageBytes = bytes,
-                                fileName = fileName
+                        if (bytes != null) {
+                            roomsViewModel.onRoomEvent(
+                                RoomEvent.OnGenerateClick(imageBytes = bytes, fileName = fileName)
                             )
+                        }
+                    }
+                } else {
+                    coroutineScope.launch {
+                        snackbarHostState.showSnackbar(
+                            message = "You've run out of credits to generate designs.",
+                            duration = SnackbarDuration.Short
                         )
-                    } else {
-                        println("DEBUG: No image bytes found in state")
                     }
                 }
             }
+        }
 
-            Spacer(modifier = Modifier.height(24.dp))
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 40.dp)
+                .padding(horizontal = 24.dp)
+        ) { data ->
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF2C2C2C).copy(alpha = 0.98f)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
+                modifier = Modifier.fillMaxWidth()
+                    .border(0.5.dp, Color.White.copy(0.2f), RoundedCornerShape(16.dp))
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // Icon Badge
+                    Box(
+                        modifier = Modifier.size(36.dp).clip(CircleShape)
+                            .background(Color(0xFFFF5252).copy(0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            "!",
+                            color = Color(0xFFFF5252),
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 18.sp
+                        )
+                    }
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Insufficient Credits",
+                            color = Color.White,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        Text(
+                            text = data.visuals.message,
+                            color = Color.White.copy(0.7f),
+                            fontSize = 12.sp,
+                            lineHeight = 16.sp,
+                            fontWeight = FontWeight.Normal,
+                            letterSpacing = 0.sp
+                        )
+                    }
+
+                    // Action Label
+                    Text(
+                        text = "GET MORE",
+                        color = Color(0xFFCEFFB3),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .clickable {
+                                onSubscriptionClick()
+                                data.dismiss()
+                            }
+                            .padding(8.dp)
+                    )
+                }
+            }
         }
 
         if (state.isGenerating) {
             LoadingScreen()
         }
+
+        Spacer(modifier = Modifier.height(24.dp))
+    }
+
+    if (state.isGenerating) {
+        LoadingScreen()
     }
 }
 
@@ -207,7 +285,12 @@ private fun ImagePreview(modifier: Modifier = Modifier, imageBytes: ByteArray?) 
 }
 
 @Composable
-private fun SelectionCard(label: String, value: String, borderColor: Color, modifier: Modifier = Modifier) {
+private fun SelectionCard(
+    label: String,
+    value: String,
+    borderColor: Color,
+    modifier: Modifier = Modifier
+) {
     val backgroundColor = Color(0xFFFFFFFF).copy(alpha = 0.57f)
     val mediumText = Color(0xFF4D4D4D)
     val grayText = Color(0xFF91918F)
@@ -224,8 +307,20 @@ private fun SelectionCard(label: String, value: String, borderColor: Color, modi
             modifier = Modifier.align(Alignment.CenterStart),
             verticalArrangement = Arrangement.Center
         ) {
-            Text(text = value, fontSize = 15.sp, fontWeight = FontWeight.Medium, color = mediumText, lineHeight = 20.sp)
-            Text(text = label, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = grayText, lineHeight = 20.sp)
+            Text(
+                text = value,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Medium,
+                color = mediumText,
+                lineHeight = 20.sp
+            )
+            Text(
+                text = label,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = grayText,
+                lineHeight = 20.sp
+            )
         }
 
         Icon(
@@ -240,7 +335,11 @@ private fun SelectionCard(label: String, value: String, borderColor: Color, modi
 }
 
 @Composable
-private fun ColorPaletteCard(borderColor: Color, paletteColors: List<Color>, modifier: Modifier = Modifier) {
+private fun ColorPaletteCard(
+    borderColor: Color,
+    paletteColors: List<Color>,
+    modifier: Modifier = Modifier
+) {
     val backgroundColor = Color(0xFFFFFFFF).copy(alpha = 0.57f)
     val lightGrayText = Color(0xFF90918F)
     val editIconColor = Color(0xFFB3B5B1)
@@ -252,13 +351,21 @@ private fun ColorPaletteCard(borderColor: Color, paletteColors: List<Color>, mod
             .background(backgroundColor)
             .padding(horizontal = 16.dp, vertical = 10.dp)
     ) {
-        Column(modifier = Modifier.align(Alignment.CenterStart), verticalArrangement = Arrangement.Center) {
+        Column(
+            modifier = Modifier.align(Alignment.CenterStart),
+            verticalArrangement = Arrangement.Center
+        ) {
             Row(horizontalArrangement = Arrangement.spacedBy((-9).dp)) {
                 paletteColors.forEach { color ->
                     Box(
                         modifier = Modifier
                             .size(24.dp)
-                            .shadow(5.dp, CircleShape, ambientColor = Color.Black.copy(0.2f), spotColor = Color.Black.copy(0.2f))
+                            .shadow(
+                                5.dp,
+                                CircleShape,
+                                ambientColor = Color.Black.copy(0.2f),
+                                spotColor = Color.Black.copy(0.2f)
+                            )
                             .clip(CircleShape)
                             .background(color)
                             .border(0.2.dp, Color(0xFF898989), CircleShape)
@@ -267,7 +374,12 @@ private fun ColorPaletteCard(borderColor: Color, paletteColors: List<Color>, mod
             }
 
             Spacer(modifier = Modifier.height(2.dp))
-            Text(text = "Colour Pallete", fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = lightGrayText)
+            Text(
+                text = "Colour Pallete",
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = lightGrayText
+            )
         }
 
         Icon(
@@ -299,14 +411,31 @@ private fun GenerateButton(modifier: Modifier = Modifier, onGenerateClick: () ->
             modifier = Modifier.fillMaxSize().background(buttonGradient, RoundedCornerShape(50)),
             contentAlignment = Alignment.Center
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center, modifier = Modifier.padding(end = 16.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.padding(end = 16.dp)
+            ) {
                 Box(
                     modifier = Modifier
                         .padding(end = 9.dp)
                         .size(40.2.dp)
-                        .shadow(4.dp, CircleShape, ambientColor = Color.Black.copy(0.07f), spotColor = Color.Black.copy(0.07f))
+                        .shadow(
+                            4.dp,
+                            CircleShape,
+                            ambientColor = Color.Black.copy(0.07f),
+                            spotColor = Color.Black.copy(0.07f)
+                        )
                         .clip(CircleShape)
-                        .background(Brush.linearGradient(listOf(Color(0xFFC5EBB2).copy(0.69f), Color(0xFFDFF2C2).copy(0.69f), Color(0xFFD2F7BD).copy(0.69f)))),
+                        .background(
+                            Brush.linearGradient(
+                                listOf(
+                                    Color(0xFFC5EBB2).copy(0.69f),
+                                    Color(0xFFDFF2C2).copy(0.69f),
+                                    Color(0xFFD2F7BD).copy(0.69f)
+                                )
+                            )
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -319,7 +448,12 @@ private fun GenerateButton(modifier: Modifier = Modifier, onGenerateClick: () ->
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                Text(text = "Generate", fontSize = 19.67.sp, fontWeight = FontWeight.Medium, color = Color.Black)
+                Text(
+                    text = "Generate",
+                    fontSize = 19.67.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.Black
+                )
             }
         }
     }

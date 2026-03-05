@@ -31,3 +31,24 @@ data class UserDto(
     @SerialName("created_at") val createdAt: String,
     @SerialName("updated_at") val updatedAt: String
 )
+
+
+@Serializable
+data class LogoutResponseDto(
+    val status: String? = null,
+    @SerialName("free_credits") val freeCredits: Int? = null,
+    @SerialName("total_credits") val totalCredits: Int? = null,
+    val user: UserDetailDto? = null
+)
+
+@Serializable
+data class UserDetailDto(
+    val id: Int? = null,
+    @SerialName("app_id") val appId: String? = null,
+    @SerialName("device_id") val deviceId: String? = null,
+    @SerialName("free_credits") val freeCredits: String? = null,
+    @SerialName("total_credits") val totalCredits: Int? = null,
+    @SerialName("user_email") val userEmail: String? = null, // Will handle "null"
+    @SerialName("created_at") val createdAt: String? = null,
+    @SerialName("updated_at") val updatedAt: String? = null
+)

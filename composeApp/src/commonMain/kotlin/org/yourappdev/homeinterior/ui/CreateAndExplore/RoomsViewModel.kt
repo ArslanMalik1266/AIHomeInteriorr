@@ -11,13 +11,19 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.yourappdev.homeinterior.data.mapper.toUi
 import org.yourappdev.homeinterior.domain.repo.RoomsRepository
+import org.yourappdev.homeinterior.domain.usecase.AddCreditsUseCase
 import org.yourappdev.homeinterior.ui.Generate.UiScreens.ColorPalette
 import org.yourappdev.homeinterior.ui.Generate.UiScreens.InteriorStyle
+import org.yourappdev.homeinterior.ui.authentication.AuthViewModel
+import org.yourappdev.homeinterior.ui.authentication.register.RegisterEvent
 import org.yourappdev.homeinterior.ui.common.base.CommonUiEvent
 import org.yourappdev.homeinterior.ui.common.base.CommonUiEvent.ShowError
 import org.yourappdev.homeinterior.utils.executeApiCall
 
-class RoomsViewModel(val roomsRepository: RoomsRepository) : ViewModel() {
+class RoomsViewModel(val roomsRepository: RoomsRepository,
+                     private val addCreditsUseCase: AddCreditsUseCase,
+                     private val authViewModel: AuthViewModel
+) : ViewModel() {
 
     private val _state = MutableStateFlow(RoomUiState())
     val state: StateFlow<RoomUiState> = _state.asStateFlow()
@@ -389,5 +395,48 @@ class RoomsViewModel(val roomsRepository: RoomsRepository) : ViewModel() {
             Include complementary decorative elements such as artwork, plants, rugs, curtains, and accessories that reinforce the mood and atmosphere. 
             Ensure the design is cohesive, functional, visually balanced, and creates the intended ambiance while reflecting the chosen style and palette.
         """.trimIndent()
+    }
+
+    fun onSubscriptionEvent(event: RoomEvent) {
+        when (event) {
+            is RoomEvent.OnPurchasePlan -> {
+                // Price to Credits Mapping
+                val amount = when (event.price) {
+                    "$9.99" -> 500
+                    "$18.99" -> 1100
+                    "$28.99" -> 2300
+                    else -> 0
+                }
+
+                val email = authViewModel.state.value.email ?: ""
+
+                if (email.isBlank()) {
+                    _state.update { it.copy(purchaseError = "User not logged in") }
+                    return
+                }
+
+                _state.update { it.copy(isPurchasing = true, purchaseError = null) }
+
+                viewModelScope.launch {
+                    val result = addCreditsUseCase(email, amount)
+
+                    result.onSuccess { response ->
+                        _state.update { it.copy(
+                            isPurchasing = false,
+                            purchaseSuccess = "Credits added: ${response.purchasedCredits}"
+                        )}
+                        authViewModel.onAuthEvent(RegisterEvent.FetchUserDetails)                    }.onFailure { error ->
+                        _state.update { it.copy(
+                            isPurchasing = false,
+                            purchaseError = error.message ?: "Transaction failed"
+                        )}
+                    }
+                }
+            }
+            RoomEvent.ClearPurchaseState -> {
+                _state.update { it.copy(purchaseSuccess = null, purchaseError = null) }
+            }
+            else -> onRoomEvent(event) // Purane events ko bhej dein
+        }
     }
 }

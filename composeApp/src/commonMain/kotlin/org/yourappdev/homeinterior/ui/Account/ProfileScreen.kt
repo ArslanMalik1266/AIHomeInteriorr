@@ -58,11 +58,9 @@ fun ProfileScreen(
         authViewModel.uiEvent.collect { event ->
             when (event) {
                 is CommonUiEvent.NavigateToSuccess -> {
-                    // Jab logout success ho jaye to ye lambda call karein
                     onLogoutSuccess()
                 }
                 is CommonUiEvent.ShowError -> {
-                    // Error message dikhane ke liye
                     println("DEBUG_UI: Logout Error = ${event.message}")
                 }
                 is CommonUiEvent.ShowSuccess -> {
@@ -186,32 +184,15 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.height(20.dp))
 
             ProfileHeader(
-                name = user?.fullname ?: "",
-                email = user?.email ?: ""
+                email = user?.userEmail ?: "No Email"
             )
 
             Spacer(modifier = Modifier.height(60.dp))
 
             ProfileMenuItems(
-                username = user?.fullname ?: "",
-                email = user?.email ?: "",
+                email = user?.userEmail ?: "No Email",
                 onLogoutClick = { showLogoutDialog = true }
             )
-
-            Box(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 27.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .clickable {
-                        showDelete = true
-                    }) {
-                Text(
-                    text = "Delete Account",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color(0xFFFB5C5C),
-                    modifier = Modifier.padding(vertical = 16.dp, horizontal = 10.dp)
-                )
-            }
 
         }
         if (showDelete) {
@@ -233,7 +214,7 @@ fun ProfileScreen(
 }
 
 @Composable
-fun ProfileHeader(name: String, email: String) {
+fun ProfileHeader( email: String) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -256,13 +237,6 @@ fun ProfileHeader(name: String, email: String) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text(
-            text = name,
-            fontSize = 17.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = Color(0xFF615E5E),
-            textAlign = TextAlign.Center
-        )
 
         Text(
             text = email,
@@ -276,7 +250,6 @@ fun ProfileHeader(name: String, email: String) {
 
 @Composable
 fun ProfileMenuItems(
-    username: String,
     email: String,
     onLogoutClick: () -> Unit
 ) {
@@ -286,11 +259,6 @@ fun ProfileMenuItems(
             .padding(horizontal = 35.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        ProfileMenuItem(
-            label = "Username",
-            value = username
-        )
-
         ProfileMenuItem(
             label = "Email",
             value = email

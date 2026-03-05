@@ -1,9 +1,13 @@
 package org.yourappdev.homeinterior.data.mapper
 
 import org.yourappdev.homeinterior.data.remote.dto.DeviceLinkResponseDto
+import org.yourappdev.homeinterior.data.remote.dto.LogoutResponseDto
+import org.yourappdev.homeinterior.data.remote.dto.UserDetailDto
 import org.yourappdev.homeinterior.data.remote.dto.UserDto
 import org.yourappdev.homeinterior.domain.model.DeviceLinkResult
+import org.yourappdev.homeinterior.domain.model.LogoutDomainModel
 import org.yourappdev.homeinterior.domain.model.UserDetail
+import org.yourappdev.homeinterior.domain.model.UserDetailDomainModel
 
 fun DeviceLinkResponseDto.toDomain(): DeviceLinkResult {
     return DeviceLinkResult(
@@ -33,3 +37,16 @@ fun UserDto?.toDomain(): UserDetail { // Nullable extension function
         updatedAt = this?.updatedAt ?: ""
     )
 }
+
+fun LogoutResponseDto.toDomain() = LogoutDomainModel(
+    status = status,
+    freeCredits = freeCredits,
+    totalCredits = totalCredits,
+    user = user?.toDomain()
+)
+
+fun UserDetailDto.toDomain() = UserDetailDomainModel(
+    id = id, appId = appId, deviceId = deviceId,
+    freeCredits = freeCredits, totalCredits = totalCredits,
+    userEmail = userEmail, createdAt = createdAt, updatedAt = updatedAt
+)

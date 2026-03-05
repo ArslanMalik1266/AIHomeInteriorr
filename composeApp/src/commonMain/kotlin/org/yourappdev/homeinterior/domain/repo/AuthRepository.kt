@@ -1,9 +1,9 @@
 package org.yourappdev.homeinterior.domain.repo
 
+import org.yourappdev.homeinterior.data.remote.util.ResultState
 import org.yourappdev.homeinterior.domain.model.DeviceLinkResult
-import org.yourappdev.homeinterior.domain.model.RegisterRequest
-import org.yourappdev.homeinterior.domain.model.RegisterResponse
-import org.yourappdev.homeinterior.domain.model.User
+import org.yourappdev.homeinterior.domain.model.LogoutDomainModel
+import org.yourappdev.homeinterior.domain.model.UserDetail
 import org.yourappdev.homeinterior.domain.model.VerifyResponse
 
 interface AuthRepository {
@@ -23,8 +23,14 @@ interface AuthRepository {
 
     suspend fun logout(
         packageName: String,
-        deviceId: String,
-        userEmail: String
-    ): Result<DeviceLinkResult>
+        userEmail: String,
+        deviceId: String
+    ): Result<LogoutDomainModel>
 
+    suspend fun getProfileAndCredits(
+        packageName: String,
+        deviceId: String,
+        userEmail: String,
+        authProvider: String
+    ): Result<DeviceLinkResult>
 }

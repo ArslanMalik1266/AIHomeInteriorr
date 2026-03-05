@@ -3,6 +3,7 @@ package org.yourappdev.homeinterior.ui.authentication
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.russhwolf.settings.Settings
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -13,8 +14,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.yourappdev.homeinterior.data.remote.dto.UserDto
 import org.yourappdev.homeinterior.data.remote.util.ResultState
-import org.yourappdev.homeinterior.domain.model.User
+import org.yourappdev.homeinterior.domain.model.UserDetail
 import org.yourappdev.homeinterior.domain.repo.AuthRepository
 import org.yourappdev.homeinterior.domain.usecase.LoginUseCase
 import org.yourappdev.homeinterior.domain.usecase.LogoutUseCase
@@ -36,14 +39,67 @@ class AuthViewModel(private val verifyOtpUseCase: VerifyOtpUseCase,
     private val _state = MutableStateFlow(RegisterState())
     val state: StateFlow<RegisterState> = _state.asStateFlow()
 
-    private val _user = MutableStateFlow<User?>(null)
+    private val _user = MutableStateFlow<UserDetail?>(null)
     val user = _user.asStateFlow()
+
+
 
     private val _uiEvent = MutableSharedFlow<CommonUiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
     private var timerJob: Job? = null
 
     init {
+        val savedEmail = settings.getString("user_email", "")
+        _state.value = _state.value.copy(email = savedEmail)
+
+        if (savedEmail.isNotBlank()) {
+            fetchUserDetails()
+        }
+    }
+
+    fun onAuthEvent(event: RegisterEvent) {
+        when (event) {
+            is RegisterEvent.FetchUserDetails -> {
+                fetchUserDetails()
+            }
+            else -> onRegisterFormEvent(event)
+        }
+    }
+
+  fun fetchUserDetails() {
+        val savedEmail = settings.getString("user_email", "")
+        if (savedEmail.isBlank()) return
+
+        viewModelScope.launch {
+            // UI par loading dikhane ke liye
+            _state.value = _state.value.copy(isLoading = true)
+
+            // Naya method jo humne AuthRepository mein banaya tha
+            val result = repository.getProfileAndCredits(
+                packageName = "org.yourappdev.homeinterior",
+                deviceId = getDeviceId(),
+                userEmail = savedEmail,
+                authProvider = "email" // Ya jo bhi aap default rakhte hain
+            )
+
+            result.onSuccess { deviceLinkResult ->
+                // 1. State update karein (Credits ke liye)
+                _state.value = _state.value.copy(
+                    freeCredits = deviceLinkResult.freeCredits ?: 0,
+                    purchaseCredits = deviceLinkResult.purchaseCredits ?: 0,
+                    totalCredits = deviceLinkResult.totalCredits ?: 0,
+                    isLoading = false
+                )
+
+                // 2. User Detail update karein
+                _user.value = deviceLinkResult.user
+
+                println("DEBUG: User Details Updated - Total Credits: ${deviceLinkResult.totalCredits}")
+            }.onFailure { error ->
+                _state.value = _state.value.copy(isLoading = false)
+                _uiEvent.emit(ShowError("Profile Update Failed: ${error.message}"))
+            }
+        }
     }
 
     fun onRegisterFormEvent(event: RegisterEvent) {
@@ -112,13 +168,27 @@ class AuthViewModel(private val verifyOtpUseCase: VerifyOtpUseCase,
             )
 
             result.onSuccess { deviceLinkResult ->
-                _state.value = _state.value.copy(deviceLinkResponse = ResultState.Success(deviceLinkResult))
+                println("DEBUG: freeCredits = ${deviceLinkResult.freeCredits}")
+                println("DEBUG: purchaseCredits = ${deviceLinkResult.purchaseCredits}")
+                println("DEBUG: totalCredits = ${deviceLinkResult.totalCredits}")
+
+                println("DEBUG_VERIFY_OTP: DeviceLinkResult = $deviceLinkResult")
+                _state.value = _state.value.copy(
+                    deviceLinkResponse = ResultState.Success(deviceLinkResult),
+                    freeCredits = deviceLinkResult.freeCredits ?: 0,
+                    purchaseCredits = deviceLinkResult.purchaseCredits ?: 0,
+                    totalCredits = deviceLinkResult.totalCredits ?: 0
+                )
+                _user.value = deviceLinkResult.user
+                println("DEBUG_VERIFY_OTP: _user.value = ${_user.value}")
                 if (deviceLinkResult.status == "linked") {
-                    settings.putString(Constants.LOGIN, "true")
-                    settings.putString("user_email", deviceLinkResult.userEmail)
+                    settings.putBoolean(Constants.LOGIN, true)
+                    settings.putString("user_email", deviceLinkResult.userEmail ?: "")
                     _uiEvent.emit(ShowSuccess("Device Linked Successfully"))
                     _uiEvent.emit(NavigateToSuccess)
                 }
+
+
             }.onFailure { exception ->
                 val errorMsg = exception.message ?: "Verification Failed"
                 println("DEBUG: ViewModel Verification Failed: $errorMsg")
@@ -177,27 +247,41 @@ class AuthViewModel(private val verifyOtpUseCase: VerifyOtpUseCase,
 
 
     fun logout() {
-        println("DEBUG_VM: Logout triggered inside ViewModel")
-
+        println("DEBUG_LOGOUT: 1. Function Called")
         viewModelScope.launch {
+            try {
+                val savedEmail = settings.getString("user_email", "NOT_FOUND")
+                println("DEBUG_LOGOUT: 2. Saved Email: $savedEmail")
 
-            val savedEmail = settings.getString("user_email", "")
-            println("DEBUG_VM: Attempting logout for email: $savedEmail")
+                val devId = getDeviceId()
+                println("DEBUG_LOGOUT: 3. Device ID: $devId")
 
-            val result = logoutUseCase(
-                packageName = "org.yourappdev.homeinterior",
-                deviceId = getDeviceId(),
-                userEmail = savedEmail
-            )
+                println("DEBUG_LOGOUT: 4. Calling logoutUseCase...")
+                val result = logoutUseCase(
+                    packageName = "org.yourappdev.homeinterior",
+                    deviceId = devId,
+                    userEmail = savedEmail,
+                )
 
-            result.onSuccess {
-                println("DEBUG_VM: Logout API Success")
-                settings.remove(Constants.LOGIN)
-                settings.remove("user_email")
-                _uiEvent.emit(CommonUiEvent.NavigateToSuccess)
-            }.onFailure {
-                println("DEBUG_VM: Logout API Failed: ${it.message}")
-                _uiEvent.emit(CommonUiEvent.ShowError(it.message ?: "Logout Failed"))
+                result.onSuccess { domainModel ->
+                    println("DEBUG_LOGOUT: 5. API Success! Status: ${domainModel.status}")
+
+                    settings.putBoolean(Constants.LOGIN, false)
+                    settings.remove("user_email")
+                    println("DEBUG_LOGOUT: 6. Settings Cleared")
+                    _state.value = RegisterState()
+                    _user.value = null
+
+                    _uiEvent.emit(CommonUiEvent.NavigateToSuccess)
+                    println("DEBUG_LOGOUT: 7. Navigate Event Emitted")
+                }.onFailure { error ->
+                    println("DEBUG_LOGOUT: 5. API Failure: ${error.message}")
+                    error.printStackTrace() // Isse poora error stack trace dikhega
+                    _uiEvent.emit(CommonUiEvent.ShowError(error.message ?: "Logout Failed"))
+                }
+            } catch (e: Exception) {
+                println("DEBUG_LOGOUT: CRASH in ViewModel: ${e.message}")
+                _uiEvent.emit(CommonUiEvent.ShowError("Unexpected Error: ${e.message}"))
             }
         }
     }

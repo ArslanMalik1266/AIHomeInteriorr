@@ -21,6 +21,8 @@ sealed class RoomEvent {
     ) : RoomEvent()
 
 
+    data class OnPurchasePlan(val price: String) : RoomEvent()
+    data object ClearPurchaseState : RoomEvent()
     data class OnTempFilterChange(val filterState: FilterState) : RoomEvent()
     data class OnToggleFilterSection(val section: FilterSection) : RoomEvent()
 

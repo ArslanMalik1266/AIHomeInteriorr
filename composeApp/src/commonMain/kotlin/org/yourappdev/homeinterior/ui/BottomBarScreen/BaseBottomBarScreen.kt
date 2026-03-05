@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -62,7 +63,8 @@ import org.yourappdev.homeinterior.ui.theme.unselectedNavItem
 import org.yourappdev.homeinterior.utils.getPlatformContext
 
 @Composable
-fun BaseBottomBarScreen() {
+fun BaseBottomBarScreen(rootNavController: NavHostController) {
+
 
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -227,7 +229,8 @@ fun BaseBottomBarScreen() {
                         showGallery = true
                     },
                     onRoomClick = { room ->
-                        navController.navigate(Routes.FileEdit(imageUrl = room.imageUrl))                    },
+                        navController.navigate(Routes.FileEdit(imageUrl = room.imageUrl))
+                    },
                     onShowResults = {
                         navController.navigate(Routes.Result)
                     },
@@ -273,7 +276,8 @@ fun BaseBottomBarScreen() {
                     },
                     onProfileClick = {
                         navController.navigate(Routes.Profile)
-                    }
+                    },
+                    viewModel = authViewModel
                 )
             }
 
@@ -308,9 +312,12 @@ fun BaseBottomBarScreen() {
                         navController.popBackStack()
                     },
                     onResult = {
-                        navController.navigate(Routes.Result){
+                        navController.navigate(Routes.Result) {
                             popUpTo(Routes.AbtToGenerate) { inclusive = true }
                         }
+                    },
+                    onSubscriptionClick = {
+                        navController.navigate(Routes.Subscription)
                     }
                 )
             }
@@ -319,7 +326,8 @@ fun BaseBottomBarScreen() {
                 SubscriptionScreen(
                     onBackClick = {
                         navController.popBackStack()
-                    }
+                    },
+                    roomsViewModel = roomViewModel
                 )
             }
 
@@ -354,12 +362,13 @@ fun BaseBottomBarScreen() {
             composable<Routes.Profile> {
                 ProfileScreen(
                     authViewModel = authViewModel,
-                            onBackClick = {
+                    onBackClick = {
                         navController.popBackStack()
                     },
                     onLogoutSuccess = {
-                        navController.navigate(Routes.Login) {
+                        rootNavController.navigate(Routes.Login) {
                             popUpTo(0) { inclusive = true }
+                            launchSingleTop = true
                         }
                     }
                 )
@@ -368,18 +377,18 @@ fun BaseBottomBarScreen() {
 
         if (showGallery) {
             GalleryPickerLauncher(
-            onPhotosSelected = { photos ->
-                val photo = photos.first()
-                val bytes = uriToByteArray(platformContext, photo.uri.toString())
-                val fileName = "room_upload.jpg"
-                roomViewModel.resetGenerationState()
-                roomViewModel.onRoomEvent(
-                    RoomEvent.SetImageBytes(bytes, fileName)
-                )
+                onPhotosSelected = { photos ->
+                    val photo = photos.first()
+                    val bytes = uriToByteArray(platformContext, photo.uri.toString())
+                    val fileName = "room_upload.jpg"
+                    roomViewModel.resetGenerationState()
+                    roomViewModel.onRoomEvent(
+                        RoomEvent.SetImageBytes(bytes, fileName)
+                    )
 
-                showGallery = false
-                navController.navigate(Routes.AddScreen)
-            },
+                    showGallery = false
+                    navController.navigate(Routes.AddScreen)
+                },
                 onError = { showGallery = false },
                 onDismiss = { showGallery = false },
                 allowMultiple = false,

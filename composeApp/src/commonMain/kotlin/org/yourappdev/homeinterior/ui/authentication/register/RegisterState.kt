@@ -25,6 +25,9 @@ data class RegisterState(
     val forgetPasswordResetResponse: ResultState<RegisterResponse> = ResultState.Stable,
     val newPassword: String = "",
     val deviceLinkResponse: ResultState<DeviceLinkResult> = ResultState.Stable,
+    val freeCredits: Int = 0,
+    val purchaseCredits: Int = 0,
+    val totalCredits: Int = 0,
     val isLoading: Boolean = false,
     val result: DeviceLinkResult? = null,
     val error: String? = null
