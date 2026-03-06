@@ -7,20 +7,23 @@ import androidx.room.RoomDatabaseConstructor
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import kotlinx.coroutines.Dispatchers
 import org.yourappdev.homeinterior.data.local.dao.ProfileDao
+import org.yourappdev.homeinterior.data.local.dao.DraftDao // Import add karein
 import org.yourappdev.homeinterior.data.local.entities.UserInfoEntity
+import org.yourappdev.homeinterior.data.local.entities.DraftEntity // Import add karein
 
-
-@Database(entities = [UserInfoEntity::class], version = 1)
+@Database(
+    entities = [DraftEntity::class],
+    version = 1
+)
 @ConstructedBy(AppDatabaseConstructor::class)
 abstract class AppDatabase : RoomDatabase() {
-    abstract fun userProfileDao(): ProfileDao
+    abstract fun draftDao(): DraftDao
 }
 
 @Suppress("KotlinNoActualForExpect")
 expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase> {
     override fun initialize(): AppDatabase
 }
-
 
 fun getRoomDatabase(
     builder: RoomDatabase.Builder<AppDatabase>

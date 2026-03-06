@@ -9,5 +9,7 @@ data class Rooms(
     val rooms: List<Room> = emptyList(),
 
     @SerialName("success")
-    val success: Boolean = false
+    val success: Boolean = false,
+
+    val message: String? = null
 )

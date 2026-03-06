@@ -1,22 +1,29 @@
 package org.yourappdev.homeinterior.data.repository
 
+import org.yourappdev.homeinterior.data.remote.service.AuthService
 import org.yourappdev.homeinterior.data.remote.service.RoomService
 import org.yourappdev.homeinterior.domain.model.CreditResponse
 import org.yourappdev.homeinterior.domain.repo.CreditsRepository
 
 class CreditsRepositoryImpl(
-    private val roomService: RoomService
+    private val authService: AuthService
 ) : CreditsRepository {
 
     override suspend fun addCredits(email: String, amount: Int): Result<CreditResponse> {
+        println("DEBUG_REPO: Calling API with Email: $email, Amount: $amount")
         return try {
-            val response = roomService.addCredits(email, amount)
+            println("DEBUG_REPO: 2. Calling roomService.addCredits...") // <--- Yahan
+            val response = authService.addCredits(email, amount)
+            println("DEBUG_REPO: Raw Response Check: $response")
             if (response.status == "added") {
+                println("DEBUG_REPO: 4. Success Condition Met") // <--- Yahan
                 Result.success(response)
             } else {
+                println("DEBUG_REPO: 5. Failed Condition: Status was ${response.status}") // <--- Yahan
                 Result.failure(Exception(response.message))
             }
         } catch (e: Exception) {
+            println("DEBUG_REPO: 6. Exception Caught: ${e.message}") // <--- Yahan
             Result.failure(e)
         }
     }
