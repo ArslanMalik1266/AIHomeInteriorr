@@ -1,17 +1,36 @@
 package org.yourappdev.homeinterior.domain.repo
 
-import org.yourappdev.homeinterior.domain.model.RegisterRequest
-import org.yourappdev.homeinterior.domain.model.RegisterResponse
-import org.yourappdev.homeinterior.domain.model.User
+import org.yourappdev.homeinterior.data.remote.util.ResultState
+import org.yourappdev.homeinterior.domain.model.DeviceLinkResult
+import org.yourappdev.homeinterior.domain.model.LogoutDomainModel
+import org.yourappdev.homeinterior.domain.model.UserDetail
 import org.yourappdev.homeinterior.domain.model.VerifyResponse
 
 interface AuthRepository {
-    suspend fun register(request: RegisterRequest): RegisterResponse
-    suspend fun verifyOtp(email: String, otp: String): VerifyResponse
-    suspend fun resendOtp(email: String): VerifyResponse
-    suspend fun forgetPasswordRequest(email: String): RegisterResponse
-    suspend fun forgetPasswordVerify(email: String, otp: String): RegisterResponse
-    suspend fun forgetPasswordReset(email: String, password: String, confirm_password: String): RegisterResponse
-    suspend fun login(email: String, password: String): VerifyResponse
+    suspend fun login(
+        packageName: String,
+        deviceId: String,
+        userEmail: String,
+        authProvider: String
+    ): Result<VerifyResponse>
+    suspend fun verifyOtp(
+        packageName: String,
+        deviceId: String,
+        userEmail: String,
+        authProvider: String,
+        otp: String
+    ): Result<DeviceLinkResult>
 
+    suspend fun logout(
+        packageName: String,
+        userEmail: String,
+        deviceId: String
+    ): Result<LogoutDomainModel>
+
+    suspend fun getProfileAndCredits(
+        packageName: String,
+        deviceId: String,
+        userEmail: String,
+        authProvider: String
+    ): Result<DeviceLinkResult>
 }

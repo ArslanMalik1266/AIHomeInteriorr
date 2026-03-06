@@ -1,31 +1,31 @@
 package org.yourappdev.homeinterior.data.remote
 
 import com.russhwolf.settings.Settings
-import com.russhwolf.settings.get
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
-import io.ktor.client.plugins.logging.DEFAULT
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
+import io.ktor.client.plugins.cookies.HttpCookies
+import io.ktor.client.plugins.cookies.AcceptAllCookiesStorage
 import io.ktor.client.request.header
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
-import org.yourappdev.homeinterior.data.local.dao.ProfileDao
-import org.yourappdev.homeinterior.data.local.entities.UserInfoEntity
 import org.yourappdev.homeinterior.utils.Constants
 
-
-const val BASE_URL = "https://interior.shabbirhussain.com/api/"
 
 fun createHttpClientManual(
     settings: Settings
 ): HttpClient {
     return HttpClient {
+        install(HttpCookies) {
+            storage = AcceptAllCookiesStorage()
+        }
+
         install(ContentNegotiation) {
             json(
                 Json {
@@ -33,19 +33,17 @@ fun createHttpClientManual(
                     isLenient = true
                     ignoreUnknownKeys = true
                     explicitNulls = false
+                    encodeDefaults = true
                 }
             )
         }
 
         defaultRequest {
-            url(BASE_URL)
-
             val bt = settings.getString(Constants.BT, "")
 
-            co.touchlab.kermit.Logger.i("MYTOKEN") { bt }
-            header(HttpHeaders.Authorization, "Bearer $bt")
-
-            contentType(ContentType.Application.Json)
+            if (bt.isNotEmpty()) {
+                header(HttpHeaders.Authorization, "Bearer $bt")
+            }
         }
 
         install(Logging) {

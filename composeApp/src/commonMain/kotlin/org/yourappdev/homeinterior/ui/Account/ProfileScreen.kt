@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,13 +35,15 @@ import org.koin.compose.viewmodel.koinViewModel
 import org.yourappdev.homeinterior.ui.UiUtils.BackIconButton
 import org.yourappdev.homeinterior.ui.UiUtils.DeleteConfirmationDialog
 import org.yourappdev.homeinterior.ui.authentication.AuthViewModel
+import org.yourappdev.homeinterior.ui.common.base.CommonUiEvent
 import org.yourappdev.homeinterior.ui.theme.white_color
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     authViewModel: AuthViewModel = koinViewModel(),
-    onBackClick: () -> Unit = {}
+    onBackClick: () -> Unit = {},
+    onLogoutSuccess: () -> Unit = {}
 ) {
 
 
@@ -51,6 +54,21 @@ fun ProfileScreen(
     val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
 
+    LaunchedEffect(Unit) {
+        authViewModel.uiEvent.collect { event ->
+            when (event) {
+                is CommonUiEvent.NavigateToSuccess -> {
+                    onLogoutSuccess()
+                }
+                is CommonUiEvent.ShowError -> {
+                    println("DEBUG_UI: Logout Error = ${event.message}")
+                }
+                is CommonUiEvent.ShowSuccess -> {
+                    println("DEBUG_UI: Success = ${event.message}")
+                }
+            }
+        }
+    }
     val user by authViewModel.user.collectAsState()
 
     println("DEBUG_UI: ProfileScreen user data = $user")
@@ -67,9 +85,9 @@ fun ProfileScreen(
                     // Sign Out Button (Red Background)
                     Button(
                         onClick = {
-                            showLogoutDialog = false
+                            println("DEBUG_UI: Button clicked - Step 1") // Pehle ye check karein                            showLogoutDialog = false
                             authViewModel.logout()
-                            onBackClick()
+                            println("DEBUG_UI: Button clicked - Step 2")
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -166,32 +184,15 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.height(20.dp))
 
             ProfileHeader(
-                name = user?.fullname ?: "",
-                email = user?.email ?: ""
+                email = user?.userEmail ?: "No Email"
             )
 
             Spacer(modifier = Modifier.height(60.dp))
 
             ProfileMenuItems(
-                username = user?.fullname ?: "",
-                email = user?.email ?: "",
+                email = user?.userEmail ?: "No Email",
                 onLogoutClick = { showLogoutDialog = true }
             )
-
-            Box(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 27.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .clickable {
-                        showDelete = true
-                    }) {
-                Text(
-                    text = "Delete Account",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color(0xFFFB5C5C),
-                    modifier = Modifier.padding(vertical = 16.dp, horizontal = 10.dp)
-                )
-            }
 
         }
         if (showDelete) {
@@ -213,7 +214,7 @@ fun ProfileScreen(
 }
 
 @Composable
-fun ProfileHeader(name: String, email: String) {
+fun ProfileHeader( email: String) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -236,13 +237,6 @@ fun ProfileHeader(name: String, email: String) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text(
-            text = name,
-            fontSize = 17.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = Color(0xFF615E5E),
-            textAlign = TextAlign.Center
-        )
 
         Text(
             text = email,
@@ -256,7 +250,6 @@ fun ProfileHeader(name: String, email: String) {
 
 @Composable
 fun ProfileMenuItems(
-    username: String,
     email: String,
     onLogoutClick: () -> Unit
 ) {
@@ -266,11 +259,6 @@ fun ProfileMenuItems(
             .padding(horizontal = 35.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        ProfileMenuItem(
-            label = "Username",
-            value = username
-        )
-
         ProfileMenuItem(
             label = "Email",
             value = email

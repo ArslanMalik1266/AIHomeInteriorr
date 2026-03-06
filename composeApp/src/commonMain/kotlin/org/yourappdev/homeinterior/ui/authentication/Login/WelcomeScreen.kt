@@ -86,23 +86,6 @@ fun WelcomeScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Login link
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Already have an account? ",
-                fontSize = 16.sp,
-                color = black_color,
-                lineHeight = 1.sp,
-                fontWeight = FontWeight.Normal,
-            )
-            ClickableText(title = "Login", textSize = 16.sp, fontWeight = FontWeight.Bold) {
-                onLogin()
-            }
-        }
     }
 }
 

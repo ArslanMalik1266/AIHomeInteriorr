@@ -75,8 +75,7 @@ fun LoginScreen(
                 }
 
                 CommonUiEvent.NavigateToSuccess -> {
-                    navController.navigate(Routes.BaseAppScreen) {
-                        popUpTo(navController.graph.startDestinationId)
+                    navController.navigate(Routes.Verification) {
                     }
                 }
 
@@ -115,7 +114,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Login now to track all your expenses and income at a place!",
+                text = "Sign in to explore AI room makeovers, save your favorite styles, and transform your living space.",
                 fontSize = 14.sp,
                 color = smallText,
             )
@@ -157,92 +156,11 @@ fun LoginScreen(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 singleLine = true
             )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Password field
-            Text(
-                text = "Your Password",
-                fontSize = 14.sp,
-                color = smallText,
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-
-            OutlinedTextField(
-                value = state.password,
-                onValueChange = { onLoginEvent(RegisterEvent.PasswordUpdate(it)) },
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = {
-                    Text(
-                        "••••••••••",
-                        color = grey_border
-                    )
-                },
-                leadingIcon = {
-                    Image(
-                        painter = painterResource(Res.drawable.passicon),
-                        contentDescription = null,
-                        colorFilter = ColorFilter.tint(color = LocalContentColor.current)
-                    )
-                },
-                trailingIcon = {
-                    Box(modifier = Modifier.size(30.dp).clip(CircleShape).clickable {
-                        onLoginEvent(RegisterEvent.TogglePassword(!state.showPassword))
-                    }, contentAlignment = Alignment.Center) {
-                        Image(
-                            painter = painterResource(if (state.showPassword) Res.drawable.show_1_ else Res.drawable.hide_),
-                            contentDescription = "Close",
-                            colorFilter = ColorFilter.tint(color = buttonBack),
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                },
-                visualTransformation = if (state.showPassword) VisualTransformation.None else PasswordVisualTransformation(),
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedBorderColor = grey_border,
-                    focusedBorderColor = green_border,
-                    focusedLeadingIconColor = green_border,
-                    unfocusedLeadingIconColor = grey_border
-                ),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
-            )
-
-            Spacer(modifier = Modifier.height(6.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Checkbox(
-                        checked = state.rememberMe,
-                        onCheckedChange = { },
-                        colors = CheckboxDefaults.colors(
-                            checkedColor = green_border,
-                            uncheckedColor = Color(0xFFCCCCCC)
-                        )
-                    )
-                    Text(
-                        text = "Remember me",
-                        fontSize = 12.sp,
-                        color = smallText,
-                    )
-                }
-
-                ClickableText(title = "Forget Password?", textSize = 12.sp, color = smallText) {
-                    navController.navigate(Routes.ForgetEmail)
-                }
-            }
-
             Spacer(modifier = Modifier.height(24.dp))
 
             // Login button
             Button(
-                onClick = { 
+                onClick = {
                     onLoginEvent(RegisterEvent.Login)
                 },
                 modifier = Modifier
@@ -266,31 +184,6 @@ fun LoginScreen(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 20.dp, horizontal = 10.dp)
             )
 
-            ButtonWithIcon(image = Res.drawable.google, borderColor = green_border, title = "Continue with Google", onClick = {})
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Don't have an account? ",
-                    fontSize = 14.sp,
-                    color = smallText
-                )
-
-                ClickableText(
-                    title = "Register",
-                    textSize = 14.sp,
-                    color = green_border,
-                    fontWeight = FontWeight.Bold
-                ) {
-                    navController.navigate(Routes.Register)
-                }
-            }
         }
         CustomSnackbar(
             state = snackBarState,

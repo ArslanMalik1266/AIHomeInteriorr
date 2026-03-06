@@ -31,12 +31,23 @@ import org.yourappdev.homeinterior.ui.common.base.CommonUiEvent
 import org.yourappdev.homeinterior.ui.theme.buttonBack
 import org.yourappdev.homeinterior.ui.theme.smallText
 
-@Composable
-fun VerificationRoot(onBackClick: () -> Unit, authViewModel: AuthViewModel, onSuccess: () -> Unit) {
-    val state by authViewModel.state.collectAsState()
-    VerificationScreen(onBackClick,state, authViewModel.uiEvent, authViewModel::onRegisterFormEvent, onSuccess)
-}
 
+@Composable
+fun VerificationRoot(
+    onBackClick: () -> Unit,
+    authViewModel: AuthViewModel,
+    onSuccess: () -> Unit
+) {
+    val state by authViewModel.state.collectAsState()
+
+    VerificationScreen(
+        onBackClick = onBackClick,
+        state = state,
+        uiEvent = authViewModel.uiEvent,
+        event = authViewModel::onRegisterFormEvent,
+        onSuccess = onSuccess
+    )
+}
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VerificationScreen(
@@ -87,14 +98,14 @@ fun VerificationScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "Register",
+                text = "Otp Verification",
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
                 color = buttonBack
             )
 
             Text(
-                text = "We have sent an email to your email account with a verification code!",
+                text = "We sent a 6-digit verification code to ${maskEmail(state.email)}",
                 fontSize = 14.sp,
                 color = smallText,
                 modifier = Modifier.padding(top = 8.dp),
@@ -130,6 +141,7 @@ fun VerificationScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
+            // --- YAHAN CHANGE KIYA HAI ---
             Button(
                 onClick = {
                     event(RegisterEvent.Verify)
@@ -148,7 +160,9 @@ fun VerificationScreen(
                     fontWeight = FontWeight.Medium
                 )
             }
+
             Spacer(modifier = Modifier.height(24.dp))
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
@@ -190,5 +204,15 @@ fun VerificationScreen(
             duration = 3000L
         )
     }
+}
+fun maskEmail(email: String): String {
+    if (email.isBlank() || !email.contains('@')) return email
+    val atIndex = email.indexOf('@')
+    if (atIndex <= 3) return email
 
+    val visiblePart = email.substring(0, 3)
+    val maskedPart = "*".repeat(atIndex - 3)
+    val domain = email.substring(atIndex)
+
+    return visiblePart + maskedPart + domain
 }

@@ -16,4 +16,6 @@ sealed interface RegisterEvent {
     object ForgetPasswordVerify : RegisterEvent
     object ForgetPasswordReset : RegisterEvent
     data class NewPasswordUpdate(val password: String) : RegisterEvent
+
+    data object FetchUserDetails : RegisterEvent
 }

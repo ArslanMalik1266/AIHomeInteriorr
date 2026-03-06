@@ -50,6 +50,9 @@ data class RoomUiState(
     val generatedRoom: GenerateRoomResponse? = null,
     val selectedImageBytes: ByteArray? = null,
     val selectedFileName: String? = null,
+    val isPurchasing: Boolean = false,
+    val purchaseSuccess: String? = null,
+    val purchaseError: String? = null
 )
 
 data class FilterState(

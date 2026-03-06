@@ -37,14 +37,19 @@ import homeinterior.composeapp.generated.resources.keyboard_arrow_up_24px
 import homeinterior.composeapp.generated.resources.settingback
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import org.yourappdev.homeinterior.ui.authentication.AuthViewModel
 
 @Preview
 @Composable
 fun AccountScreen(
+    viewModel: AuthViewModel,
     onSubscriptionClick: () -> Unit = {},
     onProfileClick: () -> Unit = {},
 ) {
-
+    LaunchedEffect(Unit) {
+        viewModel.fetchUserDetails()
+    }
+    val state by viewModel.state.collectAsState()
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -83,7 +88,11 @@ fun AccountScreen(
             }
         }
 
-        CreditCard() {
+        CreditCard(
+            freeCredits = state.freeCredits,
+            purchaseCredits = state.purchaseCredits,
+            totalCredits = state.totalCredits
+        ) {
             onSubscriptionClick()
         }
         // Scrollable Content
@@ -111,7 +120,12 @@ fun AccountScreen(
 }
 
 @Composable
-fun CreditCard(onSubscriptionClick: () -> Unit) {
+fun CreditCard(
+    freeCredits: Int,
+    purchaseCredits: Int,
+    totalCredits: Int,
+    onSubscriptionClick: () -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -124,7 +138,8 @@ fun CreditCard(onSubscriptionClick: () -> Unit) {
                 .fillMaxWidth()
                 .fillMaxHeight(0.9f)
                 .align(Alignment.BottomCenter)
-                .clip(RoundedCornerShape(7.dp)), painter = painterResource(Res.drawable.settingback),
+                .clip(RoundedCornerShape(7.dp)),
+            painter = painterResource(Res.drawable.settingback),
             contentDescription = "setback",
             contentScale = ContentScale.FillHeight
         )
@@ -185,7 +200,7 @@ fun CreditCard(onSubscriptionClick: () -> Unit) {
                     }
 
                     Text(
-                        text = "9 Credits Left",
+                        text = "$totalCredits Credits Left",
                         fontSize = 19.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF355300),
@@ -278,12 +293,17 @@ fun NotificationsToggle() {
                     .offset(x = thumbOffset)
                     .size(23.dp)
                     .background(Color.White, CircleShape)
-                    .border(4.dp, trackColor, CircleShape) // This creates the "inset" look from your XML
+                    .border(
+                        4.dp,
+                        trackColor,
+                        CircleShape
+                    ) // This creates the "inset" look from your XML
             )
         }
         // --- CUSTOM SWITCH END ---
     }
 }
+
 @Composable
 fun ModelsSection() {
     var selectedModel by remember { mutableStateOf("DesignNet" to "Basic") }

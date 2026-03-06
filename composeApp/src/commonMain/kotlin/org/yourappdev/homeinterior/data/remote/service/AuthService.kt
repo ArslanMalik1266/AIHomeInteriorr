@@ -1,88 +1,89 @@
 package org.yourappdev.homeinterior.data.remote.service
 
 import io.ktor.client.HttpClient
-import io.ktor.client.request.forms.FormDataContent
-import io.ktor.client.request.forms.formData
+import io.ktor.client.call.body
 import io.ktor.client.request.forms.submitForm
-import io.ktor.client.request.get
-import io.ktor.client.request.parameter
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
+import io.ktor.client.request.header
+import io.ktor.client.statement.HttpResponse
 import io.ktor.http.Parameters
-import io.ktor.http.parameters
-import org.yourappdev.homeinterior.domain.model.RegisterRequest
-import org.yourappdev.homeinterior.domain.model.RegisterResponse
+import org.yourappdev.homeinterior.domain.model.DeviceLinkResult
 
-class AuthService(val client: HttpClient) {
-    suspend fun register(registerRequest: RegisterRequest) = client.post("auth/register") {
-        setBody(
-            FormDataContent(
-                Parameters.build {
-                    append("fullname", registerRequest.fullname)
-                    append("email", registerRequest.email)
-                    append("password", registerRequest.password)
-                }
-            )
-        )
-    }
+class AuthService(
+    private val client: HttpClient,
+    private val baseUrl: String,
+    private val apiKey: String
+) {
 
-    suspend fun verifyOtp(email: String, otp: String) = client.post("auth/verify-otp") {
-        setBody(
-            FormDataContent(
-                Parameters.build {
-                    append("email", email)
-                    append("otp", otp)
-                }
-            )
-        )
-    }
 
-    suspend fun resendOtp(email: String) = client.post("auth/resend-otp") {
-        setBody(
-            FormDataContent(
-                Parameters.build {
-                    append("email", email)
-                }
-            )
-        )
-    }
-
-    suspend fun forgetPasswordRequest(email: String) = client.post("forgot-password/send") {
-        setBody(
-            FormDataContent(
-                Parameters.build {
-                    append("email", email)
-                }
-            )
-        )
-    }
-
-    suspend fun forgetPasswordVerify(email: String, otp: String) = client.post("forgot-password/verify") {
-        setBody(
-            FormDataContent(
-                Parameters.build {
-                    append("email", email)
-                    append("otp", otp)
-                }
-            )
-        )
-    }
-
-    suspend fun forgetPasswordReset(email: String, password: String, confirm_password: String) =
-        client.post("forgot-password/reset") {
-            setBody(
-                FormDataContent(
-                    Parameters.build {
-                        append("email", email)
-                        append("password", password)
-                        append("password_confirmation", confirm_password)
-                    }
-                )
-            )
+    // Login (OTP Send karne ke liye)
+    suspend fun login(
+        email: String,
+        deviceId: String,
+        authProvider: String,
+    ): HttpResponse = client.submitForm(
+        url = "$baseUrl/device/link",
+        formParameters = Parameters.build {
+            append("package_name", "org.yourappdev.homeinterior")
+            append("device_id", deviceId)
+            append("user_email", email)
+            append("auth_provider", authProvider)
         }
-
-    suspend fun login(email: String, password: String) = client.post("auth/login") {
-        parameter("email", email)
-        parameter("password", password)
+    ) {
+        header("X-API-KEY", apiKey)
     }
+
+    // Verify OTP (Link karne ke liye)
+    suspend fun verifyOtp(
+        deviceId: String,
+        userEmail: String,
+        authProvider: String,
+        otp: String
+    ): HttpResponse = client.submitForm(
+        url = "$baseUrl/device/link",
+        formParameters = Parameters.build {
+            append("package_name", "org.yourappdev.homeinterior")
+            append("device_id", deviceId)
+            append("user_email", userEmail)
+            append("auth_provider", authProvider)
+            append("otp", otp)
+        }
+    ) {
+        header("X-API-KEY", apiKey)
+    }
+
+    suspend fun logout(
+        packageName: String,
+        email: String,
+        deviceId: String
+    ): HttpResponse = client.submitForm(
+        url = "$baseUrl/auth/logout",
+        formParameters = Parameters.build {
+            append("package_name", "org.yourappdev.homeinterior") // Hardcoded
+            append("user_email", email)
+            append("device_id", deviceId)
+
+        }
+    ) {
+        println("DEBUG_SERVICE_LOGOUT: URL -> $baseUrl/auth/logout")
+        println("DEBUG_SERVICE_LOGOUT: Form Parameters -> package_name=$packageName, user_email=$email, device_id=$deviceId")
+        println("DEBUG_SERVICE_LOGOUT: Headers -> X-API-KEY=$apiKey")
+        header("X-API-KEY", apiKey)
+    }
+
+    suspend fun getProfileData(
+        email: String,
+        deviceId: String,
+        authProvider: String,
+    ): HttpResponse = client.submitForm(
+        url = "$baseUrl/device/link", // Same endpoint as login
+        formParameters = Parameters.build {
+            append("package_name", "org.yourappdev.homeinterior")
+            append("device_id", deviceId)
+            append("user_email", email)
+            append("auth_provider", authProvider)
+        }
+    ) {
+        header("X-API-KEY", apiKey)
+    }
+
 }

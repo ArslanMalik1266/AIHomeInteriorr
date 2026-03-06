@@ -3,6 +3,7 @@ package org.yourappdev.homeinterior.ui.authentication
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.russhwolf.settings.Settings
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -13,398 +14,276 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.launch
-import org.yourappdev.homeinterior.domain.model.RegisterRequest
-import org.yourappdev.homeinterior.domain.model.User
+import kotlinx.coroutines.withContext
+import org.yourappdev.homeinterior.data.remote.dto.UserDto
+import org.yourappdev.homeinterior.data.remote.util.ResultState
+import org.yourappdev.homeinterior.domain.model.UserDetail
 import org.yourappdev.homeinterior.domain.repo.AuthRepository
+import org.yourappdev.homeinterior.domain.usecase.LoginUseCase
+import org.yourappdev.homeinterior.domain.usecase.LogoutUseCase
+import org.yourappdev.homeinterior.domain.usecase.ResendOtpUseCase
+import org.yourappdev.homeinterior.domain.usecase.VerifyOtpUseCase
 import org.yourappdev.homeinterior.ui.authentication.register.RegisterEvent
 import org.yourappdev.homeinterior.ui.authentication.register.RegisterState
 import org.yourappdev.homeinterior.ui.common.base.CommonUiEvent
 import org.yourappdev.homeinterior.ui.common.base.CommonUiEvent.*
 import org.yourappdev.homeinterior.utils.Constants
-import org.yourappdev.homeinterior.utils.Constants.BT
-import org.yourappdev.homeinterior.utils.Constants.LOGIN
 import org.yourappdev.homeinterior.utils.executeApiCall
+import org.yourappdev.homeinterior.utils.getDeviceId
 
-class AuthViewModel(val repository: AuthRepository, val settings: Settings) : ViewModel() {
+class AuthViewModel(private val verifyOtpUseCase: VerifyOtpUseCase,
+                    private val loginUseCase: LoginUseCase,
+                    private val logoutUseCase: LogoutUseCase,
+                    private val resendOtpUseCase: ResendOtpUseCase,
+                    val repository: AuthRepository, val settings: Settings) : ViewModel() {
     private val _state = MutableStateFlow(RegisterState())
     val state: StateFlow<RegisterState> = _state.asStateFlow()
 
-    private val _user = MutableStateFlow<User?>(null)
+    private val _user = MutableStateFlow<UserDetail?>(null)
     val user = _user.asStateFlow()
+
+
 
     private val _uiEvent = MutableSharedFlow<CommonUiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
     private var timerJob: Job? = null
 
     init {
-        loadUserFromSettings()
+        val savedEmail = settings.getString("user_email", "")
+        _state.value = _state.value.copy(email = savedEmail)
+
+        if (savedEmail.isNotBlank()) {
+            fetchUserDetails()
+        }
     }
 
+    fun onAuthEvent(event: RegisterEvent) {
+        when (event) {
+            is RegisterEvent.FetchUserDetails -> {
+                fetchUserDetails()
+            }
+            else -> onRegisterFormEvent(event)
+        }
+    }
+
+  fun fetchUserDetails() {
+        val savedEmail = settings.getString("user_email", "")
+        if (savedEmail.isBlank()) return
+
+        viewModelScope.launch {
+            // UI par loading dikhane ke liye
+            _state.value = _state.value.copy(isLoading = true)
+
+            // Naya method jo humne AuthRepository mein banaya tha
+            val result = repository.getProfileAndCredits(
+                packageName = "org.yourappdev.homeinterior",
+                deviceId = getDeviceId(),
+                userEmail = savedEmail,
+                authProvider = "email" // Ya jo bhi aap default rakhte hain
+            )
+
+            result.onSuccess { deviceLinkResult ->
+                // 1. State update karein (Credits ke liye)
+                _state.value = _state.value.copy(
+                    freeCredits = deviceLinkResult.freeCredits ?: 0,
+                    purchaseCredits = deviceLinkResult.purchaseCredits ?: 0,
+                    totalCredits = deviceLinkResult.totalCredits ?: 0,
+                    isLoading = false
+                )
+
+                // 2. User Detail update karein
+                _user.value = deviceLinkResult.user
+
+                println("DEBUG: User Details Updated - Total Credits: ${deviceLinkResult.totalCredits}")
+            }.onFailure { error ->
+                _state.value = _state.value.copy(isLoading = false)
+                _uiEvent.emit(ShowError("Profile Update Failed: ${error.message}"))
+            }
+        }
+    }
 
     fun onRegisterFormEvent(event: RegisterEvent) {
         when (event) {
             is RegisterEvent.EmailUpdate -> _state.value = _state.value.copy(email = event.email)
 
-            is RegisterEvent.NameUpdate -> _state.value = _state.value.copy(username = event.name)
-
-            is RegisterEvent.PasswordUpdate -> _state.value =
-                _state.value.copy(password = event.password)
-
-            RegisterEvent.Register -> {
-                val request = RegisterRequest(
-                    fullname = state.value.username,
-                    email = state.value.email,
-                    password = state.value.password
-                )
-                if (validateForm()) {
-                    performRegister(request)
-                }
-            }
-
-            is RegisterEvent.TogglePassword -> _state.value =
-                _state.value.copy(showPassword = event.newState)
-
-            RegisterEvent.Verify -> {
-                val isBlank = state.value.otp.isBlank()
-                if (isBlank) {
-                    viewModelScope.launch {
-                        _uiEvent.emit(ShowError("OTP is required"))
-                    }
-                } else {
-                    verifyOtp()
-                }
-            }
-
             is RegisterEvent.OTPUpdate -> _state.value = _state.value.copy(otp = event.otp)
-            RegisterEvent.Resend -> {
-                if (state.value.canResend) {
-                    resendOtp()
-                    startResendTimer()
-                }
-            }
 
             RegisterEvent.Login -> {
-                if (validateForm(true)) {
+                if (_state.value.email.isBlank()) {
+                    viewModelScope.launch { _uiEvent.emit(ShowError("Email is required")) }
+                } else {
                     performLogin()
                 }
             }
 
-            RegisterEvent.ForgetPasswordRequest -> {
-                if (_state.value.email.isBlank()) {
-                    viewModelScope.launch {
-                        _uiEvent.emit(ShowError("Email is required"))
-                    }
-                } else {
-                    performForgetPasswordRequest()
-                }
-            }
-
-            RegisterEvent.ForgetPasswordVerify -> {
+            RegisterEvent.Verify -> {
                 if (_state.value.otp.isBlank()) {
-                    viewModelScope.launch {
-                        _uiEvent.emit(ShowError("OTP is required"))
-                    }
+                    viewModelScope.launch { _uiEvent.emit(ShowError("OTP is required")) }
                 } else {
-                    performForgetPasswordVerify()
+                 verifyOtp()
                 }
             }
 
-            RegisterEvent.ForgetPasswordReset -> {
-                if (_state.value.newPassword.isBlank()) {
-                    viewModelScope.launch {
-                        _uiEvent.emit(ShowError("Password is required"))
-                    }
-                } else {
-                    performForgetPasswordReset()
-                }
-            }
-
-            is RegisterEvent.NewPasswordUpdate -> {
-                _state.value = _state.value.copy(newPassword = event.password)
-            }
-
-            RegisterEvent.ResendForget -> {
+            RegisterEvent.Resend -> {
                 if (state.value.canResend) {
-                    performResendForgetPassword()
-                    startResendTimer()
+                    performResendOtp()
                 }
+            }
+            // Baaki events jo aapne maange nahi wo ignore kar diye
+            else -> {}
+        }
+    }
+
+    private fun performResendOtp() {
+        viewModelScope.launch {
+            // 1. Timer start karein (Aapka timer logic pehle se maujood hai)
+            startResendTimer()
+
+            // 2. API Hit karein
+            val result = resendOtpUseCase(
+                packageName = "org.yourappdev.homeinterior",
+                deviceId = getDeviceId(),
+                userEmail = _state.value.email,
+                authProvider = "email"
+            )
+
+            result.onSuccess { response ->
+                _uiEvent.emit(CommonUiEvent.ShowSuccess("OTP Resent Successfully!"))
+            }.onFailure { e ->
+                _uiEvent.emit(CommonUiEvent.ShowError(e.message ?: "Failed to resend OTP"))
             }
         }
     }
 
-
-    private fun performResendForgetPassword() {
+    private fun verifyOtp() {
         viewModelScope.launch {
-            executeApiCall(
-                updateState = { result ->
-                    _state.value = _state.value.copy(forgetPasswordResendResponse = result)
-                },
-                apiCall = { repository.forgetPasswordRequest(_state.value.email) },
-                onSuccess = { response ->
-                    if (response.success) {
-                        _uiEvent.emit(ShowSuccess("OTP resent successfully"))
-                    } else {
-                        _uiEvent.emit(ShowError(response.message))
-                    }
-                },
-                onError = { errorMessage ->
-                    viewModelScope.launch { _uiEvent.emit(ShowError(errorMessage)) }
-                }
+            _state.value = _state.value.copy(deviceLinkResponse = ResultState.Loading)
+
+            val result = verifyOtpUseCase(
+                packageName = "org.yourappdev.homeinterior",
+                deviceId = getDeviceId(),
+                userEmail = _state.value.email,
+                authProvider = "email",
+                otp = _state.value.otp
             )
+
+            result.onSuccess { deviceLinkResult ->
+                println("DEBUG: freeCredits = ${deviceLinkResult.freeCredits}")
+                println("DEBUG: purchaseCredits = ${deviceLinkResult.purchaseCredits}")
+                println("DEBUG: totalCredits = ${deviceLinkResult.totalCredits}")
+
+                println("DEBUG_VERIFY_OTP: DeviceLinkResult = $deviceLinkResult")
+                _state.value = _state.value.copy(
+                    deviceLinkResponse = ResultState.Success(deviceLinkResult),
+                    freeCredits = deviceLinkResult.freeCredits ?: 0,
+                    purchaseCredits = deviceLinkResult.purchaseCredits ?: 0,
+                    totalCredits = deviceLinkResult.totalCredits ?: 0
+                )
+                _user.value = deviceLinkResult.user
+                println("DEBUG_VERIFY_OTP: _user.value = ${_user.value}")
+                if (deviceLinkResult.status == "linked") {
+                    settings.putBoolean(Constants.LOGIN, true)
+                    settings.putString("user_email", deviceLinkResult.userEmail ?: "")
+                    _uiEvent.emit(ShowSuccess("Device Linked Successfully"))
+                    _uiEvent.emit(NavigateToSuccess)
+                }
+
+
+            }.onFailure { exception ->
+                val errorMsg = exception.message ?: "Verification Failed"
+                println("DEBUG: ViewModel Verification Failed: $errorMsg")
+                _state.value = _state.value.copy(deviceLinkResponse = ResultState.Failure(errorMsg))
+                _uiEvent.emit(ShowError(errorMsg))
+            }
         }
     }
-
-
-    private fun performForgetPasswordRequest() {
-        viewModelScope.launch {
-            executeApiCall(
-                updateState = { result ->
-                    _state.value = _state.value.copy(forgetPasswordRequestResponse = result)
-                },
-                apiCall = { repository.forgetPasswordRequest(_state.value.email) },
-                onSuccess = { response ->
-                    if (response.success) {
-                        _uiEvent.emit(ShowSuccess("OTP sent to your email"))
-                        _uiEvent.emit(NavigateToSuccess)
-                    } else {
-                        _uiEvent.emit(ShowError(response.message))
-                    }
-                },
-                onError = { errorMessage ->
-                    viewModelScope.launch { _uiEvent.emit(ShowError(errorMessage)) }
-                }
-            )
-        }
-    }
-
-    private fun performForgetPasswordVerify() {
-        viewModelScope.launch {
-            executeApiCall(
-                updateState = { result ->
-                    _state.value = _state.value.copy(forgetPasswordVerifyResponse = result)
-                },
-                apiCall = {
-                    repository.forgetPasswordVerify(_state.value.email, _state.value.otp)
-                },
-                onSuccess = { response ->
-                    if (response.success) {
-                        _uiEvent.emit(ShowSuccess("OTP verified successfully"))
-                        _uiEvent.emit(NavigateToSuccess)
-                    } else {
-                        _uiEvent.emit(ShowError(response.message))
-                    }
-                },
-                onError = { errorMessage ->
-                    viewModelScope.launch { _uiEvent.emit(ShowError(errorMessage)) }
-                }
-            )
-        }
-    }
-
-    private fun performForgetPasswordReset() {
-        viewModelScope.launch {
-            executeApiCall(
-                updateState = { result ->
-                    _state.value = _state.value.copy(forgetPasswordResetResponse = result)
-                },
-                apiCall = {
-                    repository.forgetPasswordReset(
-                        _state.value.email,
-                        _state.value.newPassword,
-                        _state.value.newPassword
-                    )
-                },
-                onSuccess = { response ->
-                    if (response.success) {
-                        _uiEvent.emit(ShowSuccess("Password reset successfully"))
-                        _uiEvent.emit(NavigateToSuccess)
-                    } else {
-                        _uiEvent.emit(ShowError(response.message))
-                    }
-                },
-                onError = { errorMessage ->
-                    viewModelScope.launch { _uiEvent.emit(ShowError(errorMessage)) }
-                }
-            )
-        }
-    }
-
-
     private fun performLogin() {
         viewModelScope.launch {
-            executeApiCall(
-                updateState = { result ->
-                    _state.value = _state.value.copy(loginResponse = result)
-                },
-                apiCall = {
-                    repository.login(_state.value.email, _state.value.password)
-                },
-                onSuccess = { response ->
-                    if (response.success) {
-                        println("LOGIN RESPONSE USER: ${response.user}")
-                        settings.putBoolean(LOGIN, true)
-                        settings.putString(BT, response.token ?: "")
-                        response.user?.let { u ->
-                            settings.putString("user_name", u.fullname)
-                            settings.putString("user_email", u.email)
-                            _user.value = u
-                        }
-                        settings.putBoolean(LOGIN, true)
+            // State ko loading par set karein
+            _state.value = _state.value.copy(loginResponse = ResultState.Loading)
 
-                        _user.value = response.user
-                        println("USER SET IN VIEWMODEL: ${_user.value}")
-
-
-                        _uiEvent.emit(ShowSuccess("Login successful!"))
-                        _uiEvent.emit(NavigateToSuccess)
-                    } else {
-                        _uiEvent.emit(ShowError(response.message))
-                    }
-                },
-                onError = { errorMessage ->
-                    viewModelScope.launch { _uiEvent.emit(ShowError(errorMessage)) }
-                }
+            val result = loginUseCase(
+                packageName = "org.yourappdev.homeinterior",
+                deviceId = getDeviceId(),
+                userEmail = _state.value.email,
+                authProvider = "email"
             )
+
+            result.onSuccess { response ->
+                _state.value = _state.value.copy(loginResponse = ResultState.Success(response))
+                println("Login Response: $response")
+                if (response.status == "otp_sent" ) {
+                    _uiEvent.emit(CommonUiEvent.ShowSuccess(response.message ?: "OTP sent successfully"))
+                    _uiEvent.emit(CommonUiEvent.NavigateToSuccess) // Ye Verification screen par le jayega
+                } else {
+                    _uiEvent.emit(CommonUiEvent.ShowError(response.message ?:"Login Failed"))
+                }
+            }.onFailure { exception ->
+                val errorMsg = exception.message ?: "Login Failed"
+                println("DEBUG: ViewModel Login Failed: $errorMsg")
+                _state.value = _state.value.copy(loginResponse = ResultState.Failure(errorMsg))
+                _uiEvent.emit(CommonUiEvent.ShowError(errorMsg))
+            }
         }
     }
+
 
     private fun startResendTimer() {
         timerJob?.cancel()
         _state.value = _state.value.copy(canResend = false, resendTimerSeconds = 30)
-
         timerJob = viewModelScope.launch {
             flow {
                 for (i in 30 downTo 0) {
                     emit(i)
                     if (i > 0) delay(1000)
                 }
+            }.onCompletion {
+                _state.value = _state.value.copy(canResend = true, resendTimerSeconds = 0)
+            }.collect { seconds ->
+                _state.value = _state.value.copy(resendTimerSeconds = seconds)
             }
-                .onCompletion {
-                    _state.value = _state.value.copy(canResend = true, resendTimerSeconds = 0)
-                }
-                .collect { seconds ->
-                    _state.value = _state.value.copy(resendTimerSeconds = seconds)
-                }
-        }
-    }
-
-    private fun verifyOtp() {
-        viewModelScope.launch {
-            executeApiCall(
-                updateState = { result ->
-                    _state.value = _state.value.copy(verifyResponse = result)
-                },
-                apiCall = {
-                    repository.verifyOtp(_state.value.email, _state.value.otp)
-                },
-                onSuccess = { response ->
-                    if (response.success) {
-                        settings.putBoolean(LOGIN, true)
-                        settings.putBoolean(Constants.ONBOARDING, true)
-                        settings.putString(BT, response.token ?: "")
-                        _uiEvent.emit(ShowSuccess(response.message))
-                        _uiEvent.emit(NavigateToSuccess)
-                    } else {
-                        _uiEvent.emit(ShowError(response.message))
-                    }
-                },
-                onError = { errorMessage ->
-                    viewModelScope.launch { _uiEvent.emit(ShowError(errorMessage)) }
-                }
-            )
         }
     }
 
 
-    private fun resendOtp() {
-        viewModelScope.launch {
-            executeApiCall(
-                updateState = { result ->
-                    _state.value = _state.value.copy(resendResponse = result)
-                },
-                apiCall = {
-                    repository.resendOtp(_state.value.email)
-                },
-                onSuccess = { response ->
-                    if (response.success) {
-                        _uiEvent.emit(ShowSuccess("OTP resent successfully"))
-                    } else {
-                        response.error?.let { _uiEvent.emit(ShowError(it)) }
-                    }
-                },
-                onError = { errorMessage ->
-                    viewModelScope.launch { _uiEvent.emit(ShowError(errorMessage)) }
-                }
-            )
-        }
-    }
-
-    private fun performRegister(request: RegisterRequest) {
-        viewModelScope.launch {
-            executeApiCall(
-                updateState = { result ->
-                    _state.value = _state.value.copy(registerResponse = result)
-                },
-                apiCall = {
-                    repository.register(request)
-                },
-                onSuccess = { response ->
-                    if (response.success) {
-                        _uiEvent.emit(NavigateToSuccess)
-                    } else {
-                        _uiEvent.emit(ShowError(response.message))
-                    }
-                },
-                onError = { errorMessage ->
-                    viewModelScope.launch { _uiEvent.emit(ShowError(errorMessage)) }
-                }
-            )
-        }
-    }
-
-    private fun validateForm(login: Boolean = false): Boolean {
-        val currentState = _state.value
-
-        val errorMessage = when {
-            currentState.email.isBlank() -> "Email is required"
-            !login && currentState.username.isBlank() -> "Name is required"
-            currentState.password.isBlank() -> "Password is required"
-            else -> null
-        }
-
-        if (errorMessage != null) {
-            viewModelScope.launch {
-                _uiEvent.emit(CommonUiEvent.ShowError(errorMessage))
-            }
-            return false
-        }
-
-        return true
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        timerJob?.cancel()
-    }
-
-    private fun loadUserFromSettings() {
-        val name = settings.getString("user_name", "")
-        val email = settings.getString("user_email", "")
-
-        println("DEBUG_VM: User loaded from Settings: $name")
-        println("DEBUG_VM: User loaded from Settings: $email")
-        if (name.isNotEmpty() && email.isNotEmpty()) {
-            _user.value = User(id = 0, fullname = name, email = email, createdAt = "", updatedAt = "")
-            println("DEBUG_VM: User loaded from Settings: $name")
-        } else {
-            println("DEBUG_VM: User not loaded from Settings")
-        }
-    }
     fun logout() {
-        settings.remove("user_name")
-        settings.remove("user_email")
-        settings.remove(Constants.LOGIN)
-        settings.remove(Constants.BT)
-        _user.value = null
+        println("DEBUG_LOGOUT: 1. Function Called")
+        viewModelScope.launch {
+            try {
+                val savedEmail = settings.getString("user_email", "NOT_FOUND")
+                println("DEBUG_LOGOUT: 2. Saved Email: $savedEmail")
+
+                val devId = getDeviceId()
+                println("DEBUG_LOGOUT: 3. Device ID: $devId")
+
+                println("DEBUG_LOGOUT: 4. Calling logoutUseCase...")
+                val result = logoutUseCase(
+                    packageName = "org.yourappdev.homeinterior",
+                    deviceId = devId,
+                    userEmail = savedEmail,
+                )
+
+                result.onSuccess { domainModel ->
+                    println("DEBUG_LOGOUT: 5. API Success! Status: ${domainModel.status}")
+
+                    settings.putBoolean(Constants.LOGIN, false)
+                    settings.remove("user_email")
+                    println("DEBUG_LOGOUT: 6. Settings Cleared")
+                    _state.value = RegisterState()
+                    _user.value = null
+
+                    _uiEvent.emit(CommonUiEvent.NavigateToSuccess)
+                    println("DEBUG_LOGOUT: 7. Navigate Event Emitted")
+                }.onFailure { error ->
+                    println("DEBUG_LOGOUT: 5. API Failure: ${error.message}")
+                    error.printStackTrace() // Isse poora error stack trace dikhega
+                    _uiEvent.emit(CommonUiEvent.ShowError(error.message ?: "Logout Failed"))
+                }
+            } catch (e: Exception) {
+                println("DEBUG_LOGOUT: CRASH in ViewModel: ${e.message}")
+                _uiEvent.emit(CommonUiEvent.ShowError("Unexpected Error: ${e.message}"))
+            }
+        }
     }
+
 }
