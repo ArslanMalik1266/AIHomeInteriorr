@@ -6,6 +6,8 @@ import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.header
 import io.ktor.client.statement.HttpResponse
 import io.ktor.http.Parameters
+import io.ktor.http.parameters
+import org.yourappdev.homeinterior.domain.model.CreditResponse
 import org.yourappdev.homeinterior.domain.model.DeviceLinkResult
 
 class AuthService(
@@ -75,7 +77,7 @@ class AuthService(
         deviceId: String,
         authProvider: String,
     ): HttpResponse = client.submitForm(
-        url = "$baseUrl/device/link", // Same endpoint as login
+        url = "$baseUrl/device/link",
         formParameters = Parameters.build {
             append("package_name", "org.yourappdev.homeinterior")
             append("device_id", deviceId)
@@ -84,6 +86,21 @@ class AuthService(
         }
     ) {
         header("X-API-KEY", apiKey)
+    }
+
+    suspend fun addCredits(email: String, amount: Int): CreditResponse {
+        return client.submitForm(
+            url = "$baseUrl/credits/add",
+            formParameters = Parameters.build {
+                append("user_email", email)
+                append("amount", amount.toString())
+                append("package_name", "org.yourappdev.homeinterior")
+            }
+        ) {
+            header("X-API-KEY", apiKey)
+            println("DEBUG_SERVICE_CREDITS: URL -> $baseUrl/credits/add")
+            println("DEBUG_SERVICE_CREDITS: Email -> $email, Amount -> $amount")
+        }.body()
     }
 
 }

@@ -69,6 +69,7 @@ fun LoginScreen(
     val snackBarState = rememberCustomSnackbarState()
     LaunchedEffect(Unit) {
         uiEvent.collect { event ->
+            println("DEBUG_UI_EVENT: Received Event -> $event")
             when (event) {
                 is CommonUiEvent.ShowError -> {
                     snackBarState.showError(event.message)

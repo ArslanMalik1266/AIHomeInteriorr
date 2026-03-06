@@ -1,5 +1,6 @@
 package org.yourappdev.homeinterior.ui.CreateAndExplore
 
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -355,11 +356,15 @@ class RoomsViewModel(val roomsRepository: RoomsRepository,
     }
 
     fun getRooms() {
+        println("DEBUG_VM: 1. getRooms() called") // Check if called
         viewModelScope.launch {
             executeApiCall(
                 updateState = { result -> _state.value = _state.value.copy(getRoomsResponse = result) },
-                apiCall = { roomsRepository.getRoomsList() },
+                apiCall = {
+                    println("DEBUG_VM: 2. Launching API Call...")
+                    roomsRepository.getRoomsList() },
                 onSuccess = { response ->
+                    println("DEBUG_VM: 3. Success! Rooms Count: ${response.rooms.size}")
                     if (response.success) {
                         val finalList = response.rooms.map { it.toUi() }
                         val trending = finalList.filter { it.isTrending == 1 }
@@ -367,13 +372,16 @@ class RoomsViewModel(val roomsRepository: RoomsRepository,
                             trendingRooms = trending,
                             allRooms = finalList,
                             filteredRooms = finalList,
+                            isLoading = false
                         )
                         extractDynamicFilters(finalList)
                     } else {
+                        println("DEBUG_VM: 4. API Success was False.")
                         _uiEvent.emit(ShowError("Something went wrong"))
                     }
                 },
                 onError = { errorMessage ->
+                    println("DEBUG_VM: 5. API Error: $errorMessage")
                     viewModelScope.launch { _uiEvent.emit(ShowError(errorMessage)) }
                 }
             )
@@ -381,20 +389,53 @@ class RoomsViewModel(val roomsRepository: RoomsRepository,
     }
 
     private fun buildPromptFromState(state: RoomUiState): String {
-        val roomType = state.selectedRoomType?.ifBlank { "living room" }
-        val style = state.selectedStyleName?.ifBlank { "modern" }
-        val colors = state.availableColors
-            .firstOrNull { it.id == state.selectedPaletteId }
-            ?.colors?.joinToString(", ") ?: "neutral tones"
+        val roomType = state.selectedRoomType?.ifBlank { "living room" } ?: "living room"
+        val style = state.selectedStyleName?.ifBlank { "modern" } ?: "modern"
+
+        // 1. Pehle selected palette dhoondein
+        val selectedPalette = state.availableColors.firstOrNull { it.id == state.selectedPaletteId }
+
+        // 2. Colors ko transform karein (Color object -> "FFFFFF")
+        val cleanHexColors = selectedPalette?.colors?.map { colorValue ->
+            when (colorValue) {
+                is Color -> colorValue.toRawHex() // Agar Compose Color hai
+                is String -> cleanColorString(colorValue) // Agar String hai
+                else -> "FFFFFF"
+            }
+        } ?: listOf("neutral tones")
+
+        val colorPaletteString = cleanHexColors.joinToString(", ")
 
         return """
-            Design a $roomType in a $style with the color palette $colors, specifying primary, secondary, and accent colors. 
-            Provide a detailed furniture layout, including essential pieces, spatial arrangement, and functional zones. 
-            Recommend materials, textures, and finishes for walls, flooring, furniture, and textiles to enhance the style. 
-            Suggest lighting solutions, including natural light utilization, fixture types, and placement for ambient, task, and accent lighting. 
-            Include complementary decorative elements such as artwork, plants, rugs, curtains, and accessories that reinforce the mood and atmosphere. 
-            Ensure the design is cohesive, functional, visually balanced, and creates the intended ambiance while reflecting the chosen style and palette.
-        """.trimIndent()
+        Design a $roomType in a $style with the color palette $colorPaletteString, specifying primary, secondary, and accent colors. 
+        Provide a detailed furniture layout, including essential pieces, spatial arrangement, and functional zones. 
+        Recommend materials, textures, and finishes for walls, flooring, furniture, and textiles to enhance the style. 
+        Suggest lighting solutions, including natural light utilization, fixture types, and placement for ambient, task, and accent lighting. 
+        Include complementary decorative elements such as artwork, plants, rugs, curtains, and accessories that reinforce the mood and atmosphere. 
+        Ensure the design is cohesive, functional, visually balanced, and creates the intended ambiance while reflecting the chosen style and palette.
+    """.trimIndent()
+    }
+
+    // Helper to clean existing strings
+    private fun cleanColorString(rawColor: String): String {
+        return if (rawColor.contains("Color")) {
+            // Agar galti se "Color(1.0...)" string ban chuka hai, toh usse handle karein
+            "FFFFFF"
+        } else {
+            rawColor.replace("#", "").trim()
+        }
+    }
+
+    // Compose Color to "FFFFFF"
+    fun Color.toRawHex(): String {
+        val r = (this.red * 255).toInt().coerceIn(0, 255)
+        val g = (this.green * 255).toInt().coerceIn(0, 255)
+        val b = (this.blue * 255).toInt().coerceIn(0, 255)
+
+        // Har component ko 2-digit hex string mein badlein aur join karein
+        return listOf(r, g, b).joinToString("") {
+            it.toString(16).padStart(2, '0').uppercase()
+        }
     }
 
     fun onSubscriptionEvent(event: RoomEvent) {
@@ -409,6 +450,10 @@ class RoomsViewModel(val roomsRepository: RoomsRepository,
                 }
 
                 val email = authViewModel.state.value.email ?: ""
+
+                println("DEBUG_PURCHASE: Event triggered for price: ${event.price}")
+                println("DEBUG_PURCHASE: Mapped amount: $amount")
+                println("DEBUG_PURCHASE: User email: '$email'")
 
                 if (email.isBlank()) {
                     _state.update { it.copy(purchaseError = "User not logged in") }
@@ -425,7 +470,9 @@ class RoomsViewModel(val roomsRepository: RoomsRepository,
                             isPurchasing = false,
                             purchaseSuccess = "Credits added: ${response.purchasedCredits}"
                         )}
-                        authViewModel.onAuthEvent(RegisterEvent.FetchUserDetails)                    }.onFailure { error ->
+                        authViewModel.onAuthEvent(RegisterEvent.FetchUserDetails)
+                    }.onFailure { error ->
+                        println("DEBUG_PURCHASE: Failure! Error: ${error.message}")
                         _state.update { it.copy(
                             isPurchasing = false,
                             purchaseError = error.message ?: "Transaction failed"

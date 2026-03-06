@@ -25,7 +25,7 @@ val dataModule = module {
     single {
         RoomService(
             client = get(),
-            baseUrl = "https://interior.shabbirhussain.com/api/"
+            baseUrl = "https://interior.shabbirhussain.com/api"
         )
     }
     single<AuthRepository> { AuthRepositoryImpl(get()) }

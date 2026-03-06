@@ -198,8 +198,9 @@ class AuthViewModel(private val verifyOtpUseCase: VerifyOtpUseCase,
         }
     }
     private fun performLogin() {
+        println("DEBUG_LOGIN: 1. performLogin() started")
         viewModelScope.launch {
-            // State ko loading par set karein
+            println("DEBUG_LOGIN: 2. Current State before loading: ${_state.value.loginResponse}")
             _state.value = _state.value.copy(loginResponse = ResultState.Loading)
 
             val result = loginUseCase(
@@ -210,15 +211,18 @@ class AuthViewModel(private val verifyOtpUseCase: VerifyOtpUseCase,
             )
 
             result.onSuccess { response ->
+                println("DEBUG_LOGIN: 3. Success! Status: ${response.status}")
                 _state.value = _state.value.copy(loginResponse = ResultState.Success(response))
                 println("Login Response: $response")
                 if (response.status == "otp_sent" ) {
+                    println("DEBUG_LOGIN: 4. Emitting NavigateToSuccess")
                     _uiEvent.emit(CommonUiEvent.ShowSuccess(response.message ?: "OTP sent successfully"))
                     _uiEvent.emit(CommonUiEvent.NavigateToSuccess) // Ye Verification screen par le jayega
                 } else {
                     _uiEvent.emit(CommonUiEvent.ShowError(response.message ?:"Login Failed"))
                 }
             }.onFailure { exception ->
+                println("DEBUG_LOGIN: 5. Failed: ${exception.message}")
                 val errorMsg = exception.message ?: "Login Failed"
                 println("DEBUG: ViewModel Login Failed: $errorMsg")
                 _state.value = _state.value.copy(loginResponse = ResultState.Failure(errorMsg))

@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "a83c6c00146a91dcd6b7cf1654c528e9",
+    "identityHash": "f3fe91ad59f0c3eaa0d96c74c890ee58",
     "entities": [
       {
-        "tableName": "users",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `fullname` TEXT NOT NULL, `email` TEXT NOT NULL, `token` TEXT, PRIMARY KEY(`id`))",
+        "tableName": "drafts",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `userImageBytes` BLOB, `roomType` TEXT NOT NULL, `style` TEXT NOT NULL, `paletteId` TEXT NOT NULL, `currentPage` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
@@ -15,25 +15,43 @@
             "notNull": true
           },
           {
-            "fieldPath": "fullname",
-            "columnName": "fullname",
+            "fieldPath": "userImageBytes",
+            "columnName": "userImageBytes",
+            "affinity": "BLOB"
+          },
+          {
+            "fieldPath": "roomType",
+            "columnName": "roomType",
             "affinity": "TEXT",
             "notNull": true
           },
           {
-            "fieldPath": "email",
-            "columnName": "email",
+            "fieldPath": "style",
+            "columnName": "style",
             "affinity": "TEXT",
             "notNull": true
           },
           {
-            "fieldPath": "token",
-            "columnName": "token",
-            "affinity": "TEXT"
+            "fieldPath": "paletteId",
+            "columnName": "paletteId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "currentPage",
+            "columnName": "currentPage",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
           }
         ],
         "primaryKey": {
-          "autoGenerate": false,
+          "autoGenerate": true,
           "columnNames": [
             "id"
           ]
@@ -42,7 +60,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'a83c6c00146a91dcd6b7cf1654c528e9')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'f3fe91ad59f0c3eaa0d96c74c890ee58')"
     ]
   }
 }
