@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.russhwolf.settings.Settings
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -13,6 +14,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.yourappdev.homeinterior.data.remote.dto.UserDto
@@ -66,42 +68,46 @@ class AuthViewModel(private val verifyOtpUseCase: VerifyOtpUseCase,
         }
     }
 
-  fun fetchUserDetails() {
+    fun fetchUserDetails() {
         val savedEmail = settings.getString("user_email", "")
         if (savedEmail.isBlank()) return
 
-        viewModelScope.launch {
-            // UI par loading dikhane ke liye
-            _state.value = _state.value.copy(isLoading = true)
+        viewModelScope.launch(Dispatchers.IO) {
+            delay(800)
 
-            // Naya method jo humne AuthRepository mein banaya tha
+            _state.update { it.copy(isLoading = true) }
+
             val result = repository.getProfileAndCredits(
                 packageName = "org.yourappdev.homeinterior",
                 deviceId = getDeviceId(),
                 userEmail = savedEmail,
-                authProvider = "email" // Ya jo bhi aap default rakhte hain
+                authProvider = "email"
             )
 
-            result.onSuccess { deviceLinkResult ->
-                // 1. State update karein (Credits ke liye)
-                _state.value = _state.value.copy(
-                    freeCredits = deviceLinkResult.freeCredits ?: 0,
-                    purchaseCredits = deviceLinkResult.purchaseCredits ?: 0,
-                    totalCredits = deviceLinkResult.totalCredits ?: 0,
-                    isLoading = false
-                )
+            withContext(Dispatchers.Main) {
+                result.onSuccess { deviceLinkResult ->
 
-                // 2. User Detail update karein
-                _user.value = deviceLinkResult.user
+                    _state.update { currentState ->
+                        currentState.copy(
+                            freeCredits = deviceLinkResult.freeCredits ?: 0,
+                            purchaseCredits = deviceLinkResult.purchaseCredits ?: 0,
+                            totalCredits = deviceLinkResult.totalCredits ?: 0,
+                            isLoading = false
+                        )
+                    }
 
-                println("DEBUG: User Details Updated - Total Credits: ${deviceLinkResult.totalCredits}")
-            }.onFailure { error ->
-                _state.value = _state.value.copy(isLoading = false)
-                _uiEvent.emit(ShowError("Profile Update Failed: ${error.message}"))
+                    // 4. User details ko bhi update karein taake profile sync rahe
+                    _user.value = deviceLinkResult.user
+
+                    println("DEBUG: Credits Refreshed -> Total: ${deviceLinkResult.totalCredits}")
+
+                }.onFailure { error ->
+                    _state.update { it.copy(isLoading = false) }
+                    _uiEvent.emit(CommonUiEvent.ShowError("Sync Failed: ${error.message}"))
+                }
             }
         }
     }
-
     fun onRegisterFormEvent(event: RegisterEvent) {
         when (event) {
             is RegisterEvent.EmailUpdate -> _state.value = _state.value.copy(email = event.email)

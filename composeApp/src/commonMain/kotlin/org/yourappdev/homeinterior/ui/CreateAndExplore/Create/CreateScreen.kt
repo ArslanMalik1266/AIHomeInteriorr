@@ -69,6 +69,11 @@ fun CreateScreen(
     onSeeAllClick: () -> Unit
 ) {
     val state by viewModel.state.collectAsState()
+    val dbImages by viewModel.dbGeneratedImages.collectAsState()
+    val generatedBundles = dbImages.chunked(3).map { bundle ->
+        bundle.map { it.imageUrl }
+    }
+    val displayBundles = generatedBundles.takeLast(10)
     val scrollState = rememberScrollState()
 
     Column(
@@ -86,10 +91,10 @@ fun CreateScreen(
                 onRoomClick = onRoomClick
             )
             RecentFilesSection(
-                generatedBundles = state.recentGeneratedImages,
+                generatedBundles = displayBundles,
                 onBundleClick = { bundle ->
                     viewModel.onRoomEvent(RoomEvent.ShowSelectedBundle(bundle))
-                    onShowResults() // Result screen par bhej dega
+                    onShowResults()
                 },
                 onSeeAllClick = onSeeAllClick
             )

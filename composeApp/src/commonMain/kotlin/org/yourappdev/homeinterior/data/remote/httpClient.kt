@@ -2,6 +2,7 @@ package org.yourappdev.homeinterior.data.remote
 
 import com.russhwolf.settings.Settings
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.LogLevel
@@ -22,6 +23,12 @@ fun createHttpClientManual(
     settings: Settings
 ): HttpClient {
     return HttpClient {
+        install(HttpTimeout) {
+            requestTimeoutMillis = 120_000L // 2 Minutes (AI generation slow hoti hai)
+            connectTimeoutMillis = 60_000L  // 1 Minute
+            socketTimeoutMillis = 120_000L  // 2 Minutes
+        }
+
         install(HttpCookies) {
             storage = AcceptAllCookiesStorage()
         }

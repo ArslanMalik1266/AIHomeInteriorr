@@ -127,18 +127,25 @@ fun FilesScreen(
                 .padding(paddingValues)
         ) { page ->
             when (page) {
-                0 -> RecentContent(
-                    generatedBundles = state.recentGeneratedImages,
-                    onBundleClick = { bundle ->
-                        viewModel.onRoomEvent(RoomEvent.ShowSelectedBundle(bundle))
-                        onShowResults()
-                    }
-                )
+
+                0 -> {
+                    // 1. Database se images collect karein
+                    val dbImages by viewModel.dbGeneratedImages.collectAsState()
+
+                    // 2. RecentContent ko pass karein
+                    RecentContent(
+                        generatedImages = dbImages, // Ab ye direct DB entities le raha hai
+                        onBundleClick = { bundleUrls ->
+                            viewModel.onRoomEvent(RoomEvent.ShowSelectedBundle(bundleUrls))
+                            onShowResults()
+                        }
+                    )
+                }
 
                 1 -> DraftsContent(
                     viewModel = viewModel,
-                    onImageClick = { draft, index ->
-                        viewModel.selectDraftImage(draft, index)
+                    onImageClick = { clickedDraft ->
+                        viewModel.selectDraftImage(clickedDraft)
                         navController.navigate(Routes.AddScreen)
                     }
                 )

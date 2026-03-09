@@ -10,6 +10,7 @@ import org.yourappdev.homeinterior.data.local.getRoomDatabase
 val databaseModule = module {
     single { getRoomDatabase(get<RoomDatabase.Builder<AppDatabase>>()) }
     single { get<AppDatabase>().draftDao() }
+    single { get<AppDatabase>().recentGeneratedDao() }
     single<Settings> { Settings() }
 
 }

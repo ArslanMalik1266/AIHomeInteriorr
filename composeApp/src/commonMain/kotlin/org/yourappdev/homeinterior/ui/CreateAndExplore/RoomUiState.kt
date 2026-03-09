@@ -52,7 +52,8 @@ data class RoomUiState(
     val selectedFileName: String? = null,
     val isPurchasing: Boolean = false,
     val purchaseSuccess: String? = null,
-    val purchaseError: String? = null
+    val purchaseError: String? = null,
+    val generatedCount: Int = 0,
 )
 
 data class FilterState(

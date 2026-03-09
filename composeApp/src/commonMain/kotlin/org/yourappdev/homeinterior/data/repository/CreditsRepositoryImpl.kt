@@ -1,7 +1,6 @@
 package org.yourappdev.homeinterior.data.repository
 
 import org.yourappdev.homeinterior.data.remote.service.AuthService
-import org.yourappdev.homeinterior.data.remote.service.RoomService
 import org.yourappdev.homeinterior.domain.model.CreditResponse
 import org.yourappdev.homeinterior.domain.repo.CreditsRepository
 
@@ -23,8 +22,26 @@ class CreditsRepositoryImpl(
                 Result.failure(Exception(response.message))
             }
         } catch (e: Exception) {
-            println("DEBUG_REPO: 6. Exception Caught: ${e.message}") // <--- Yahan
+            println("DEBUG_REPO: 6. Exception Caught: ${e.message}")
             Result.failure(e)
         }
     }
+//    override suspend fun consumeCredits(
+//        email: String,
+//        amount: Int,
+//        deviceId: String,
+//        packageName: String
+//    ): Result<CreditResponseconsume> {
+//        return try {
+//            val response = authService.consumeCredits(email, amount, deviceId, packageName)
+//            if (response.status == "success") {
+//                Result.success(response)
+//            } else {
+//                Result.failure(Exception(response.message ?: "Failed to consume credits"))
+//            }
+//        } catch (e: Exception) {
+//            Result.failure(e)
+//        }
+//    }
+
 }

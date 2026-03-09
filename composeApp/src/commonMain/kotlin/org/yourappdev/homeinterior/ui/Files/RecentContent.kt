@@ -32,13 +32,15 @@ import homeinterior.composeapp.generated.resources.emptyimage
 import homeinterior.composeapp.generated.resources.roomplaceholder
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
+import org.yourappdev.homeinterior.data.local.entities.RecentGeneratedEntity
 
 @Composable
 fun RecentContent(
-    generatedBundles: List<List<String>>,
+    generatedImages: List<RecentGeneratedEntity>,
     onBundleClick: (List<String>) -> Unit
 ) {
-    if (generatedBundles.isEmpty()) {
+    val bundles = generatedImages.chunked(3)
+    if (bundles.isEmpty()) {
         // Empty State
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -58,20 +60,21 @@ fun RecentContent(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.fillMaxSize()
         ) {
-            items(generatedBundles.reversed()) { bundle ->
+            items(bundles) { bundle ->
                 println("DEBUG: Bundle received = $bundle")
+                val urlList = bundle.map { it.imageUrl }
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(145.dp) // Drafts jaisa size
                         .clip(RoundedCornerShape(11.dp))
                         .background(Color(0xFFF5F5F5))
-                        .clickable { onBundleClick(bundle) }
+                        .clickable {onBundleClick(urlList) }
                 ) {
                     if (bundle.isNotEmpty()) {
                         println("DEBUG: Loading image = ${bundle[0]}")
                         AsyncImage(
-                            model = bundle[0], // Bundle ki cover image
+                            model = bundle[0].imageUrl, // Bundle ki cover image
                             contentDescription = "Generated Interior",
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop,

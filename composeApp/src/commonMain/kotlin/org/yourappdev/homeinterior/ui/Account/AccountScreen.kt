@@ -26,6 +26,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import homeinterior.composeapp.generated.resources.Res
 import homeinterior.composeapp.generated.resources.coin
 import homeinterior.composeapp.generated.resources.coins
@@ -46,10 +47,12 @@ fun AccountScreen(
     onSubscriptionClick: () -> Unit = {},
     onProfileClick: () -> Unit = {},
 ) {
-    LaunchedEffect(Unit) {
-        viewModel.fetchUserDetails()
-    }
+
     val state by viewModel.state.collectAsState()
+    LifecycleResumeEffect(Unit) {
+        viewModel.fetchUserDetails()
+        onPauseOrDispose { }
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()

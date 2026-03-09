@@ -5,12 +5,18 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.yourappdev.homeinterior.data.local.entities.DraftEntity
+import org.yourappdev.homeinterior.data.local.entities.RecentGeneratedEntity
 import org.yourappdev.homeinterior.data.mapper.toUi
+import org.yourappdev.homeinterior.domain.repo.DraftsRepository
+import org.yourappdev.homeinterior.domain.repo.RecentGeneratedRepository
 import org.yourappdev.homeinterior.domain.repo.RoomsRepository
 import org.yourappdev.homeinterior.domain.usecase.AddCreditsUseCase
 import org.yourappdev.homeinterior.ui.Generate.UiScreens.ColorPalette
@@ -20,10 +26,14 @@ import org.yourappdev.homeinterior.ui.authentication.register.RegisterEvent
 import org.yourappdev.homeinterior.ui.common.base.CommonUiEvent
 import org.yourappdev.homeinterior.ui.common.base.CommonUiEvent.ShowError
 import org.yourappdev.homeinterior.utils.executeApiCall
+import kotlin.time.ExperimentalTime
 
 class RoomsViewModel(val roomsRepository: RoomsRepository,
                      private val addCreditsUseCase: AddCreditsUseCase,
-                     private val authViewModel: AuthViewModel
+                     private val authViewModel: AuthViewModel,
+                     private val draftsRepository: DraftsRepository,
+                     private val recentGeneratedRepository: RecentGeneratedRepository,
+//                     private val consumeCreditsUseCase: ConsumeCreditsUseCase,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(RoomUiState())
@@ -33,51 +43,76 @@ class RoomsViewModel(val roomsRepository: RoomsRepository,
     val uiEvent = _uiEvent.asSharedFlow()
     private val _selectedGeneratedImage = MutableStateFlow<String?>(null)
     val selectedGeneratedImage: StateFlow<String?> = _selectedGeneratedImage.asStateFlow()
-    private val _draftImages = MutableStateFlow<List<RoomDraft>>(emptyList()) // Change to RoomDraft
-    val draftImages = _draftImages.asStateFlow()
-    private var currentDraftIndex: Int? = null
-
-    fun selectDraftImage(imageBytes: ByteArray, index: Int) {
-        currentDraftIndex = index // Index save kar liya
-        onRoomEvent(RoomEvent.SetImageBytes(imageBytes, "draft_image.jpg"))
-    }
-    fun saveOrUpdateDraft() {
-        val currentState = _state.value
-        val currentImage = currentState.selectedImageBytes ?: return
-
-        val newDraft = RoomDraft(
-            imageBytes = currentImage,
-            roomType = currentState.selectedRoomType,
-            styleName = currentState.selectedStyleName,
-            paletteId = currentState.selectedPaletteId,
-            currentPage = currentState.currentPage
+    val draftImages: StateFlow<List<DraftEntity>> = draftsRepository.getAllDrafts()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
         )
+    private var currentDraftId: Long? = null
 
-        _draftImages.update { currentList ->
-            val list = currentList.toMutableList()
-            val index = currentDraftIndex
-            if (index != null && index in list.indices) {
-                list[index] = newDraft
-            } else {
-                list.add(newDraft)
-            }
-            list
-        }
-        currentDraftIndex = null
-        resetGenerationState() // Draft save hone ke baad state clear karein
-    }
 
-    fun selectDraftImage(draft: RoomDraft, index: Int) {
-        currentDraftIndex = index
+    fun selectDraftImage(draft: DraftEntity) {
+        currentDraftId = draft.id
+
+        onRoomEvent(
+            RoomEvent.SetImageBytes(
+                bytes = draft.userImageBytes ?: byteArrayOf(),
+                fileName = "draft_${draft.id}.jpg"
+            )
+        )
         _state.update { it.copy(
-            selectedImageBytes = draft.imageBytes,
             selectedRoomType = draft.roomType,
-            selectedStyleName = draft.styleName,
+            selectedStyleName = draft.style,
             selectedPaletteId = draft.paletteId,
             currentPage = draft.currentPage,
             selectedImage = "draft_picked"
         )}
     }
+
+    val dbGeneratedImages: StateFlow<List<RecentGeneratedEntity>> =
+        recentGeneratedRepository.getRecentGenerated()
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = emptyList()
+            )
+    @OptIn(ExperimentalTime::class)
+    fun saveOrUpdateDraft() {
+        val currentState = _state.value
+        val currentImage = currentState.selectedImageBytes ?: return
+
+        // Room Entity object banayein
+        val newDraft = DraftEntity(
+            id = currentDraftId ?: 0L, // Agar ID hai to update hoga, 0 hai to naya banega
+            userImageBytes = currentImage,
+            roomType = currentState.selectedRoomType ?: "Living Room",
+            style = currentState.selectedStyleName ?: "Modern",
+            paletteId = currentState.selectedPaletteId ?: 0,
+            currentPage = currentState.currentPage,
+            createdAt = kotlin.time.Clock.System.now().toEpochMilliseconds()
+        )
+
+        viewModelScope.launch {
+            draftsRepository.saveDraft(newDraft)
+            currentDraftId = null
+            resetGenerationState()
+        }
+    }
+
+    fun selectDraftForEditing(draft: DraftEntity) {
+        currentDraftId = draft.id
+
+        _state.update { it.copy(
+            selectedImageBytes = draft.userImageBytes,
+            selectedRoomType = draft.roomType,
+            selectedStyleName = draft.style,
+            selectedPaletteId = draft.paletteId,
+            currentPage = draft.currentPage,
+            selectedImage = "draft_picked"
+        )}
+    }
+
 
     fun onGeneratedImageClick(imageUrl: String) {
         _selectedGeneratedImage.value = imageUrl
@@ -100,9 +135,10 @@ class RoomsViewModel(val roomsRepository: RoomsRepository,
             isGenerating = false,
             generatedImages = emptyList()
         ) }
-        currentDraftIndex = null
+        currentDraftId = null
     }
 
+    @OptIn(ExperimentalTime::class)
     fun onRoomEvent(event: RoomEvent) {
         when (event) {
 
@@ -235,6 +271,7 @@ class RoomsViewModel(val roomsRepository: RoomsRepository,
             // **Generate room using ByteArray image**
 // RoomsViewModel.kt mein replace karein:
             is RoomEvent.OnGenerateClick -> {
+                println("DEBUG_VM: 1. OnGenerateClick Triggered")
                 _state.update { it.copy(
                     isGenerating = true,
                     selectedImageBytes = event.imageBytes,
@@ -243,32 +280,45 @@ class RoomsViewModel(val roomsRepository: RoomsRepository,
                 )}
 
                 viewModelScope.launch {
+
                     try {
                         val prompt = buildPromptFromState(_state.value)
-                        println("DEBUG_VM: OnGenerateClick triggered")
-                        println("DEBUG_VM: imageBytes size = ${event.imageBytes.size}")
-                        println("DEBUG_VM: fileName = ${event.fileName}")
-                        println("DEBUG_VM: prompt = $prompt")
+                        println("DEBUG_VM: 2. Prompt Built: $prompt")
+                        println("DEBUG_VM: 3. Calling API with image size: ${event.imageBytes.size}")
                         val response = roomsRepository.generateRoom(
                             imageBytes = event.imageBytes,
                             fileName = event.fileName,
                             prompt = prompt,
                             strength = 0.7f
                         )
+                        println("DEBUG_VM: 4. API Response Received. Success = ${response.success}")
                         if (response.success) {
+                            println("DEBUG_VM: 5. Success! Images found: ${response.images.size}")
+                            response.images.forEach { url ->
+                                recentGeneratedRepository.saveGenerated(
+                                    RecentGeneratedEntity(
+                                        imageBytes = byteArrayOf(),
+                                        imageUrl = url,
+                                        createdAt = kotlin.time.Clock.System.now().toEpochMilliseconds()
+                                    )
+                                )
+                            }
+
                             _state.update { it.copy(
                                 isGenerating = false,
-                                generatedImages = response.static_urls,
-                                recentGeneratedImages = _state.value.recentGeneratedImages.plus(element = response.static_urls),                                errorMessage = null
+                                generatedImages = response.images,
+                                generatedCount = response.count,
+                                jobId = response.job_id,
+                                generatedRoom = response,
                             )}
-                            println("DEBUG_VM: Response success = ${response.success}")
-                            println("DEBUG_VM: Response message = ${response.message}")
-                            println("DEBUG_VM: Response static_urls = ${response.static_urls}")
+
+
                         } else {
-                            _state.update { it.copy(isGenerating = false, errorMessage = response.message) }
-                            println("DEBUG_API_FLOW: API Error Message: ${response.message}")
+                            println("DEBUG_VM: 6. API Failed! Response: $response")
+                            _state.update { it.copy(isGenerating = false, errorMessage = "") }
                         }
                     } catch (e: Exception) {
+                        println("DEBUG_VM: CRASH! Error: ${e.message}")
                         _state.update { it.copy(isGenerating = false, errorMessage = e.message) }
                     }
                 }

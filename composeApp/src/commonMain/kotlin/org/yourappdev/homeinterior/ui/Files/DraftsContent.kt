@@ -29,16 +29,16 @@ import homeinterior.composeapp.generated.resources.sofa
 import homeinterior.composeapp.generated.resources.sofa_2
 import homeinterior.composeapp.generated.resources.sofa_3
 import org.jetbrains.compose.resources.painterResource
+import org.yourappdev.homeinterior.data.local.entities.DraftEntity
 import org.yourappdev.homeinterior.ui.CreateAndExplore.RoomDraft
 import org.yourappdev.homeinterior.ui.CreateAndExplore.RoomsViewModel
 
 @Composable
 fun DraftsContent(
-    viewModel: RoomsViewModel, // ViewModel pass karein
-    onImageClick: (RoomDraft, Int) -> Unit
+    viewModel: RoomsViewModel,
+    onImageClick: (DraftEntity) -> Unit
 ) {
     val drafts by viewModel.draftImages.collectAsState()
-
     if (drafts.isEmpty()) {
         // Empty state dikha sakte hain
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -56,13 +56,13 @@ fun DraftsContent(
                 val draft = drafts[index]
 
                 coil3.compose.AsyncImage(
-                    model = draft.imageBytes, // ByteArray ko coil handle kar leta hai
+                    model = draft.userImageBytes,
                     contentDescription = "Draft $index",
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(145.dp)
                         .clip(RoundedCornerShape(11.dp))
-                        .clickable { onImageClick(draft, index) },
+                        .clickable { onImageClick(draft) },
                     contentScale = ContentScale.Crop,
                     placeholder = painterResource(Res.drawable.roomplaceholder)
                 )

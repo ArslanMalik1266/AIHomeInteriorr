@@ -10,3 +10,10 @@ data class CreditResponse(
     val purchasedCredits: Int? = 0,
     val message: String? = null
 )
+
+//@Serializable
+//data class CreditResponseconsume(
+//    val status: String,
+//    val total_credits: Int,
+//    val message: String? = null
+//)

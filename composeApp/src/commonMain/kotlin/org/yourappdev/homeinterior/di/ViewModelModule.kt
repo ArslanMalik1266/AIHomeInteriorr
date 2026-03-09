@@ -14,5 +14,6 @@ val viewModelModule = module {
     viewModelOf(::NavigationViewModel)
     viewModelOf(::OnBoardingViewModel)
     viewModelOf(::RoomsViewModel)
+//    factory { ConsumeCreditsUseCase(get()) }
 
 }

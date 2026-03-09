@@ -9,7 +9,7 @@ data class DraftEntity(
     val userImageBytes: ByteArray?,
     val roomType: String,
     val style: String,
-    val paletteId: String,
+    val paletteId: Int,
     val currentPage: Int,
     val createdAt: Long
 )
