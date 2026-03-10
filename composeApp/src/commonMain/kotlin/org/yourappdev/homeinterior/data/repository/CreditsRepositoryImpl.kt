@@ -2,6 +2,7 @@ package org.yourappdev.homeinterior.data.repository
 
 import org.yourappdev.homeinterior.data.remote.service.AuthService
 import org.yourappdev.homeinterior.domain.model.CreditResponse
+import org.yourappdev.homeinterior.domain.model.SpendCreditsResponse
 import org.yourappdev.homeinterior.domain.repo.CreditsRepository
 
 class CreditsRepositoryImpl(
@@ -26,19 +27,20 @@ class CreditsRepositoryImpl(
             Result.failure(e)
         }
     }
-//    override suspend fun consumeCredits(
-//        email: String,
+//    override suspend fun spendCredits(
+//        userEmail: String,
 //        amount: Int,
 //        deviceId: String,
 //        packageName: String
-//    ): Result<CreditResponseconsume> {
+//    ): Result<SpendCreditsResponse> {
 //        return try {
-//            val response = authService.consumeCredits(email, amount, deviceId, packageName)
-//            if (response.status == "success") {
-//                Result.success(response)
-//            } else {
-//                Result.failure(Exception(response.message ?: "Failed to consume credits"))
-//            }
+//            val response = authService.spendCredits(
+//                email = userEmail,
+//                amount = amount,
+//                deviceId = deviceId,
+//                packageName = packageName
+//            )
+//            Result.success(response)
 //        } catch (e: Exception) {
 //            Result.failure(e)
 //        }

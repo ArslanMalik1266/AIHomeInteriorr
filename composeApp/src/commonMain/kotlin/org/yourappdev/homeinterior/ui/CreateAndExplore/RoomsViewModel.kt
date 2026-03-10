@@ -19,6 +19,7 @@ import org.yourappdev.homeinterior.domain.repo.DraftsRepository
 import org.yourappdev.homeinterior.domain.repo.RecentGeneratedRepository
 import org.yourappdev.homeinterior.domain.repo.RoomsRepository
 import org.yourappdev.homeinterior.domain.usecase.AddCreditsUseCase
+import org.yourappdev.homeinterior.domain.usecase.SpendCreditsUseCase
 import org.yourappdev.homeinterior.ui.Generate.UiScreens.ColorPalette
 import org.yourappdev.homeinterior.ui.Generate.UiScreens.InteriorStyle
 import org.yourappdev.homeinterior.ui.authentication.AuthViewModel
@@ -26,14 +27,16 @@ import org.yourappdev.homeinterior.ui.authentication.register.RegisterEvent
 import org.yourappdev.homeinterior.ui.common.base.CommonUiEvent
 import org.yourappdev.homeinterior.ui.common.base.CommonUiEvent.ShowError
 import org.yourappdev.homeinterior.utils.executeApiCall
+import org.yourappdev.homeinterior.utils.getDeviceId
 import kotlin.time.ExperimentalTime
 
-class RoomsViewModel(val roomsRepository: RoomsRepository,
-                     private val addCreditsUseCase: AddCreditsUseCase,
-                     private val authViewModel: AuthViewModel,
-                     private val draftsRepository: DraftsRepository,
-                     private val recentGeneratedRepository: RecentGeneratedRepository,
-//                     private val consumeCreditsUseCase: ConsumeCreditsUseCase,
+class RoomsViewModel(
+    val roomsRepository: RoomsRepository,
+    private val addCreditsUseCase: AddCreditsUseCase,
+    private val authViewModel: AuthViewModel,
+    private val draftsRepository: DraftsRepository,
+    private val recentGeneratedRepository: RecentGeneratedRepository,
+    private val spendCreditsUseCase: SpendCreditsUseCase,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(RoomUiState())
@@ -61,13 +64,15 @@ class RoomsViewModel(val roomsRepository: RoomsRepository,
                 fileName = "draft_${draft.id}.jpg"
             )
         )
-        _state.update { it.copy(
-            selectedRoomType = draft.roomType,
-            selectedStyleName = draft.style,
-            selectedPaletteId = draft.paletteId,
-            currentPage = draft.currentPage,
-            selectedImage = "draft_picked"
-        )}
+        _state.update {
+            it.copy(
+                selectedRoomType = draft.roomType,
+                selectedStyleName = draft.style,
+                selectedPaletteId = draft.paletteId,
+                currentPage = draft.currentPage,
+                selectedImage = "draft_picked"
+            )
+        }
     }
 
     val dbGeneratedImages: StateFlow<List<RecentGeneratedEntity>> =
@@ -77,6 +82,7 @@ class RoomsViewModel(val roomsRepository: RoomsRepository,
                 started = SharingStarted.WhileSubscribed(5000),
                 initialValue = emptyList()
             )
+
     @OptIn(ExperimentalTime::class)
     fun saveOrUpdateDraft() {
         val currentState = _state.value
@@ -103,20 +109,23 @@ class RoomsViewModel(val roomsRepository: RoomsRepository,
     fun selectDraftForEditing(draft: DraftEntity) {
         currentDraftId = draft.id
 
-        _state.update { it.copy(
-            selectedImageBytes = draft.userImageBytes,
-            selectedRoomType = draft.roomType,
-            selectedStyleName = draft.style,
-            selectedPaletteId = draft.paletteId,
-            currentPage = draft.currentPage,
-            selectedImage = "draft_picked"
-        )}
+        _state.update {
+            it.copy(
+                selectedImageBytes = draft.userImageBytes,
+                selectedRoomType = draft.roomType,
+                selectedStyleName = draft.style,
+                selectedPaletteId = draft.paletteId,
+                currentPage = draft.currentPage,
+                selectedImage = "draft_picked"
+            )
+        }
     }
 
 
     fun onGeneratedImageClick(imageUrl: String) {
         _selectedGeneratedImage.value = imageUrl
     }
+
     fun resetSelectedGeneratedImage() {
         _selectedGeneratedImage.value = null
     }
@@ -126,15 +135,17 @@ class RoomsViewModel(val roomsRepository: RoomsRepository,
     }
 
     fun resetGenerationState() {
-        _state.update { it.copy(
-            selectedRoomType = null,
-            selectedStyleName = null,
-            selectedPaletteId = null,
-            currentPage = 0, // <--- YE LINE ADD KAREIN
-            errorMessage = null,
-            isGenerating = false,
-            generatedImages = emptyList()
-        ) }
+        _state.update {
+            it.copy(
+                selectedRoomType = null,
+                selectedStyleName = null,
+                selectedPaletteId = null,
+                currentPage = 0, // <--- YE LINE ADD KAREIN
+                errorMessage = null,
+                isGenerating = false,
+                generatedImages = emptyList()
+            )
+        }
         currentDraftId = null
     }
 
@@ -149,11 +160,13 @@ class RoomsViewModel(val roomsRepository: RoomsRepository,
             }
 
             is RoomEvent.SetImageBytes -> {
-                _state.update { it.copy(
-                    selectedImageBytes = event.bytes,
-                    selectedFileName = event.fileName,
-                    selectedImage = "image_picked"
-                )}
+                _state.update {
+                    it.copy(
+                        selectedImageBytes = event.bytes,
+                        selectedFileName = event.fileName,
+                        selectedImage = "image_picked"
+                    )
+                }
             }
 
 
@@ -168,6 +181,7 @@ class RoomsViewModel(val roomsRepository: RoomsRepository,
                 )
                 applyFiltersAndSearch()
             }
+
             RoomEvent.OnFilterClick -> {
                 _state.value = _state.value.copy(
                     showFilterSheet = true,
@@ -175,21 +189,25 @@ class RoomsViewModel(val roomsRepository: RoomsRepository,
                     tempFilterCount = _state.value.filterCount
                 )
             }
+
             RoomEvent.OnResetLoading -> {
                 _state.update { it.copy(isLoading = false) }
             }
+
             RoomEvent.OnDismissFilterSheet -> {
                 _state.value = _state.value.copy(
                     showFilterSheet = false,
                     tempFilterCount = _state.value.filterCount
                 )
             }
+
             RoomEvent.OnClearFilters -> {
                 _state.value = _state.value.copy(
                     tempFilterState = FilterState(),
                     tempFilterCount = 0
                 )
             }
+
             is RoomEvent.OnTempFilterChange -> {
                 val newCount = calculateFilterCount(event.filterState)
                 _state.value = _state.value.copy(
@@ -197,20 +215,25 @@ class RoomsViewModel(val roomsRepository: RoomsRepository,
                     tempFilterCount = newCount
                 )
             }
+
             is RoomEvent.OnToggleFilterSection -> {
                 _state.value = when (event.section) {
                     FilterSection.ROOM_TYPE -> _state.value.copy(
                         expandedRoomType = !_state.value.expandedRoomType
                     )
+
                     FilterSection.STYLE -> _state.value.copy(
                         expandedStyle = !_state.value.expandedStyle
                     )
+
                     FilterSection.COLOR -> _state.value.copy(
                         expandedColor = !_state.value.expandedColor
                     )
+
                     FilterSection.FORMAT -> _state.value.copy(
                         expandedFormat = !_state.value.expandedFormat
                     )
+
                     FilterSection.PRICE -> _state.value.copy(
                         expandedPrice = !_state.value.expandedPrice
                     )
@@ -229,12 +252,14 @@ class RoomsViewModel(val roomsRepository: RoomsRepository,
             is RoomEvent.OnPageChange -> {
                 _state.value = _state.value.copy(currentPage = event.page)
             }
+
             RoomEvent.OnNextPage -> {
                 val currentPage = _state.value.currentPage
                 if (currentPage < _state.value.pageCount - 1) {
                     _state.value = _state.value.copy(currentPage = currentPage + 1)
                 }
             }
+
             RoomEvent.OnPreviousPage -> {
                 val currentPage = _state.value.currentPage
                 if (currentPage > 0) {
@@ -246,24 +271,30 @@ class RoomsViewModel(val roomsRepository: RoomsRepository,
             is RoomEvent.OnRoomTypeSelected -> {
                 _state.value = _state.value.copy(selectedRoomType = event.roomType)
             }
+
             is RoomEvent.OnRoomSearchQueryChange -> {
                 _state.value = _state.value.copy(roomSearchQuery = event.query)
             }
+
             is RoomEvent.OnRoomSearchExpandedChange -> {
                 _state.value = _state.value.copy(isRoomSearchExpanded = event.isExpanded)
             }
+
             is RoomEvent.OnStyleSelected -> {
                 val styleName = _state.value.availableStyles
                     .firstOrNull { it.id == event.styleId }
                     ?.name ?: "Unknown"
                 _state.value = _state.value.copy(selectedStyleName = styleName)
             }
+
             is RoomEvent.OnStyleSearchQueryChange -> {
                 _state.value = _state.value.copy(styleSearchQuery = event.query)
             }
+
             is RoomEvent.OnStyleSearchExpandedChange -> {
                 _state.value = _state.value.copy(isStyleSearchExpanded = event.isExpanded)
             }
+
             is RoomEvent.OnPaletteSelected -> {
                 _state.value = _state.value.copy(selectedPaletteId = event.paletteId)
             }
@@ -272,12 +303,14 @@ class RoomsViewModel(val roomsRepository: RoomsRepository,
 // RoomsViewModel.kt mein replace karein:
             is RoomEvent.OnGenerateClick -> {
                 println("DEBUG_VM: 1. OnGenerateClick Triggered")
-                _state.update { it.copy(
-                    isGenerating = true,
-                    selectedImageBytes = event.imageBytes,
-                    selectedFileName = event.fileName,
-                    errorMessage = null
-                )}
+                _state.update {
+                    it.copy(
+                        isGenerating = true,
+                        selectedImageBytes = event.imageBytes,
+                        selectedFileName = event.fileName,
+                        errorMessage = null
+                    )
+                }
 
                 viewModelScope.launch {
 
@@ -294,23 +327,39 @@ class RoomsViewModel(val roomsRepository: RoomsRepository,
                         println("DEBUG_VM: 4. API Response Received. Success = ${response.success}")
                         if (response.success) {
                             println("DEBUG_VM: 5. Success! Images found: ${response.images.size}")
+//                            val email = authViewModel.state.value.email ?: ""
+//                            val deviceId = getDeviceId()
+//                            spendCreditsUseCase(
+//                                userEmail = email,
+//                                deviceId = deviceId,
+//                                amount = 1
+//                            ).onSuccess { creditResponse ->
+//                                println("DEBUG_VM: Credits remaining: ${creditResponse.total_credits}")
+//                                authViewModel.onAuthEvent(RegisterEvent.FetchUserDetails)
+//                            }.onFailure { error ->
+//                                println("DEBUG_VM: Credit spend failed silently: ${error.message}")
+//                            }
+
                             response.images.forEach { url ->
                                 recentGeneratedRepository.saveGenerated(
                                     RecentGeneratedEntity(
                                         imageBytes = byteArrayOf(),
                                         imageUrl = url,
-                                        createdAt = kotlin.time.Clock.System.now().toEpochMilliseconds()
+                                        createdAt = kotlin.time.Clock.System.now()
+                                            .toEpochMilliseconds()
                                     )
                                 )
                             }
 
-                            _state.update { it.copy(
-                                isGenerating = false,
-                                generatedImages = response.images,
-                                generatedCount = response.count,
-                                jobId = response.job_id,
-                                generatedRoom = response,
-                            )}
+                            _state.update {
+                                it.copy(
+                                    isGenerating = false,
+                                    generatedImages = response.images,
+                                    generatedCount = response.count,
+                                    jobId = response.job_id,
+                                    generatedRoom = response,
+                                )
+                            }
 
 
                         } else {
@@ -323,24 +372,30 @@ class RoomsViewModel(val roomsRepository: RoomsRepository,
                     }
                 }
             }
+
             is RoomEvent.OnGenerationComplete -> {
-                _state.update { it.copy(
-                    selectedImageBytes = null,
-                    selectedFileName = null,
-                    selectedImage = null,
-                    generatedImages = emptyList(),
-                    isGenerating = false,
-                    selectedRoomType = null,
-                    selectedStyleName = null,
-                    selectedPaletteId = null,
-                    currentPage = 0 // <--- Reset to Step 1
-                )}
+                _state.update {
+                    it.copy(
+                        selectedImageBytes = null,
+                        selectedFileName = null,
+                        selectedImage = null,
+                        generatedImages = emptyList(),
+                        isGenerating = false,
+                        selectedRoomType = null,
+                        selectedStyleName = null,
+                        selectedPaletteId = null,
+                        currentPage = 0 // <--- Reset to Step 1
+                    )
+                }
             }
+
             is RoomEvent.ShowSelectedBundle -> {
-                _state.update { it.copy(
-                    generatedImages = event.bundle, // Taake ResultScreen ye images dikhaye
-                    isGenerating = false // Loading band ho jaye agar khuli ho
-                )}
+                _state.update {
+                    it.copy(
+                        generatedImages = event.bundle, // Taake ResultScreen ye images dikhaye
+                        isGenerating = false // Loading band ho jaye agar khuli ho
+                    )
+                }
             }
 
             else -> {}
@@ -354,16 +409,33 @@ class RoomsViewModel(val roomsRepository: RoomsRepository,
         var filtered = state.allRooms
 
         if (state.searchQuery.isNotBlank()) {
-            filtered = filtered.filter { room -> room.roomType.contains(state.searchQuery, ignoreCase = true) }
-        }
-
-        if (state.filterState.selectedRoomTypes.isNotEmpty() && !state.filterState.selectedRoomTypes.contains("All")) {
-            filtered = filtered.filter { room -> state.filterState.selectedRoomTypes.contains(room.roomType) }
-        }
-
-        if (state.filterState.selectedStyles.isNotEmpty() && !state.filterState.selectedStyles.contains("All")) {
             filtered = filtered.filter { room ->
-                state.filterState.selectedStyles.any { style -> room.roomStyle.contains(style, ignoreCase = true) }
+                room.roomType.contains(
+                    state.searchQuery,
+                    ignoreCase = true
+                )
+            }
+        }
+
+        if (state.filterState.selectedRoomTypes.isNotEmpty() && !state.filterState.selectedRoomTypes.contains(
+                "All"
+            )
+        ) {
+            filtered =
+                filtered.filter { room -> state.filterState.selectedRoomTypes.contains(room.roomType) }
+        }
+
+        if (state.filterState.selectedStyles.isNotEmpty() && !state.filterState.selectedStyles.contains(
+                "All"
+            )
+        ) {
+            filtered = filtered.filter { room ->
+                state.filterState.selectedStyles.any { style ->
+                    room.roomStyle.contains(
+                        style,
+                        ignoreCase = true
+                    )
+                }
             }
         }
 
@@ -393,7 +465,8 @@ class RoomsViewModel(val roomsRepository: RoomsRepository,
             InteriorStyle(name = data.roomStyle, imageUrl = data.imageUrl, id = data.id)
         }.distinct()
 
-        val colorPalettes = rooms.map { room -> ColorPalette(colors = room.colors, id = room.id) }.distinct()
+        val colorPalettes =
+            rooms.map { room -> ColorPalette(colors = room.colors, id = room.id) }.distinct()
         val stylesString = styles.map { it.name }.distinct()
 
         _state.value = _state.value.copy(
@@ -409,10 +482,13 @@ class RoomsViewModel(val roomsRepository: RoomsRepository,
         println("DEBUG_VM: 1. getRooms() called") // Check if called
         viewModelScope.launch {
             executeApiCall(
-                updateState = { result -> _state.value = _state.value.copy(getRoomsResponse = result) },
+                updateState = { result ->
+                    _state.value = _state.value.copy(getRoomsResponse = result)
+                },
                 apiCall = {
                     println("DEBUG_VM: 2. Launching API Call...")
-                    roomsRepository.getRoomsList() },
+                    roomsRepository.getRoomsList()
+                },
                 onSuccess = { response ->
                     println("DEBUG_VM: 3. Success! Rooms Count: ${response.rooms.size}")
                     if (response.success) {
@@ -516,23 +592,29 @@ class RoomsViewModel(val roomsRepository: RoomsRepository,
                     val result = addCreditsUseCase(email, amount)
 
                     result.onSuccess { response ->
-                        _state.update { it.copy(
-                            isPurchasing = false,
-                            purchaseSuccess = "Credits added: ${response.purchasedCredits}"
-                        )}
+                        _state.update {
+                            it.copy(
+                                isPurchasing = false,
+                                purchaseSuccess = "Credits added: ${response.purchasedCredits}"
+                            )
+                        }
                         authViewModel.onAuthEvent(RegisterEvent.FetchUserDetails)
                     }.onFailure { error ->
                         println("DEBUG_PURCHASE: Failure! Error: ${error.message}")
-                        _state.update { it.copy(
-                            isPurchasing = false,
-                            purchaseError = error.message ?: "Transaction failed"
-                        )}
+                        _state.update {
+                            it.copy(
+                                isPurchasing = false,
+                                purchaseError = error.message ?: "Transaction failed"
+                            )
+                        }
                     }
                 }
             }
+
             RoomEvent.ClearPurchaseState -> {
                 _state.update { it.copy(purchaseSuccess = null, purchaseError = null) }
             }
+
             else -> onRoomEvent(event) // Purane events ko bhej dein
         }
     }

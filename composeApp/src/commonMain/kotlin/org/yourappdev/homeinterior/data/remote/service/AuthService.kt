@@ -9,6 +9,7 @@ import io.ktor.http.Parameters
 import io.ktor.http.parameters
 import org.yourappdev.homeinterior.domain.model.CreditResponse
 import org.yourappdev.homeinterior.domain.model.DeviceLinkResult
+import org.yourappdev.homeinterior.domain.model.SpendCreditsResponse
 
 class AuthService(
     private val client: HttpClient,
@@ -102,14 +103,14 @@ class AuthService(
             println("DEBUG_SERVICE_CREDITS: Email -> $email, Amount -> $amount")
         }.body()
     }
-//    suspend fun consumeCredits(
+//    suspend fun spendCredits(
 //        email: String,
 //        amount: Int,
 //        deviceId: String,
 //        packageName: String
-//    ): CreditResponseconsume {
+//    ): SpendCreditsResponse {
 //        return client.submitForm(
-//            url = "$baseUrl/credits/consume",
+//            url = "$baseUrl/credits/spend",
 //            formParameters = Parameters.build {
 //                append("user_email", email)
 //                append("amount", amount.toString())

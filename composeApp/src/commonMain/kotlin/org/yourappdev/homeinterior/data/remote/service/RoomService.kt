@@ -51,8 +51,7 @@ class RoomService(val client: HttpClient,
 
             // Response check karne ke liye
             println("DEBUG_SERVICE: 5. Response Status -> ${response.status}")
-            val errorBody = response.bodyAsText()
-            println("DEBUG_SERVICE: RAW_RESPONSE_BODY -> $errorBody")
+
             val body = response.body<GenerateRoomResponse>()
             println("DEBUG_SERVICE: 6. Parse Success! Server Response -> ${body.success}")
 

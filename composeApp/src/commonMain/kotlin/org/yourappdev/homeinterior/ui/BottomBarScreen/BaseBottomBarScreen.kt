@@ -380,6 +380,7 @@ fun BaseBottomBarScreen(rootNavController: NavHostController) {
                 onPhotosSelected = { photos ->
                     val photo = photos.first()
                     val bytes = uriToByteArray(platformContext, photo.uri.toString())
+                    println("DEBUG_PICKER: Raw bytes from picker = ${bytes.size}")
                     val fileName = "room_upload.jpg"
                     roomViewModel.resetGenerationState()
                     roomViewModel.onRoomEvent(

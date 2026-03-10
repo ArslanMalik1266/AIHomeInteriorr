@@ -32,8 +32,7 @@ class NavigationViewModel(
 
         val startDestination = when {
             !isOnboardingDone -> Routes.OnBoarding.toString()
-            isLoggedIn -> Routes.BaseAppScreen.toString()
-            else -> Routes.Welcome.toString()
+            else -> Routes.BaseAppScreen.toString()
         }
 
         _state.value = NavigationState(startDestination)

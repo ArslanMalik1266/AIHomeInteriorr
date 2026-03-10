@@ -102,7 +102,7 @@ fun App(koinAppDeclaration: KoinAppDeclaration? = null) {
                     val onBoardingViewModel: OnBoardingViewModel = koinViewModel()
                     BaseScreen() {
                         onBoardingViewModel.onBoardingDone()
-                        navController.navigate(Routes.Login)
+                        navController.navigate(Routes.BaseAppScreen)
                     }
                 }
                 composable<Routes.BaseAppScreen> {

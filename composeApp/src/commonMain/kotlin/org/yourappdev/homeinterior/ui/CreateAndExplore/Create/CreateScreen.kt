@@ -73,7 +73,7 @@ fun CreateScreen(
     val generatedBundles = dbImages.chunked(3).map { bundle ->
         bundle.map { it.imageUrl }
     }
-    val displayBundles = generatedBundles.takeLast(10)
+    val displayBundles = generatedBundles.takeLast(10).reversed()
     val scrollState = rememberScrollState()
 
     Column(
