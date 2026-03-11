@@ -34,7 +34,7 @@ import org.yourappdev.homeinterior.ui.authentication.AuthViewModel
 @Composable
 fun AboutToGenerateScreen(
     roomsViewModel: RoomsViewModel = koinViewModel(),
-    authViewModel: AuthViewModel = koinViewModel(),
+    authViewModel: AuthViewModel,
     onCloseClick: () -> Unit,
     onResult: () -> Unit,
     onSubscriptionClick: () -> Unit
@@ -136,20 +136,36 @@ fun AboutToGenerateScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             GenerateButton(
+
                 modifier = Modifier.width(170.dp).height(49.dp).align(Alignment.CenterHorizontally)
             ) {
+                println("DEBUG_GENERATE: Button Clicked!")
+                println("DEBUG_GENERATE: totalCredits = ${authState.totalCredits}")
+                println("DEBUG_GENERATE: freeCredits = ${authState.freeCredits}")
+                println("DEBUG_GENERATE: selectedImageBytes = ${state.selectedImageBytes?.size}")
+                println("DEBUG_GENERATE: isGenerating = ${state.isGenerating}")
                 if (authState.totalCredits > 0) {
+                    println("DEBUG_GENERATE: Credits available, starting generation...")
+
                     coroutineScope.launch {
                         val bytes = state.selectedImageBytes
                         val fileName = state.selectedFileName ?: "room_image.jpg"
+                        println("DEBUG_GENERATE: bytes = ${bytes?.size}, fileName = $fileName")
+
 
                         if (bytes != null) {
+                            println("DEBUG_GENERATE: Calling OnGenerateClick...")
+
                             roomsViewModel.onRoomEvent(
                                 RoomEvent.OnGenerateClick(imageBytes = bytes, fileName = fileName)
                             )
                         }
+                        else{
+                            println("DEBUG_GENERATE: bytes is NULL!")
+                        }
                     }
                 } else {
+                    println("DEBUG_GENERATE: No credits! Showing snackbar...")
                     coroutineScope.launch {
                         snackbarHostState.showSnackbar(
                             message = "You've run out of credits to generate designs.",

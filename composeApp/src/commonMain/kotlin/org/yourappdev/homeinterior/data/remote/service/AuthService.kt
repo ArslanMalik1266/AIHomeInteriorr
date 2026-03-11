@@ -103,23 +103,36 @@ class AuthService(
             println("DEBUG_SERVICE_CREDITS: Email -> $email, Amount -> $amount")
         }.body()
     }
-//    suspend fun spendCredits(
-//        email: String,
-//        amount: Int,
-//        deviceId: String,
-//        packageName: String
-//    ): SpendCreditsResponse {
-//        return client.submitForm(
-//            url = "$baseUrl/credits/spend",
-//            formParameters = Parameters.build {
-//                append("user_email", email)
-//                append("amount", amount.toString())
-//                append("device_id", deviceId)
-//                append("package_name", packageName)
-//            }
-//        ) {
-//            header("X-API-KEY", apiKey)
-//        }.body()
-//    }
+    suspend fun registerGuest(
+        packageName: String,
+        deviceId: String
+    ): HttpResponse = client.submitForm(
+        url = "$baseUrl/device/register",
+        formParameters = Parameters.build {
+            append("package_name", packageName)
+            append("device_id", deviceId)
+        }
+    ) {
+        header("X-API-KEY", apiKey)
+    }
+
+    suspend fun spendCredits(
+        email: String,
+        amount: Int,
+        deviceId: String,
+        packageName: String
+    ): SpendCreditsResponse {
+        return client.submitForm(
+            url = "$baseUrl/credits/spend",
+            formParameters = Parameters.build {
+                append("user_email", email)
+                append("amount", amount.toString())
+                append("device_id", deviceId)
+                append("package_name", packageName)
+            }
+        ) {
+            header("X-API-KEY", apiKey)
+        }.body()
+    }
 
 }

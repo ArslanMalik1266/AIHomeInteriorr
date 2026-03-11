@@ -53,9 +53,9 @@ import org.yourappdev.homeinterior.ui.theme.white_color
 
 @Preview(showBackground = true)
 @Composable
-fun LoginRoot(authViewModel: AuthViewModel = koinViewModel(), navController: NavHostController) {
+fun LoginRoot(authViewModel: AuthViewModel = koinViewModel(), navController: NavHostController, onBackClick: (() -> Unit)? = null) {
     val state by authViewModel.state.collectAsState()
-    LoginScreen(navController, authViewModel.uiEvent, state, authViewModel::onRegisterFormEvent)
+    LoginScreen(navController, authViewModel.uiEvent, state, authViewModel::onRegisterFormEvent,onBackClick)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -64,7 +64,8 @@ fun LoginScreen(
     navController: NavHostController,
     uiEvent: SharedFlow<CommonUiEvent>,
     state: RegisterState,
-    onLoginEvent: (event: RegisterEvent) -> Unit
+    onLoginEvent: (event: RegisterEvent) -> Unit,
+    onBackClick: (() -> Unit)? = null
 ) {
     val snackBarState = rememberCustomSnackbarState()
     LaunchedEffect(Unit) {
@@ -92,16 +93,16 @@ fun LoginScreen(
             .background(white_color)
             .statusBarsPadding()
     ) {
-        if (state.loginResponse is ResultState.Loading) {
-            ProgressLoading()
-        }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(28.dp)
         ) {
             BackIconButton {
-                navController.navigateUp()
+                if (onBackClick != null) {
+                    onBackClick()
+                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -162,8 +163,10 @@ fun LoginScreen(
             // Login button
             Button(
                 onClick = {
+                    println("DEBUG_LOGIN_BTN: Button Clicked! Email = ${state.email}")
                     onLoginEvent(RegisterEvent.Login)
                 },
+                enabled = true,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -185,6 +188,9 @@ fun LoginScreen(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 20.dp, horizontal = 10.dp)
             )
 
+        }
+        if (state.loginResponse is ResultState.Loading) {
+            ProgressLoading()
         }
         CustomSnackbar(
             state = snackBarState,

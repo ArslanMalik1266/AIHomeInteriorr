@@ -33,6 +33,7 @@ fun App(koinAppDeclaration: KoinAppDeclaration? = null) {
         modules(appModule() + platformModule())
     }) {
         val navController = rememberNavController()
+        val authViewModel: AuthViewModel = koinViewModel()
         MaterialTheme(typography = AppTypography()) {
             NavHost(navController, startDestination = Routes.Splash) {
                 composable<Routes.Welcome> {
@@ -41,10 +42,17 @@ fun App(koinAppDeclaration: KoinAppDeclaration? = null) {
                     })
                 }
                 composable<Routes.Login> {
-                    LoginRoot(navController = navController)
+                    LoginRoot(
+                        authViewModel = authViewModel,
+                        navController = navController,
+                        onBackClick = {
+                            navController.popBackStack()
+                        })
+
                 }
                 composable<Routes.Splash> {
-                    SplashScreen(navController = navController)
+                    SplashScreen(navController = navController,
+                        authViewModel = authViewModel)
                 }
                 composable<Routes.ForgetEmail> {
                     ForgetEmailRoot(onBack = {
@@ -89,10 +97,10 @@ fun App(koinAppDeclaration: KoinAppDeclaration? = null) {
                 composable<Routes.Verification> {
                     VerificationRoot(
                         onBackClick = { navController.popBackStack() },
-                        authViewModel = koinViewModel(),
+                        authViewModel = authViewModel,
                         onSuccess = {
                             navController.navigate(Routes.BaseAppScreen) {
-                                popUpTo(0) { inclusive = true } // Pura auth flow clear kar dega
+                                popUpTo(0) { inclusive = true }
                                 launchSingleTop = true
                             }
                         }
@@ -106,7 +114,9 @@ fun App(koinAppDeclaration: KoinAppDeclaration? = null) {
                     }
                 }
                 composable<Routes.BaseAppScreen> {
-                    BaseBottomBarScreen(rootNavController = navController)
+                    BaseBottomBarScreen(rootNavController = navController,
+                        authViewModel = authViewModel)
+
                 }
             }
         }

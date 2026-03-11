@@ -24,9 +24,9 @@ fun createHttpClientManual(
 ): HttpClient {
     return HttpClient {
         install(HttpTimeout) {
-            requestTimeoutMillis = 120_000L // 2 Minutes (AI generation slow hoti hai)
-            connectTimeoutMillis = 60_000L  // 1 Minute
-            socketTimeoutMillis = 120_000L  // 2 Minutes
+            requestTimeoutMillis = 300_000L  // ✅ 5 minutes
+            connectTimeoutMillis = 120_000L  // ✅ 2 minutes
+            socketTimeoutMillis = 300_000L   // ✅ 5 minutes
         }
 
         install(HttpCookies) {

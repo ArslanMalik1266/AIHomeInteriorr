@@ -43,7 +43,8 @@ import org.yourappdev.homeinterior.ui.theme.white_color
 fun ProfileScreen(
     authViewModel: AuthViewModel = koinViewModel(),
     onBackClick: () -> Unit = {},
-    onLogoutSuccess: () -> Unit = {}
+    onLogoutSuccess: () -> Unit = {},
+    onLoginClick: () -> Unit = {}
 ) {
 
 
@@ -70,12 +71,13 @@ fun ProfileScreen(
         }
     }
     val user by authViewModel.user.collectAsState()
+    val isLoggedIn = user != null
 
     println("DEBUG_UI: ProfileScreen user data = $user")
 
     if (showLogoutDialog) {
         AlertDialog(
-            onDismissRequest = { showLogoutDialog = false },
+            onDismissRequest =  { showLogoutDialog = false },
             confirmButton = {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
@@ -191,7 +193,9 @@ fun ProfileScreen(
 
             ProfileMenuItems(
                 email = user?.userEmail ?: "No Email",
-                onLogoutClick = { showLogoutDialog = true }
+                isLoggedIn = isLoggedIn,
+                onLogoutClick = { showLogoutDialog = true },
+                onLoginClick = { onLoginClick() }
             )
 
         }
@@ -251,7 +255,9 @@ fun ProfileHeader( email: String) {
 @Composable
 fun ProfileMenuItems(
     email: String,
-    onLogoutClick: () -> Unit
+    isLoggedIn: Boolean,
+    onLogoutClick: () -> Unit,
+    onLoginClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -269,12 +275,21 @@ fun ProfileMenuItems(
             value = null
         )
 
-        ProfileMenuItem(
-            label = "Sign Out",
-            value = null,
-            isDestructive = true,
-            onClick = onLogoutClick
-        )
+        if (isLoggedIn) {
+            ProfileMenuItem(
+                label = "Sign Out",
+                value = null,
+                isDestructive = true,
+                onClick = onLogoutClick
+            )
+        } else {
+            ProfileMenuItem(
+                label = "Login",
+                value = null,
+                isDestructive = false,
+                onClick = onLoginClick
+            )
+        }
     }
 }
 

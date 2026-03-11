@@ -19,9 +19,11 @@ import androidx.navigation.NavHostController
 import kotlinx.coroutines.delay
 import org.koin.compose.viewmodel.koinViewModel
 import org.yourappdev.homeinterior.navigation.NavigationViewModel
+import org.yourappdev.homeinterior.ui.authentication.AuthViewModel
 
 @Composable
-fun SplashScreen(navigationViewModel: NavigationViewModel = koinViewModel(), navController: NavHostController) {
+fun SplashScreen(navigationViewModel: NavigationViewModel = koinViewModel(), navController: NavHostController,
+                 authViewModel: AuthViewModel) {
     val state by navigationViewModel.state.collectAsState()
     LaunchedEffect(state.startDestination) {
         if (state.startDestination.isNotBlank()) {

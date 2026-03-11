@@ -15,10 +15,14 @@ import kotlinx.coroutines.launch
 import org.yourappdev.homeinterior.data.local.entities.DraftEntity
 import org.yourappdev.homeinterior.data.local.entities.RecentGeneratedEntity
 import org.yourappdev.homeinterior.data.mapper.toUi
+import org.yourappdev.homeinterior.data.remote.util.ResultState
+import org.yourappdev.homeinterior.domain.model.GenerateRoomRequest
 import org.yourappdev.homeinterior.domain.repo.DraftsRepository
 import org.yourappdev.homeinterior.domain.repo.RecentGeneratedRepository
 import org.yourappdev.homeinterior.domain.repo.RoomsRepository
 import org.yourappdev.homeinterior.domain.usecase.AddCreditsUseCase
+import org.yourappdev.homeinterior.domain.usecase.FetchGeneratedRoomUseCase
+import org.yourappdev.homeinterior.domain.usecase.GenerateRoomUseCase
 import org.yourappdev.homeinterior.domain.usecase.SpendCreditsUseCase
 import org.yourappdev.homeinterior.ui.Generate.UiScreens.ColorPalette
 import org.yourappdev.homeinterior.ui.Generate.UiScreens.InteriorStyle
@@ -28,6 +32,7 @@ import org.yourappdev.homeinterior.ui.common.base.CommonUiEvent
 import org.yourappdev.homeinterior.ui.common.base.CommonUiEvent.ShowError
 import org.yourappdev.homeinterior.utils.executeApiCall
 import org.yourappdev.homeinterior.utils.getDeviceId
+import org.yourappdev.homeinterior.utils.toBase64
 import kotlin.time.ExperimentalTime
 
 class RoomsViewModel(
@@ -37,6 +42,8 @@ class RoomsViewModel(
     private val draftsRepository: DraftsRepository,
     private val recentGeneratedRepository: RecentGeneratedRepository,
     private val spendCreditsUseCase: SpendCreditsUseCase,
+    private val generateRoomUseCase: GenerateRoomUseCase,
+    private val fetchGeneratedRoomUseCase: FetchGeneratedRoomUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(RoomUiState())
@@ -299,81 +306,116 @@ class RoomsViewModel(
                 _state.value = _state.value.copy(selectedPaletteId = event.paletteId)
             }
 
-            // **Generate room using ByteArray image**
-// RoomsViewModel.kt mein replace karein:
             is RoomEvent.OnGenerateClick -> {
                 println("DEBUG_VM: 1. OnGenerateClick Triggered")
                 _state.update {
-                    it.copy(
-                        isGenerating = true,
-                        selectedImageBytes = event.imageBytes,
-                        selectedFileName = event.fileName,
-                        errorMessage = null
-                    )
+                    it.copy(isGenerating = true, errorMessage = null)
                 }
 
                 viewModelScope.launch {
-
                     try {
-                        val prompt = buildPromptFromState(_state.value)
-                        println("DEBUG_VM: 2. Prompt Built: $prompt")
-                        println("DEBUG_VM: 3. Calling API with image size: ${event.imageBytes.size}")
-                        val response = roomsRepository.generateRoom(
-                            imageBytes = event.imageBytes,
-                            fileName = event.fileName,
-                            prompt = prompt,
-                            strength = 0.7f
+                        // ✅ Step 1: Credit spend
+                        val email = authViewModel.state.value.email ?: ""
+                        val deviceId = getDeviceId()
+                        val creditResult = spendCreditsUseCase(
+                            userEmail = email,
+                            deviceId = deviceId,
+                            amount = 1
                         )
-                        println("DEBUG_VM: 4. API Response Received. Success = ${response.success}")
-                        if (response.success) {
-                            println("DEBUG_VM: 5. Success! Images found: ${response.images.size}")
-//                            val email = authViewModel.state.value.email ?: ""
-//                            val deviceId = getDeviceId()
-//                            spendCreditsUseCase(
-//                                userEmail = email,
-//                                deviceId = deviceId,
-//                                amount = 1
-//                            ).onSuccess { creditResponse ->
-//                                println("DEBUG_VM: Credits remaining: ${creditResponse.total_credits}")
-//                                authViewModel.onAuthEvent(RegisterEvent.FetchUserDetails)
-//                            }.onFailure { error ->
-//                                println("DEBUG_VM: Credit spend failed silently: ${error.message}")
-//                            }
+                        if (creditResult.isFailure) {
+                            _state.update { it.copy(isGenerating = false, errorMessage = "Not enough credits") }
+                            _uiEvent.emit(ShowError("Not enough credits"))
+                            return@launch
+                        }
+                        authViewModel.fetchUserDetails()
 
-                            response.images.forEach { url ->
-                                recentGeneratedRepository.saveGenerated(
-                                    RecentGeneratedEntity(
-                                        imageBytes = byteArrayOf(),
-                                        imageUrl = url,
-                                        createdAt = kotlin.time.Clock.System.now()
-                                            .toEpochMilliseconds()
-                                    )
-                                )
+                        // ✅ Step 2: Bytes ko base64 convert karo
+                        val base64Image = "data:image/jpeg;base64,${event.imageBytes.toBase64()}"
+                        val prompt = buildPromptFromState(_state.value)
+                        println("DEBUG_VM: Image base64 length = ${base64Image.length}")
+                        println("DEBUG_VM: Prompt = $prompt")
+
+                        // ✅ Step 3: Generate karo
+                        val request = GenerateRoomRequest(
+                            initImage = base64Image,
+                            prompt = prompt
+                        )
+                        val result = generateRoomUseCase(request)
+
+                        when (result) {
+                            is ResultState.Success -> {
+                                val response = result.data
+                                println("DEBUG_VM: status = ${response.status}")
+                                println("DEBUG_VM: isProcessing = ${response.isProcessing}")
+                                println("DEBUG_VM: fetchUrl = ${response.fetchUrl}")
+                                println("DEBUG_VM: eta = ${response.eta}")
+
+                                // ✅ Step 4: Processing ho to polling karo
+                                val finalResponse = if (response.isProcessing && response.fetchUrl != null) {
+                                    println("DEBUG_VM: Processing! Waiting ${response.eta}s...")
+                                    kotlinx.coroutines.delay((response.eta ?: 30) * 1000L)
+
+                                    var fetchResult = fetchGeneratedRoomUseCase(response.fetchUrl)
+                                    var retries = 0
+
+                                    while (fetchResult is ResultState.Success &&
+                                        fetchResult.data.isProcessing && retries < 5) {
+                                        println("DEBUG_VM: Retry ${retries + 1}...")
+                                        kotlinx.coroutines.delay(10_000L)
+                                        fetchResult = fetchGeneratedRoomUseCase(response.fetchUrl)
+                                        retries++
+                                    }
+
+                                    if (fetchResult is ResultState.Success) fetchResult.data
+                                    else response
+                                } else {
+                                    response
+                                }
+
+                                println("DEBUG_VM: Final status = ${finalResponse.status}")
+                                println("DEBUG_VM: Final images = ${finalResponse.availableImages.size}")
+
+                                if (finalResponse.isSuccess) {
+                                    val images = finalResponse.availableImages
+                                    images.forEach { url ->
+                                        recentGeneratedRepository.saveGenerated(
+                                            RecentGeneratedEntity(
+                                                imageBytes = byteArrayOf(),
+                                                imageUrl = url,
+                                                createdAt = kotlin.time.Clock.System.now().toEpochMilliseconds()
+                                            )
+                                        )
+                                    }
+                                    _state.update {
+                                        it.copy(
+                                            isGenerating = false,
+                                            generatedImages = images,
+                                            generatedCount = images.size,
+                                            jobId = finalResponse.id?.toString(),
+                                            generatedRoom = null,
+                                        )
+                                    }
+                                } else {
+                                    _state.update {
+                                        it.copy(isGenerating = false, errorMessage = "Generation failed")
+                                    }
+                                }
                             }
-
-                            _state.update {
-                                it.copy(
-                                    isGenerating = false,
-                                    generatedImages = response.images,
-                                    generatedCount = response.count,
-                                    jobId = response.job_id,
-                                    generatedRoom = response,
-                                )
+                            is ResultState.Failure -> {
+                                println("DEBUG_VM: Generate Failed = ${result.msg}")
+                                _state.update {
+                                    it.copy(isGenerating = false, errorMessage = result.msg)
+                                }
+                                _uiEvent.emit(ShowError(result.msg))
                             }
-
-
-                        } else {
-                            println("DEBUG_VM: 6. API Failed! Response: $response")
-                            _state.update { it.copy(isGenerating = false, errorMessage = "") }
+                            else -> {}
                         }
                     } catch (e: Exception) {
-                        println("DEBUG_VM: CRASH! Error: ${e.message}")
+                        println("DEBUG_VM: CRASH! ${e.message}")
                         _state.update { it.copy(isGenerating = false, errorMessage = e.message) }
                     }
                 }
-            }
-
-            is RoomEvent.OnGenerationComplete -> {
+            }            is RoomEvent.OnGenerationComplete -> {
                 _state.update {
                     it.copy(
                         selectedImageBytes = null,

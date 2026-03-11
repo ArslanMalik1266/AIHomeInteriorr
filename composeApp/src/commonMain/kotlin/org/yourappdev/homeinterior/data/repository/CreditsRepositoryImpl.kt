@@ -27,23 +27,23 @@ class CreditsRepositoryImpl(
             Result.failure(e)
         }
     }
-//    override suspend fun spendCredits(
-//        userEmail: String,
-//        amount: Int,
-//        deviceId: String,
-//        packageName: String
-//    ): Result<SpendCreditsResponse> {
-//        return try {
-//            val response = authService.spendCredits(
-//                email = userEmail,
-//                amount = amount,
-//                deviceId = deviceId,
-//                packageName = packageName
-//            )
-//            Result.success(response)
-//        } catch (e: Exception) {
-//            Result.failure(e)
-//        }
-//    }
+    override suspend fun spendCredits(
+        userEmail: String,
+        amount: Int,
+        deviceId: String,
+        packageName: String
+    ): Result<SpendCreditsResponse> {
+        return try {
+            val response = authService.spendCredits(
+                email = userEmail,
+                amount = amount,
+                deviceId = deviceId,
+                packageName = packageName
+            )
+            Result.success(response)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 
 }

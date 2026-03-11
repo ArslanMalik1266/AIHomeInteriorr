@@ -63,7 +63,8 @@ import org.yourappdev.homeinterior.ui.theme.unselectedNavItem
 import org.yourappdev.homeinterior.utils.getPlatformContext
 
 @Composable
-fun BaseBottomBarScreen(rootNavController: NavHostController) {
+fun BaseBottomBarScreen(rootNavController: NavHostController,
+                         authViewModel: AuthViewModel) {
 
 
     val navController = rememberNavController()
@@ -71,7 +72,6 @@ fun BaseBottomBarScreen(rootNavController: NavHostController) {
     val currentDestination = navBackStackEntry?.destination
     val roomViewModel: RoomsViewModel = koinViewModel()
     var showGallery by remember { mutableStateOf(false) }
-    val authViewModel: AuthViewModel = koinViewModel()
 
     val scope = rememberCoroutineScope()
 
@@ -308,6 +308,7 @@ fun BaseBottomBarScreen(rootNavController: NavHostController) {
             composable<Routes.AbtToGenerate> {
                 AboutToGenerateScreen(
                     roomsViewModel = roomViewModel,
+                    authViewModel= authViewModel,
                     onCloseClick = {
                         navController.popBackStack()
                     },
@@ -368,6 +369,11 @@ fun BaseBottomBarScreen(rootNavController: NavHostController) {
                     onLogoutSuccess = {
                         rootNavController.navigate(Routes.Login) {
                             popUpTo(0) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    },
+                    onLoginClick = {
+                        rootNavController.navigate(Routes.Login) {
                             launchSingleTop = true
                         }
                     }

@@ -19,10 +19,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.yourappdev.homeinterior.data.remote.dto.UserDto
 import org.yourappdev.homeinterior.data.remote.util.ResultState
+import org.yourappdev.homeinterior.domain.model.GuestSession
 import org.yourappdev.homeinterior.domain.model.UserDetail
 import org.yourappdev.homeinterior.domain.repo.AuthRepository
 import org.yourappdev.homeinterior.domain.usecase.LoginUseCase
 import org.yourappdev.homeinterior.domain.usecase.LogoutUseCase
+import org.yourappdev.homeinterior.domain.usecase.RegisterGuestUseCase
 import org.yourappdev.homeinterior.domain.usecase.ResendOtpUseCase
 import org.yourappdev.homeinterior.domain.usecase.VerifyOtpUseCase
 import org.yourappdev.homeinterior.ui.authentication.register.RegisterEvent
@@ -37,6 +39,7 @@ class AuthViewModel(private val verifyOtpUseCase: VerifyOtpUseCase,
                     private val loginUseCase: LoginUseCase,
                     private val logoutUseCase: LogoutUseCase,
                     private val resendOtpUseCase: ResendOtpUseCase,
+                    private val registerGuestUseCase: RegisterGuestUseCase,
                     val repository: AuthRepository, val settings: Settings) : ViewModel() {
     private val _state = MutableStateFlow(RegisterState())
     val state: StateFlow<RegisterState> = _state.asStateFlow()
@@ -45,6 +48,8 @@ class AuthViewModel(private val verifyOtpUseCase: VerifyOtpUseCase,
     val user = _user.asStateFlow()
 
 
+    private val _guestSession = MutableStateFlow<GuestSession?>(null)
+    val guestSession = _guestSession.asStateFlow()
 
     private val _uiEvent = MutableSharedFlow<CommonUiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
@@ -56,9 +61,44 @@ class AuthViewModel(private val verifyOtpUseCase: VerifyOtpUseCase,
 
         if (savedEmail.isNotBlank()) {
             fetchUserDetails()
+        } else {
+            registerGuest()
         }
     }
 
+    fun registerGuest() {
+        viewModelScope.launch {
+            val deviceId = getDeviceId()
+            println("DEBUG_DEVICE_ID: = $deviceId")
+            val result = registerGuestUseCase(
+                packageName = "org.yourappdev.homeinterior",
+                deviceId = getDeviceId()
+
+            )
+
+            when (result) {
+                is ResultState.Success -> {
+                    val session = result.data
+                    _guestSession.value = session
+                    _state.update {
+                        it.copy(
+                            freeCredits = session.freeCredits,
+                            totalCredits = session.totalCredits
+                        )
+                    }
+                    println("DEBUG_GUEST: Registered! Credits: ${session.freeCredits}, isNew: ${session.isNew}")
+                }
+                is ResultState.Failure -> {
+                    println("DEBUG_GUEST: Registration Failed: ${result.msg}")
+                }
+                else -> {
+                    println("DEBUG_GUEST: Register check:  isNew:")
+
+
+                }
+            }
+        }
+    }
     fun onAuthEvent(event: RegisterEvent) {
         when (event) {
             is RegisterEvent.FetchUserDetails -> {
