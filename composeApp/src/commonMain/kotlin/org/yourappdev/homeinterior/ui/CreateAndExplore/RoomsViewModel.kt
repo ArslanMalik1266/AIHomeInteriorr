@@ -3,6 +3,8 @@ package org.yourappdev.homeinterior.ui.CreateAndExplore
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.ktor.client.request.get
+import io.ktor.client.statement.bodyAsText
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -33,6 +35,7 @@ import org.yourappdev.homeinterior.ui.common.base.CommonUiEvent.ShowError
 import org.yourappdev.homeinterior.utils.executeApiCall
 import org.yourappdev.homeinterior.utils.getDeviceId
 import org.yourappdev.homeinterior.utils.toBase64
+import kotlin.io.encoding.Base64
 import kotlin.time.ExperimentalTime
 
 class RoomsViewModel(
@@ -43,7 +46,8 @@ class RoomsViewModel(
     private val recentGeneratedRepository: RecentGeneratedRepository,
     private val spendCreditsUseCase: SpendCreditsUseCase,
     private val generateRoomUseCase: GenerateRoomUseCase,
-    private val fetchGeneratedRoomUseCase: FetchGeneratedRoomUseCase
+    private val fetchGeneratedRoomUseCase: FetchGeneratedRoomUseCase,
+    private val httpClient: io.ktor.client.HttpClient,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(RoomUiState())
@@ -60,6 +64,7 @@ class RoomsViewModel(
             initialValue = emptyList()
         )
     private var currentDraftId: Long? = null
+
 
 
     fun selectDraftImage(draft: DraftEntity) {
@@ -139,6 +144,15 @@ class RoomsViewModel(
 
     init {
         getRooms()
+        viewModelScope.launch {
+            dbGeneratedImages.collect { images ->
+                println("DEBUG_DB: Total saved = ${images.size}")
+                images.forEach {
+                    println("DEBUG_DB: URL = ${it.imageUrl}")
+                    println("DEBUG_DB: Bytes size = ${it.imageBytes.size}")
+                }
+            }
+        }
     }
 
     fun resetGenerationState() {
@@ -377,19 +391,33 @@ class RoomsViewModel(
 
                                 if (finalResponse.isSuccess) {
                                     val images = finalResponse.availableImages
-                                    images.forEach { url ->
+                                    val decodedImages = images.map { url ->
+                                        val response = httpClient.get(url)
+                                        val base64String = response.bodyAsText()
+                                        Base64.decode(base64String)
+                                    }
+                                    val response = httpClient.get(images[0])
+                                    println("DEBUG_VM: Content-Type = ${response.headers["Content-Type"]}")
+                                    println("DEBUG_VM: Body first 100 chars = ${response.bodyAsText().take(100)}")
+                                    images.forEachIndexed { index, url ->
+                                        println("DEBUG_VM: Image[$index] URL = $url")
+                                    }
+
+                                    images.forEachIndexed  { index, url ->
                                         recentGeneratedRepository.saveGenerated(
                                             RecentGeneratedEntity(
-                                                imageBytes = byteArrayOf(),
+                                                imageBytes = decodedImages.getOrNull(index) ?: byteArrayOf(),
                                                 imageUrl = url,
                                                 createdAt = kotlin.time.Clock.System.now().toEpochMilliseconds()
                                             )
                                         )
                                     }
+
                                     _state.update {
                                         it.copy(
                                             isGenerating = false,
                                             generatedImages = images,
+                                            decodedImageBytes = decodedImages,
                                             generatedCount = images.size,
                                             jobId = finalResponse.id?.toString(),
                                             generatedRoom = null,
@@ -415,7 +443,8 @@ class RoomsViewModel(
                         _state.update { it.copy(isGenerating = false, errorMessage = e.message) }
                     }
                 }
-            }            is RoomEvent.OnGenerationComplete -> {
+            }
+            is RoomEvent.OnGenerationComplete -> {
                 _state.update {
                     it.copy(
                         selectedImageBytes = null,
@@ -426,7 +455,7 @@ class RoomsViewModel(
                         selectedRoomType = null,
                         selectedStyleName = null,
                         selectedPaletteId = null,
-                        currentPage = 0 // <--- Reset to Step 1
+                        currentPage = 0
                     )
                 }
             }
@@ -434,8 +463,8 @@ class RoomsViewModel(
             is RoomEvent.ShowSelectedBundle -> {
                 _state.update {
                     it.copy(
-                        generatedImages = event.bundle, // Taake ResultScreen ye images dikhaye
-                        isGenerating = false // Loading band ho jaye agar khuli ho
+                        generatedImages   = event.bundle,
+                        isGenerating = false
                     )
                 }
             }
@@ -443,8 +472,6 @@ class RoomsViewModel(
             else -> {}
         }
     }
-
-    // --- Helper functions ---
 
     private fun applyFiltersAndSearch() {
         val state = _state.value

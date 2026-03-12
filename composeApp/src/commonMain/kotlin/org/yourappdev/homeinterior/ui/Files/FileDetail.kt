@@ -44,8 +44,9 @@ import org.yourappdev.homeinterior.ui.UiUtils.DeleteConfirmationDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CreateEditScreen(imageUrl: String,
-                     onClick: () -> Unit) {
+fun CreateEditScreen( imageUrl: ByteArray = byteArrayOf(),
+                      imageUrlString: String = "",
+                      onClick: () -> Unit) {
     val scope = rememberCoroutineScope()
     val backgroundColor = Color(0xFFFFFFFF)
     val darkText = Color(0xFF2C2C2C)
@@ -226,7 +227,8 @@ fun ProBadge(gradientColors: List<Color>) {
 
 @Composable
 fun ImageSection(
-    imageUrl: String,
+    imageUrl: ByteArray = byteArrayOf(),
+    imageUrlString: String = "",
     modifier: Modifier = Modifier,
     imageBorder: Color
 ) {
@@ -240,7 +242,7 @@ fun ImageSection(
             .background(Color(0xFFF5F5F5))
     ) {
         AsyncImage(
-            model = if (isPressed) imageUrl else imageUrl, // Yahan aap secondary image logic laga sakte hain
+            model =  if (imageUrl.isNotEmpty()) imageUrl else imageUrlString,
             contentDescription = "Editing Image",
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()

@@ -298,9 +298,16 @@ fun BaseBottomBarScreen(rootNavController: NavHostController,
             composable<Routes.FileEdit> { backStackEntry ->
 
                 val args = backStackEntry.toRoute<Routes.FileEdit>()
+                val state by roomViewModel.state.collectAsState()
+                val imageBytes = if (args.imageIndex >= 0) {
+                    state.decodedImageBytes.getOrNull(args.imageIndex) ?: byteArrayOf() // ✅ index se ByteArray lo
+                } else {
+                    byteArrayOf()
+                }
 
                 CreateEditScreen(
-                    imageUrl = args.imageUrl,
+                    imageUrlString = args.imageUrl,
+                    imageUrl = imageBytes,
                     onClick = { navController.popBackStack() }
                 )
             }
@@ -353,9 +360,10 @@ fun BaseBottomBarScreen(rootNavController: NavHostController,
                             }
                         }
                     },
-                    generatedImages = roomViewModel.state.value.generatedImages,
-                    onImageClick = { url ->
-                        roomViewModel.onGeneratedImageClick(url)
+                    generatedImages = state.decodedImageBytes,      // ✅ Fresh generation ke liye
+                    generatedImageUrls = state.generatedImages,
+                    onImageClick = { index ->
+                        navController.navigate(Routes.FileEdit(imageIndex = index))
                     }
                 )
             }

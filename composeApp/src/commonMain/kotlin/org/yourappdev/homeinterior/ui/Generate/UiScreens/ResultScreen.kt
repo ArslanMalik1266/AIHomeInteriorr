@@ -25,9 +25,10 @@ import org.jetbrains.compose.resources.painterResource
 
 @Composable
 fun ResultScreen(
-    generatedImages: List<String>,
+    generatedImages: List<ByteArray>,
+    generatedImageUrls: List<String> = emptyList(),
     onCloseClick: () -> Unit = {},
-    onImageClick: (String) -> Unit
+    onImageClick: (Int) -> Unit
 ) {
 
     Box(
@@ -44,15 +45,16 @@ fun ResultScreen(
                 onCloseClick()
             }
             CreateContent(imageList = generatedImages,
-                onImageClick = onImageClick)
+                onImageClick = onImageClick
+            )
         }
     }
 }
 
 
 @Composable
-private fun CreateContent(imageList: List<String>,
-                          onImageClick: (String) -> Unit) {
+private fun CreateContent(imageList: List<ByteArray>,
+                          onImageClick: (Int) -> Unit) {
 
 
     LazyVerticalStaggeredGrid(
@@ -78,7 +80,7 @@ private fun CreateContent(imageList: List<String>,
             ImageCard(
                 imageUrl = imageResource,
                 isLarge = (index + 1) % 3 == 0,
-                modifier = Modifier.clickable { onImageClick(imageResource) }
+                modifier = Modifier.clickable { onImageClick(index) }
             )
         }
     }
@@ -86,13 +88,17 @@ private fun CreateContent(imageList: List<String>,
 
 @Composable
 private fun ImageCard(
-    imageUrl: String,
+    imageBytes: ByteArray? = null,
+    imageUrl: ByteArray,
     isLarge: Boolean,
     modifier: Modifier = Modifier
 ) {
     AsyncImage(
-        model = imageUrl,
+        model = imageBytes ?: imageUrl,
         contentDescription = "Room design",
+        onError = { error ->
+            println("DEBUG_IMAGE: Error = ${error.result.throwable.message}")
+        },
         modifier = modifier.then(
             if (isLarge) Modifier.fillMaxWidth().height(176.dp)
             else Modifier.aspectRatio(1f)

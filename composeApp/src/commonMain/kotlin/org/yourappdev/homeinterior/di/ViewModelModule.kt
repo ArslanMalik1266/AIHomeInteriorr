@@ -40,7 +40,8 @@ val viewModelModule = module {
             recentGeneratedRepository = get(),
             spendCreditsUseCase = get(),
             generateRoomUseCase = get(),
-            fetchGeneratedRoomUseCase = get()
+            fetchGeneratedRoomUseCase = get(),
+            httpClient = get(),
         )
     }
 

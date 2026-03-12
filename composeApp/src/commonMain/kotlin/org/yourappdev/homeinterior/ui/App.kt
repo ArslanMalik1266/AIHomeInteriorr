@@ -5,6 +5,9 @@ import androidx.compose.runtime.*
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import coil3.ImageLoader
+import coil3.SingletonImageLoader
+import coil3.network.ktor3.KtorNetworkFetcherFactory
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.compose.KoinApplication
 import org.koin.compose.viewmodel.koinViewModel
@@ -28,6 +31,14 @@ import org.yourappdev.homeinterior.ui.theme.AppTypography
 @Composable
 @Preview
 fun App(koinAppDeclaration: KoinAppDeclaration? = null) {
+
+    SingletonImageLoader.setSafe {
+        ImageLoader.Builder(it)
+            .components {
+                add(KtorNetworkFetcherFactory())
+            }
+            .build()
+    }
     KoinApplication(application = {
         koinAppDeclaration?.invoke(this)
         modules(appModule() + platformModule())

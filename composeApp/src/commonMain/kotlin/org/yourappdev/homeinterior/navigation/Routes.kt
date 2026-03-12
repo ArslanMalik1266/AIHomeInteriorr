@@ -54,7 +54,8 @@ sealed class Routes {
     @Serializable
     @SerialName("file-edit")
     data class FileEdit(
-        val imageUrl: String
+        val imageUrl: String = "" ,
+        val imageIndex: Int = -1
     ) : Routes()
 
     @Serializable

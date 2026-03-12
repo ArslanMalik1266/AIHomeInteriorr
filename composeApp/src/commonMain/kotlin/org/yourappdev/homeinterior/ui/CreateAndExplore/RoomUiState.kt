@@ -16,6 +16,7 @@ data class RoomUiState(
     val trendingRooms: List<RoomUi> = emptyList(),
     val allRooms: List<RoomUi> = emptyList(),
     val filteredRooms: List<RoomUi> = emptyList(),
+    val decodedImageBytes: List<ByteArray> = emptyList(),
     val searchQuery: String = "",
     val filterState: FilterState = FilterState(),
     val filterCount: Int = 0,
