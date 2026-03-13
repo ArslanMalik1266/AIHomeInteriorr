@@ -14,7 +14,7 @@ interface RecentGeneratedDao {
     fun getRecentGenerated(): Flow<List<RecentGeneratedEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertGenerated(generated: RecentGeneratedEntity)
+    suspend fun insertGenerated(generated: RecentGeneratedEntity) : Long
 
     @Query("DELETE FROM recent_generated WHERE id = :id")
     suspend fun deleteGeneratedById(id: Long)

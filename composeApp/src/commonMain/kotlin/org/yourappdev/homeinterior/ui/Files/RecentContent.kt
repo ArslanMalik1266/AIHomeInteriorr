@@ -37,9 +37,9 @@ import org.yourappdev.homeinterior.data.local.entities.RecentGeneratedEntity
 @Composable
 fun RecentContent(
     generatedImages: List<RecentGeneratedEntity>,
-    onBundleClick: (List<String>) -> Unit
+    onBundleClick: (List<RecentGeneratedEntity>) -> Unit
 ) {
-    val bundles = generatedImages.chunked(3)
+    val bundles = generatedImages.chunked(1)
     if (bundles.isEmpty()) {
         // Empty State
         Box(
@@ -69,12 +69,12 @@ fun RecentContent(
                         .height(145.dp) // Drafts jaisa size
                         .clip(RoundedCornerShape(11.dp))
                         .background(Color(0xFFF5F5F5))
-                        .clickable {onBundleClick(urlList) }
+                        .clickable {onBundleClick(bundle) }
                 ) {
                     if (bundle.isNotEmpty()) {
                         println("DEBUG: Loading image = ${bundle[0]}")
                         AsyncImage(
-                            model = bundle[0].imageUrl,
+                            model = bundle[0].imageBytes,
                             contentDescription = "Generated Interior",
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop,

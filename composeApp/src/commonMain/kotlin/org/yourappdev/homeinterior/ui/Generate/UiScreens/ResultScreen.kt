@@ -21,11 +21,12 @@ import homeinterior.composeapp.generated.resources.Res
 import homeinterior.composeapp.generated.resources.sofa
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
+import org.yourappdev.homeinterior.data.local.entities.RecentGeneratedEntity
 
 
 @Composable
 fun ResultScreen(
-    generatedImages: List<ByteArray>,
+    generatedImages:List<RecentGeneratedEntity>,
     generatedImageUrls: List<String> = emptyList(),
     onCloseClick: () -> Unit = {},
     onImageClick: (Int) -> Unit
@@ -53,7 +54,7 @@ fun ResultScreen(
 
 
 @Composable
-private fun CreateContent(imageList: List<ByteArray>,
+private fun CreateContent(imageList: List<RecentGeneratedEntity>,
                           onImageClick: (Int) -> Unit) {
 
 
@@ -76,9 +77,10 @@ private fun CreateContent(imageList: List<ByteArray>,
                     StaggeredGridItemSpan.SingleLane
                 }
             }
-        ) { index, imageResource ->
+        ) { index, entity ->
             ImageCard(
-                imageUrl = imageResource,
+                imageBytes = entity.imageBytes.takeIf { it.isNotEmpty() },
+                imageUrl = entity.imageUrl.ifBlank { null },
                 isLarge = (index + 1) % 3 == 0,
                 modifier = Modifier.clickable { onImageClick(index) }
             )
@@ -89,7 +91,7 @@ private fun CreateContent(imageList: List<ByteArray>,
 @Composable
 private fun ImageCard(
     imageBytes: ByteArray? = null,
-    imageUrl: ByteArray,
+    imageUrl: String?,
     isLarge: Boolean,
     modifier: Modifier = Modifier
 ) {

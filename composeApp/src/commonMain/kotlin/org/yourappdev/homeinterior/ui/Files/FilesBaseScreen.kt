@@ -134,7 +134,7 @@ fun FilesScreen(
 
                     // 2. RecentContent ko pass karein
                     RecentContent(
-                        generatedImages = dbImages, // Ab ye direct DB entities le raha hai
+                        generatedImages = dbImages,
                         onBundleClick = { bundleUrls ->
                             viewModel.onRoomEvent(RoomEvent.ShowSelectedBundle(bundleUrls))
                             onShowResults()

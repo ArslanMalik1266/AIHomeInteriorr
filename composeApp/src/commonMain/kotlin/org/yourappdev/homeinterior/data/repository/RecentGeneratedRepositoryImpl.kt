@@ -13,8 +13,16 @@ class RecentGeneratedRepositoryImpl(
         return recentGeneratedDao.getRecentGenerated()
     }
 
-    override suspend fun saveGenerated(generated: RecentGeneratedEntity) {
-        recentGeneratedDao.insertGenerated(generated)
+    override suspend fun saveGenerated(generated: RecentGeneratedEntity): Long {  // ← Long return
+        println("🟡 REPO_SAVE: Saving entity...")
+        println("🟡 REPO_SAVE:   - ID = ${generated.id}")
+        println("🟡 REPO_SAVE:   - Bytes size = ${generated.imageBytes.size}")
+        println("🟡 REPO_SAVE:   - URL = ${generated.imageUrl}")
+
+        val newId = recentGeneratedDao.insertGenerated(generated)
+
+        println("🟡 REPO_SAVE: ✅ Inserted with ID = $newId")
+        return newId
     }
 
     override suspend fun deleteGeneratedById(id: Long) {

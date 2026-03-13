@@ -1,6 +1,5 @@
 package org.yourappdev.homeinterior.ui.CreateAndExplore.Create
 
-
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -50,14 +49,13 @@ import homeinterior.composeapp.generated.resources.premiumicon
 import homeinterior.composeapp.generated.resources.roomplaceholder
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
+import org.yourappdev.homeinterior.data.local.entities.RecentGeneratedEntity
 import org.yourappdev.homeinterior.domain.model.RoomUi
 import org.yourappdev.homeinterior.ui.CreateAndExplore.RoomEvent
 import org.yourappdev.homeinterior.ui.CreateAndExplore.RoomsViewModel
 import org.yourappdev.homeinterior.ui.theme.black_color
 import org.yourappdev.homeinterior.ui.theme.green_btn
 import org.yourappdev.homeinterior.ui.theme.white_color
-import org.yourappdev.homeinterior.utils.Constants
-
 
 @Composable
 fun CreateScreen(
@@ -70,10 +68,18 @@ fun CreateScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val dbImages by viewModel.dbGeneratedImages.collectAsState()
-    val generatedBundles = dbImages.chunked(3).map { bundle ->
-        bundle.map { it.imageUrl }
+
+    LaunchedEffect(dbImages) {
+        println("🟣 UI_CREATE: dbImages count = ${dbImages.size}")
     }
-    val displayBundles = generatedBundles.takeLast(10).reversed()
+
+    // ✅ Bundles of entities
+    val generatedBundles = dbImages.chunked(1).take(10)
+
+    LaunchedEffect(generatedBundles) {
+        println("🟣 UI_CREATE: bundles count = ${generatedBundles.size}")
+    }
+
     val scrollState = rememberScrollState()
 
     Column(
@@ -85,13 +91,16 @@ fun CreateScreen(
     ) {
         Header(onClick = onPremiumClick)
         EmptyStateCard({ onAddPhotoClick() })
-        Column(modifier = Modifier.verticalScroll(scrollState), verticalArrangement = Arrangement.spacedBy(32.dp)) {
+        Column(
+            modifier = Modifier.verticalScroll(scrollState),
+            verticalArrangement = Arrangement.spacedBy(32.dp)
+        ) {
             TrendingSection(
                 rooms = state.trendingRooms,
                 onRoomClick = onRoomClick
             )
             RecentFilesSection(
-                generatedBundles = displayBundles,
+                generatedBundles = generatedBundles,
                 onBundleClick = { bundle ->
                     viewModel.onRoomEvent(RoomEvent.ShowSelectedBundle(bundle))
                     onShowResults()
@@ -116,9 +125,10 @@ fun Header(onClick: () -> Unit) {
             modifier = Modifier.weight(1f),
             textAlign = TextAlign.Start
         )
-        Box(modifier = Modifier.size(30.dp).clip(CircleShape).clickable {
-            onClick()
-        }, contentAlignment = Alignment.Center) {
+        Box(
+            modifier = Modifier.size(30.dp).clip(CircleShape).clickable { onClick() },
+            contentAlignment = Alignment.Center
+        ) {
             Image(
                 painter = painterResource(Res.drawable.premiumicon),
                 contentDescription = "",
@@ -131,12 +141,9 @@ fun Header(onClick: () -> Unit) {
 @Composable
 private fun EmptyStateCard(onClick: () -> Unit) {
     Box(modifier = Modifier.padding(start = 24.dp, end = 24.dp)) {
-
         Image(painter = painterResource(Res.drawable.createpageimage), contentDescription = null)
         Surface(
-            onClick = {
-                onClick()
-            },
+            onClick = { onClick() },
             color = green_btn,
             shape = RoundedCornerShape(20),
             modifier = Modifier
@@ -162,7 +169,6 @@ private fun EmptyStateCard(onClick: () -> Unit) {
                     color = white_color,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
-
                 )
             }
         }
@@ -171,9 +177,6 @@ private fun EmptyStateCard(onClick: () -> Unit) {
 
 @Composable
 private fun TrendingSection(rooms: List<RoomUi>, onRoomClick: (RoomUi) -> Unit) {
-    LaunchedEffect(rooms) {
-        println("Trending rooms size: ${rooms.size}")
-    }
     Column {
         Text(
             text = "Trending",
@@ -182,62 +185,41 @@ private fun TrendingSection(rooms: List<RoomUi>, onRoomClick: (RoomUi) -> Unit) 
             color = black_color,
             modifier = Modifier.padding(start = 24.dp)
         )
-
         Spacer(modifier = Modifier.height(8.dp))
         AnimatedContent(
             targetState = rooms.isEmpty(),
-            transitionSpec = {
-                fadeIn() togetherWith fadeOut()
-            }
+            transitionSpec = { fadeIn() togetherWith fadeOut() }
         ) { state ->
             if (state) {
                 TrendingGridShimmer()
             } else {
-                TrendingGrid(
-                    rooms = rooms,
-                    onRoomClick = onRoomClick
-                )
+                TrendingGrid(rooms = rooms, onRoomClick = onRoomClick)
             }
         }
-
     }
 }
 
 @Composable
-private fun TrendingGrid(
-    rooms: List<RoomUi>,
-    onRoomClick: (RoomUi) -> Unit
-) {
+private fun TrendingGrid(rooms: List<RoomUi>, onRoomClick: (RoomUi) -> Unit) {
     LazyRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         contentPadding = PaddingValues(start = 24.dp, end = 24.dp),
         modifier = Modifier.then(
-            if (rooms.size > 1) {
-                Modifier.height(260.dp)
-            } else {
-                Modifier.wrapContentHeight()
-            }
+            if (rooms.size > 1) Modifier.height(260.dp)
+            else Modifier.wrapContentHeight()
         )
     ) {
         items(rooms.chunked(2)) { columnItems ->
             val columnIndex = rooms.chunked(2).indexOf(columnItems)
             val isAlternate = columnIndex % 2 == 1
-
-            Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 columnItems.forEachIndexed { index, room ->
                     val height = when {
                         isAlternate && index == 1 -> 95.dp
                         isAlternate && index == 0 -> 156.dp
                         else -> 126.dp
                     }
-
-                    RoomCategoryCard(
-                        room = room,
-                        height = height,
-                        onClick = { onRoomClick(room) }
-                    )
+                    RoomCategoryCard(room = room, height = height, onClick = { onRoomClick(room) })
                 }
             }
         }
@@ -245,11 +227,7 @@ private fun TrendingGrid(
 }
 
 @Composable
-private fun RoomCategoryCard(
-    room: RoomUi,
-    height: androidx.compose.ui.unit.Dp,
-    onClick: () -> Unit
-) {
+private fun RoomCategoryCard(room: RoomUi, height: androidx.compose.ui.unit.Dp, onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .width(126.dp)
@@ -258,9 +236,6 @@ private fun RoomCategoryCard(
             .background(Color(0xFFE8E8E8))
             .clickable { onClick() }
     ) {
-        LaunchedEffect(room.imageUrl) {
-            println("Loading image: ${room.imageUrl}")
-        }
         AsyncImage(
             model = ImageRequest.Builder(LocalPlatformContext.current)
                 .data(room.imageUrl)
@@ -275,7 +250,7 @@ private fun RoomCategoryCard(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(60.dp) // Adjust as needed
+                .height(60.dp)
                 .align(Alignment.BottomCenter)
                 .background(
                     Brush.verticalGradient(
@@ -291,17 +266,15 @@ private fun RoomCategoryCard(
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
             color = Color.White,
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(8.dp)
+            modifier = Modifier.align(Alignment.BottomStart).padding(8.dp)
         )
     }
 }
 
 @Composable
 private fun RecentFilesSection(
-    generatedBundles: List<List<String>>,
-    onBundleClick: (List<String>) -> Unit,
+    generatedBundles: List<List<RecentGeneratedEntity>>,  // ✅ Correct type
+    onBundleClick: (List<RecentGeneratedEntity>) -> Unit,  // ✅ Correct type
     onSeeAllClick: () -> Unit
 ) {
     Column(modifier = Modifier.padding(bottom = 30.dp)) {
@@ -316,7 +289,6 @@ private fun RecentFilesSection(
                 fontWeight = FontWeight.SemiBold,
                 color = black_color
             )
-
             if (generatedBundles.isNotEmpty()) {
                 Text(
                     text = "See all",
@@ -326,28 +298,25 @@ private fun RecentFilesSection(
                 )
             }
         }
-
         Spacer(modifier = Modifier.height(12.dp))
-
         RecentFilesRow(
-            generatedBundles = generatedBundles,
-            onBundleClick = onBundleClick
+            generatedBundles = generatedBundles,  // ✅ Matches parameter name
+            onBundleClick = onBundleClick          // ✅ Matches parameter name
         )
     }
 }
 
 @Composable
 private fun RecentFilesRow(
-    generatedBundles: List<List<String>>,
-    onBundleClick: (List<String>) -> Unit
+    generatedBundles: List<List<RecentGeneratedEntity>>,  // ✅ Data parameter
+    onBundleClick: (List<RecentGeneratedEntity>) -> Unit  // ✅ Callback parameter
 ) {
     LazyRow(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         contentPadding = PaddingValues(horizontal = 24.dp),
     ) {
         if (generatedBundles.isNotEmpty()) {
-            // Har list (bundle) ke liye 1 square box
-            items(generatedBundles.reversed()) { bundle -> // Reversed taake naya pehle aaye
+            items(generatedBundles) { bundle ->
                 Box(
                     modifier = Modifier
                         .size(114.dp)
@@ -356,15 +325,27 @@ private fun RecentFilesRow(
                         .clickable { onBundleClick(bundle) }
                 ) {
                     if (bundle.isNotEmpty()) {
-                        AsyncImage(
-                            model = bundle[0], // Bundle ki pehli image
-                            contentDescription = null,
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop,
-                            placeholder = painterResource(Res.drawable.roomplaceholder)
-                        )
-
-                        // Badge: images count dikhane ke liye
+                        val firstImage = bundle[0]
+                        if (firstImage.imageBytes.isNotEmpty()) {
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalPlatformContext.current)
+                                    .data(firstImage.imageBytes)
+                                    .crossfade(true)
+                                    .build(),
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop,
+                                placeholder = painterResource(Res.drawable.roomplaceholder),
+                                error = painterResource(Res.drawable.roomplaceholder)
+                            )
+                        } else {
+                            Image(
+                                painter = painterResource(Res.drawable.roomplaceholder),
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
                         Box(
                             modifier = Modifier
                                 .align(Alignment.BottomEnd)
@@ -379,7 +360,13 @@ private fun RecentFilesRow(
             }
         } else {
             items(3) {
-                Box(modifier = Modifier.size(114.dp).clip(RoundedCornerShape(12.dp)).background(Color(0xFFF5F5F5)))
+                Box(
+                    modifier = Modifier
+                        .size(114.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFFF5F5F5))
+                        .shimmerLoading()
+                )
             }
         }
     }
@@ -388,7 +375,6 @@ private fun RecentFilesRow(
 @Composable
 private fun TrendingGridShimmer() {
     val dummyItems = List(12) { it }
-
     LazyRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         contentPadding = PaddingValues(start = 24.dp, end = 24.dp),
@@ -397,17 +383,13 @@ private fun TrendingGridShimmer() {
         items(dummyItems.chunked(2)) { columnItems ->
             val columnIndex = dummyItems.chunked(2).indexOf(columnItems)
             val isAlternate = columnIndex % 2 == 1
-
-            Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 columnItems.forEachIndexed { index, _ ->
                     val height = when {
                         isAlternate && index == 1 -> 95.dp
                         isAlternate && index == 0 -> 156.dp
                         else -> 126.dp
                     }
-
                     Box(
                         modifier = Modifier
                             .width(126.dp)
@@ -423,24 +405,17 @@ private fun TrendingGridShimmer() {
 }
 
 @Composable
-fun Modifier.shimmerLoading(
-    durationMillis: Int = 1000,
-): Modifier {
+fun Modifier.shimmerLoading(durationMillis: Int = 1000): Modifier {
     val transition = rememberInfiniteTransition(label = "")
-
     val translateAnimation by transition.animateFloat(
         initialValue = 0f,
         targetValue = 500f,
         animationSpec = infiniteRepeatable(
-            animation = tween(
-                durationMillis = durationMillis,
-                easing = LinearEasing,
-            ),
+            animation = tween(durationMillis = durationMillis, easing = LinearEasing),
             repeatMode = RepeatMode.Restart,
         ),
         label = "",
     )
-
     return drawBehind {
         drawRect(
             brush = Brush.linearGradient(

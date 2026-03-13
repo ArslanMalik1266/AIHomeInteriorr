@@ -3,6 +3,7 @@ package org.yourappdev.homeinterior.ui.CreateAndExplore
 import androidx.compose.ui.graphics.Color
 import io.github.ismoy.imagepickerkmp.domain.models.GalleryPhotoResult
 import kotlinx.serialization.Serializable
+import org.yourappdev.homeinterior.data.local.entities.RecentGeneratedEntity
 import org.yourappdev.homeinterior.data.remote.util.ResultState
 import org.yourappdev.homeinterior.domain.model.GenerateRoomResponse
 import org.yourappdev.homeinterior.domain.model.Room
@@ -55,7 +56,10 @@ data class RoomUiState(
     val purchaseSuccess: String? = null,
     val purchaseError: String? = null,
     val generatedCount: Int = 0,
-)
+    val generatedImagesEntity: List<RecentGeneratedEntity> = emptyList(),
+
+
+    )
 
 data class FilterState(
     val selectedRoomTypes: Set<String> = emptySet(),

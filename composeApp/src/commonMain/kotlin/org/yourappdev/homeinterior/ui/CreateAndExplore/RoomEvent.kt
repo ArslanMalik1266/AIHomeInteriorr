@@ -1,6 +1,7 @@
 package org.yourappdev.homeinterior.ui.CreateAndExplore
 
 import io.github.ismoy.imagepickerkmp.domain.models.GalleryPhotoResult
+import org.yourappdev.homeinterior.data.local.entities.RecentGeneratedEntity
 
 sealed class RoomEvent {
     // Filter & Search Events
@@ -13,7 +14,7 @@ sealed class RoomEvent {
 
     data class SetImageBytes(val bytes: ByteArray, val fileName: String) : RoomEvent()
 
-    data class ShowSelectedBundle(val bundle: List<String>) : RoomEvent()
+    data class ShowSelectedBundle(val bundle: List<RecentGeneratedEntity>) : RoomEvent()
 
     data class OnGenerateClick(
         val imageBytes: ByteArray,

@@ -300,7 +300,7 @@ fun BaseBottomBarScreen(rootNavController: NavHostController,
                 val args = backStackEntry.toRoute<Routes.FileEdit>()
                 val state by roomViewModel.state.collectAsState()
                 val imageBytes = if (args.imageIndex >= 0) {
-                    state.decodedImageBytes.getOrNull(args.imageIndex) ?: byteArrayOf() // ✅ index se ByteArray lo
+                    state.generatedImagesEntity.getOrNull(args.imageIndex) ?.imageBytes ?: byteArrayOf() // ✅ index se ByteArray lo
                 } else {
                     byteArrayOf()
                 }
@@ -343,10 +343,9 @@ fun BaseBottomBarScreen(rootNavController: NavHostController,
                 val state by roomViewModel.state.collectAsState()
                 val selectedImage by roomViewModel.selectedGeneratedImage.collectAsState()
 
-                // Navigate when an image is selected
                 selectedImage?.let {
                     navController.navigate(Routes.FileEdit(imageUrl = it))
-                    roomViewModel.resetSelectedGeneratedImage() // reset for next click
+                    roomViewModel.resetSelectedGeneratedImage()
                 }
                 ResultScreen(
                     onCloseClick = {
@@ -360,7 +359,7 @@ fun BaseBottomBarScreen(rootNavController: NavHostController,
                             }
                         }
                     },
-                    generatedImages = state.decodedImageBytes,      // ✅ Fresh generation ke liye
+                    generatedImages = state.generatedImagesEntity,
                     generatedImageUrls = state.generatedImages,
                     onImageClick = { index ->
                         navController.navigate(Routes.FileEdit(imageIndex = index))

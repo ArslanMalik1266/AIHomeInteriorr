@@ -145,11 +145,21 @@ class RoomsViewModel(
     init {
         getRooms()
         viewModelScope.launch {
+            println("🟢 FETCH_FLOW: Starting to observe database...")
             dbGeneratedImages.collect { images ->
-                println("DEBUG_DB: Total saved = ${images.size}")
-                images.forEach {
-                    println("DEBUG_DB: URL = ${it.imageUrl}")
-                    println("DEBUG_DB: Bytes size = ${it.imageBytes.size}")
+                println("🟢 FETCH_FLOW: Database changed! Total records = ${images.size}")
+
+                if (images.isEmpty()) {
+                    println("🟢 FETCH_FLOW: ⚠️ Database is EMPTY")
+                } else {
+                    images.forEachIndexed { index, entity ->
+                        println("🟢 FETCH_FLOW: [$index] -----------------")
+                        println("🟢 FETCH_FLOW:   - ID = ${entity.id}")
+                        println("🟢 FETCH_FLOW:   - URL = ${entity.imageUrl}")
+                        println("🟢 FETCH_FLOW:   - Bytes size = ${entity.imageBytes.size}")
+                        println("🟢 FETCH_FLOW:   - Created at = ${entity.createdAt}")
+                        println("🟢 FETCH_FLOW:   - First 10 bytes = ${entity.imageBytes.take(10).toList()}")
+                    }
                 }
             }
         }
@@ -404,6 +414,10 @@ class RoomsViewModel(
                                     }
 
                                     images.forEachIndexed  { index, url ->
+                                        println("🔵 SAVE_FLOW: Saving image[$index] to database...")
+                                        println("🔵 SAVE_FLOW: - URL = $url")
+                                        println("🔵 SAVE_FLOW: - Bytes size = ${decodedImages.getOrNull(index)?.size ?: 0}")
+
                                         recentGeneratedRepository.saveGenerated(
                                             RecentGeneratedEntity(
                                                 imageBytes = decodedImages.getOrNull(index) ?: byteArrayOf(),
@@ -411,7 +425,9 @@ class RoomsViewModel(
                                                 createdAt = kotlin.time.Clock.System.now().toEpochMilliseconds()
                                             )
                                         )
+                                        println("🔵 SAVE_FLOW: Image[$index] saved to database ✅")
                                     }
+                                    println("🔵 SAVE_FLOW: All ${images.size} images saved to database")
 
                                     _state.update {
                                         it.copy(
@@ -421,6 +437,13 @@ class RoomsViewModel(
                                             generatedCount = images.size,
                                             jobId = finalResponse.id?.toString(),
                                             generatedRoom = null,
+                                            generatedImagesEntity = images.mapIndexed { index, url ->
+                                                RecentGeneratedEntity(
+                                                    imageBytes = decodedImages.getOrNull(index) ?: byteArrayOf(),
+                                                    imageUrl = url,
+                                                    createdAt = kotlin.time.Clock.System.now().toEpochMilliseconds()
+                                                )
+                                            }
                                         )
                                     }
                                 } else {
@@ -451,6 +474,7 @@ class RoomsViewModel(
                         selectedFileName = null,
                         selectedImage = null,
                         generatedImages = emptyList(),
+                        generatedImagesEntity = emptyList(),
                         isGenerating = false,
                         selectedRoomType = null,
                         selectedStyleName = null,
@@ -463,7 +487,7 @@ class RoomsViewModel(
             is RoomEvent.ShowSelectedBundle -> {
                 _state.update {
                     it.copy(
-                        generatedImages   = event.bundle,
+                        generatedImagesEntity   = event.bundle,
                         isGenerating = false
                     )
                 }
