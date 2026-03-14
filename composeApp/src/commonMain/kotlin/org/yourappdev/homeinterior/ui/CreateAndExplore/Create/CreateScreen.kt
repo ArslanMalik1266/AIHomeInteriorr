@@ -73,6 +73,7 @@ fun CreateScreen(
         println("🟣 UI_CREATE: dbImages count = ${dbImages.size}")
     }
 
+
     // ✅ Bundles of entities
     val generatedBundles = dbImages.chunked(1).take(10)
 
@@ -209,6 +210,7 @@ private fun TrendingGrid(rooms: List<RoomUi>, onRoomClick: (RoomUi) -> Unit) {
             else Modifier.wrapContentHeight()
         )
     ) {
+
         items(rooms.chunked(2)) { columnItems ->
             val columnIndex = rooms.chunked(2).indexOf(columnItems)
             val isAlternate = columnIndex % 2 == 1
@@ -241,6 +243,12 @@ private fun RoomCategoryCard(room: RoomUi, height: androidx.compose.ui.unit.Dp, 
                 .data(room.imageUrl)
                 .crossfade(true)
                 .build(),
+            onError = { error ->
+                println("❌ Image Error: ${error.result.throwable}")
+            },
+            onSuccess = {
+                println("✅ Image Loaded: ${room.imageUrl}")
+            },
             placeholder = painterResource(Res.drawable.roomplaceholder),
             error = painterResource(Res.drawable.roomplaceholder),
             contentDescription = room.roomType,

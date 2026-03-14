@@ -298,6 +298,8 @@ fun BaseBottomBarScreen(rootNavController: NavHostController,
             composable<Routes.FileEdit> { backStackEntry ->
 
                 val args = backStackEntry.toRoute<Routes.FileEdit>()
+                println("🔴 FileEdit args - imageUrl: '${args.imageUrl}'")
+                println("🔴 FileEdit args - imageIndex: ${args.imageIndex}")
                 val state by roomViewModel.state.collectAsState()
                 val imageBytes = if (args.imageIndex >= 0) {
                     state.generatedImagesEntity.getOrNull(args.imageIndex) ?.imageBytes ?: byteArrayOf() // ✅ index se ByteArray lo

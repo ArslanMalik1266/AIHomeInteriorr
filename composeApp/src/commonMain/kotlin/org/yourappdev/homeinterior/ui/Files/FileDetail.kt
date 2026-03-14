@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -87,6 +88,7 @@ fun CreateEditScreen( imageUrl: ByteArray = byteArrayOf(),
 
             ImageSection(
                 imageUrl = imageUrl,
+                imageUrlString = imageUrlString,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp),
@@ -232,6 +234,10 @@ fun ImageSection(
     modifier: Modifier = Modifier,
     imageBorder: Color
 ) {
+    LaunchedEffect(Unit) {
+        println("🟢 ImageSection - imageUrl bytes: ${imageUrl.size}")
+        println("🟢 ImageSection - imageUrlString: '$imageUrlString'")
+    }
     var image by remember { mutableStateOf(Res.drawable.sofa_3) }
     var isPressed by remember { mutableStateOf(false) }
     Box(
